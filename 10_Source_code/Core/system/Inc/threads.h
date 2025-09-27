@@ -1,10 +1,8 @@
 #ifndef THREADS_H_
 #define THREADS_H_
 
-
 #include "cmsis_os.h"
-#include "stm32f4xx_hal.h"
-#include <stdint.h>
+
 
 typedef struct {
   TIM_HandleTypeDef *htim2; // tempo timer (start/stop)

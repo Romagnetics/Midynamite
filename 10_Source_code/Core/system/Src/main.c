@@ -3,13 +3,12 @@
  *
  *      Author: Romain Dereu
  */
+#include "cmsis_os.h" //osKernel
 #include "main.h"
-#include "memory_main.h"
 #include "_menu_ui.h" //For the screen init
-#include "midi_transform.h"
-#include "midi_tempo.h"
-#include "usb_device.h"
-#include "threads.h"
+#include "midi_transform.h" //midi_buffer_push
+#include "midi_tempo.h" //mt_start_stop
+#include "threads.h" // thread functions
 
 
 I2C_HandleTypeDef hi2c1;

@@ -8,9 +8,6 @@
 #ifndef MENU_INC_MENU_UI_H_
 #define MENU_INC_MENU_UI_H_
 
-#include <stdint.h>
-#include <stddef.h>
-
 #include "_menu_controller.h" // Access to menu items
 
 #define LINE_0 0

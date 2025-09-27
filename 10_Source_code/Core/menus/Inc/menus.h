@@ -8,10 +8,10 @@
 #ifndef INC_MENUS_H_
 #define INC_MENUS_H_
 
-#include <stdint.h>
 #include "memory_main.h"   // save_field_t, SAVE_FIELD_COUNT
 #include "text.h" //definition of message
 
+//The following is defined here to avoid importing text.h into every menu
 #define TEXT_(m) ((const char*)(message->m))
 
 #ifndef MENU_ACTIVE_LIST_CAP
