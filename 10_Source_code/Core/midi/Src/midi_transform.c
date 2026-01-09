@@ -203,6 +203,12 @@ static void change_velocity(midi_note *midi_msg) {
         return;
     }
 
+    //Protecting CC64 which is the sustain pedal and doesn't support
+    if (status_nibble == 0xB0 && midi_msg->note == 64) {
+        return;
+    }
+
+
     // int16 in case of overflow
     int32_t velocity = midi_msg->velocity;
 
