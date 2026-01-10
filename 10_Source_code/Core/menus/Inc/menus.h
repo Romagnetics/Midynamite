@@ -58,7 +58,7 @@ void cont_update_transpose(menu_list_t field);
 void ui_code_transpose();
 void ui_update_transpose();
 
-void cont_update_arpeggiator();
+void cont_update_arpeggiator(menu_list_t field);
 void ui_code_arpeggiator();
 void ui_update_arpeggiator();
 

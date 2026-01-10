@@ -74,6 +74,10 @@ typedef enum {
     TRANSPOSE_SEND_ORIGINAL,
     TRANSPOSE_SENDING,
 
+    // arpeggiator_data
+	ARPEGGIATOR_INTERVAL,
+	ARPEGGIATOR_PATTERN,
+
     // settings_data
     SETTINGS_START_MENU,
     SETTINGS_SEND_USB,

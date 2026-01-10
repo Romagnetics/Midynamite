@@ -43,6 +43,9 @@ static const Message _message = {
     .change_velocity = "Change Velocity",
     .fixed_velocity = "Fixed Velocity",
 
+    // Arpeggiator
+    .pattern = "Pattern",
+
     // Transpose
     .type = "Type",
     .pitch_shift = "Pitch Shift",
@@ -110,6 +113,7 @@ static const Message _message = {
 
     // MIDI Tempo
     .bpm = "BPM",
+    .tempo = "Tempo",
 
     //USB Midi
 	.usb_midi = "USB Midi",

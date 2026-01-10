@@ -48,6 +48,10 @@ typedef struct {
     const char *change_velocity;
     const char *fixed_velocity;
 
+    // Arpeggiator
+    const char *pattern;
+
+
     // Transpose
     const char *type;
     const char *pitch_shift;
@@ -113,6 +117,7 @@ typedef struct {
 
     // MIDI Tempo
     const char *bpm;
+    const char *tempo;
 
     //USB Midi
     const char *usb_midi;

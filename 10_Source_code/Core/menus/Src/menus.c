@@ -27,9 +27,8 @@ void screen_update_menu(uint32_t flag){
             case MENU_TEMPO:     ui_update_tempo();          break;
             case MENU_MODIFY:    ui_update_modify();         break;
             case MENU_TRANSPOSE: ui_update_transpose();      break;
-            case MENU_SETTINGS:  ui_update_settings();       break;
             case MENU_ARPEGGIATOR:  ui_update_arpeggiator();       break;
-
+            case MENU_SETTINGS:  ui_update_settings();       break;
         }
     }
 }
@@ -40,8 +39,8 @@ void ui_code_menu(){
         case MENU_TEMPO:     ui_code_tempo();     break;
         case MENU_MODIFY:    ui_code_modify();    break;
         case MENU_TRANSPOSE: ui_code_transpose(); break;
-        case MENU_SETTINGS:  ui_code_settings();  break;
         case MENU_ARPEGGIATOR:  ui_code_arpeggiator();       break;
+        case MENU_SETTINGS:  ui_code_settings();  break;
 
     }
 }
@@ -52,9 +51,8 @@ void cont_update_menu(menu_list_t field){
         case MENU_TEMPO:     cont_update_tempo();          break;
         case MENU_MODIFY:    cont_update_modify(field);    break;
         case MENU_TRANSPOSE: cont_update_transpose(field); break;
+        case MENU_ARPEGGIATOR:  cont_update_arpeggiator(field);       break;
         case MENU_SETTINGS:  cont_update_settings();       break;
-        case MENU_ARPEGGIATOR:  cont_update_arpeggiator();       break;
-
     }
 }
 
@@ -112,7 +110,7 @@ static const selector_def_t kSelectors[] = {
       (const ctrl_group_id_t[]){ CTRL_TRANSPOSE_SHIFT, CTRL_TRANSPOSE_SCALED },
       TRANSPOSE_TRANSPOSE_TYPE, sel_transpose_type,   1, MENU_TRANSPOSE },
 
-	// TEMPO: ALWAYS include CTRL_TEMPO_ALL
+	// Arpeggiator
 	{ SEL_SAVE_BASED,     1,
 	(const ctrl_group_id_t[]){ CTRL_ARPEGGIATOR_ALL },
 	 SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_ARPEGGIATOR },
@@ -136,6 +134,7 @@ typedef struct {
     CtrlActiveList tempo_item_list;
     CtrlActiveList modify_item_list;
     CtrlActiveList transpose_item_list;
+    CtrlActiveList arpeggiator_item_list;
     CtrlActiveList settings_item_list;
 } MenuActiveLists;
 
@@ -146,6 +145,7 @@ CtrlActiveList* list_for_page(menu_list_t page) {
         case MENU_TEMPO:     return &s_menu_lists.tempo_item_list;
         case MENU_MODIFY:    return &s_menu_lists.modify_item_list;
         case MENU_TRANSPOSE: return &s_menu_lists.transpose_item_list;
+        case MENU_ARPEGGIATOR:  return &s_menu_lists.arpeggiator_item_list;
         case MENU_SETTINGS:  return &s_menu_lists.settings_item_list;
         default:             return &s_menu_lists.tempo_item_list;
     }

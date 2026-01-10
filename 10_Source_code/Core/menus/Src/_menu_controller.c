@@ -102,6 +102,13 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     [TRANSPOSE_SEND_ORIGINAL]    = {   WRAP,  update_value,             1,      CTRL_TRANSPOSE_ALL },
     [TRANSPOSE_SENDING]          = {   WRAP,  no_update,                0,      0 },
 
+
+    [ARPEGGIATOR_INTERVAL]          = {   WRAP,  no_update,                0,      CTRL_ARPEGGIATOR_ALL },
+    [ARPEGGIATOR_PATTERN]          = {   WRAP,  no_update,                0,      CTRL_ARPEGGIATOR_ALL },
+
+
+
+
     [SETTINGS_START_MENU]        = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL1 },
     [SETTINGS_SEND_USB]          = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL1 },
     [SETTINGS_BRIGHTNESS]        = { NO_WRAP, update_contrast,          1,      CTRL_SETTINGS_GLOBAL1 },
