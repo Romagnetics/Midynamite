@@ -8,6 +8,8 @@
 #ifndef TEXT_H_
 #define TEXT_H_
 
+#include "menus.h"
+
 // Central struct for all UI strings and selectable options
 typedef struct {
     // Menu Titles
@@ -149,10 +151,9 @@ typedef struct {
     const char *off_on[2];
     const char *usb_receive_send[2];
     const char *midi_channels[17];
-    const char *menu_list[4];
+    const char *menu_list[5];
 
 } Message;
-
 // Global access to UI strings and options
 extern const Message *message;
 

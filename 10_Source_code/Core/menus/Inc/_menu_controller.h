@@ -36,14 +36,14 @@ typedef enum {
     CTRL_TRANSPOSE_SCALED,
     CTRL_TRANSPOSE_ALL,
 
-	CTRL_ARPEGGIATOR_ALL,
-
     CTRL_SETTINGS_GLOBAL1,
     CTRL_SETTINGS_GLOBAL2,
     CTRL_SETTINGS_FILTER,
     CTRL_SETTINGS_ALL,
     CTRL_SETTINGS_ABOUT,
     CTRL_SETTINGS_ALWAYS,
+
+	CTRL_ARPEGGIATOR_ALL,
 
 } ctrl_group_id_t;
 
@@ -94,6 +94,7 @@ static inline save_field_t sending_field_for_menu(menu_list_t m) {
         case MENU_MODIFY:    return MODIFY_SENDING;
         case MENU_TRANSPOSE: return TRANSPOSE_SENDING;
         case MENU_SETTINGS:  return SAVE_FIELD_INVALID;
+        case MENU_ARPEGGIATOR: return SAVE_FIELD_INVALID;
         default:             return SAVE_FIELD_INVALID;
     }
 }

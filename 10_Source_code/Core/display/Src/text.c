@@ -231,7 +231,7 @@ static const Message _message = {
          "Ch. 9",  "Ch. 10", "Ch. 11", "Ch. 12",
          "Ch. 13", "Ch. 14", "Ch. 15", "Ch. 16"
      },
-    .menu_list = { "Tempo", "Modify", "Transpose", "Settings"},
+    .menu_list = { "Tempo", "Modify", "Transpose", "Arpeggiator" , "Settings"},
 };
 
 const Message *message = &_message;

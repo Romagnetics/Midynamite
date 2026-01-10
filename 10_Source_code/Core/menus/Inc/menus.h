@@ -25,8 +25,8 @@ typedef enum {
     MENU_TEMPO = 0,
     MENU_MODIFY,
     MENU_TRANSPOSE,
-	MENU_ARPEGGIATOR,
     MENU_SETTINGS,
+	MENU_ARPEGGIATOR,
     AMOUNT_OF_MENUS,   // number of menus
     CURRENT_MENU,      // UI state index
     OLD_MENU,          // UI state index
