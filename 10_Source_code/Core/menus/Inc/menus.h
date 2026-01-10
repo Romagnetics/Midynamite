@@ -25,6 +25,7 @@ typedef enum {
     MENU_TEMPO = 0,
     MENU_MODIFY,
     MENU_TRANSPOSE,
+	MENU_ARPEGGIATOR,
     MENU_SETTINGS,
     AMOUNT_OF_MENUS,   // number of menus
     CURRENT_MENU,      // UI state index
@@ -56,6 +57,11 @@ void ui_update_modify();
 void cont_update_transpose(menu_list_t field);
 void ui_code_transpose();
 void ui_update_transpose();
+
+void cont_update_arpeggiator();
+void ui_code_arpeggiator();
+void ui_update_arpeggiator();
+
 
 void cont_update_settings();
 void ui_code_settings();

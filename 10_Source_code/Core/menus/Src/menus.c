@@ -28,6 +28,8 @@ void screen_update_menu(uint32_t flag){
             case MENU_MODIFY:    ui_update_modify();         break;
             case MENU_TRANSPOSE: ui_update_transpose();      break;
             case MENU_SETTINGS:  ui_update_settings();       break;
+            case MENU_ARPEGGIATOR:  ui_update_arpeggiator();       break;
+
         }
     }
 }
@@ -39,6 +41,8 @@ void ui_code_menu(){
         case MENU_MODIFY:    ui_code_modify();    break;
         case MENU_TRANSPOSE: ui_code_transpose(); break;
         case MENU_SETTINGS:  ui_code_settings();  break;
+        case MENU_ARPEGGIATOR:  ui_code_arpeggiator();       break;
+
     }
 }
 
@@ -49,6 +53,8 @@ void cont_update_menu(menu_list_t field){
         case MENU_MODIFY:    cont_update_modify(field);    break;
         case MENU_TRANSPOSE: cont_update_transpose(field); break;
         case MENU_SETTINGS:  cont_update_settings();       break;
+        case MENU_ARPEGGIATOR:  cont_update_arpeggiator();       break;
+
     }
 }
 
@@ -105,6 +111,11 @@ static const selector_def_t kSelectors[] = {
     { SEL_SAVE_BASED,     2,
       (const ctrl_group_id_t[]){ CTRL_TRANSPOSE_SHIFT, CTRL_TRANSPOSE_SCALED },
       TRANSPOSE_TRANSPOSE_TYPE, sel_transpose_type,   1, MENU_TRANSPOSE },
+
+	// TEMPO: ALWAYS include CTRL_TEMPO_ALL
+	{ SEL_SAVE_BASED,     1,
+	(const ctrl_group_id_t[]){ CTRL_ARPEGGIATOR_ALL },
+	 SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_ARPEGGIATOR },
 
     // SETTINGS: ALWAYS + page-position selector
     { SEL_SAVE_BASED,     1,

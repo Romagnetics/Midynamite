@@ -19,6 +19,7 @@ static const Message _message = {
     .about = "About",
     .midi_modify = "MIDI Modify",
     .midi_transpose = "MIDI Transpose",
+    .arpeggiator = "Arpeggiator",
 	.output_sem = "Output:",
 
 	.MIDI_Thru = "MIDI Thru",

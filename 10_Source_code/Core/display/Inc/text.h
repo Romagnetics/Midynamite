@@ -21,6 +21,7 @@ typedef struct {
     const char *about;
     const char *midi_modify;
     const char *midi_transpose;
+    const char *arpeggiator;
     const char *output_sem;
 
     // Settings
