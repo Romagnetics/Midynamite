@@ -24,6 +24,9 @@ void ui_update_arpeggiator(void)
 		{ ELEM_TEXT , 0,                       TEXT_(tempo),        UI_6x8, TXT_LEFT, LINE_1,      CTRL_ARPEGGIATOR_ALL},
         { ELEM_ITEM ,  TEMPO_CURRENT_TEMPO,    TEXT_(zer_to_300),   UI_6x8, 80,      LINE_1     , CTRL_ARPEGGIATOR_ALL },
 
+		//
+		{ ELEM_TEXT , 0,                       TEXT_(tempo),        UI_6x8, TXT_LEFT, LINE_2,      CTRL_ARPEGGIATOR_ALL},
+
 
 
     };

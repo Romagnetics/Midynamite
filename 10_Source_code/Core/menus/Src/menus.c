@@ -28,7 +28,7 @@ void screen_update_menu(uint32_t flag){
             case MENU_MODIFY:    ui_update_modify();         break;
             case MENU_TRANSPOSE: ui_update_transpose();      break;
             case MENU_SETTINGS:  ui_update_settings();       break;
-            case MENU_ARPEGGIATOR:  ui_update_arpeggiator();       break;
+            case MENU_ARPEGGIATOR:  ui_update_arpeggiator(); break;
         }
     }
 }
