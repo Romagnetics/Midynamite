@@ -311,19 +311,24 @@ static inline void toggle_selected_row(menu_list_t page)
 // -------------------------
 int8_t ui_selected_bit(save_field_t f) {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return -1;
-    const menu_list_t page = page_for_ctrl_id(menu_controls[f].groups); // from menus.c
+
+    // Selection is a UI concept → always use the CURRENT menu page.
+    menu_list_t page = (menu_list_t)get_current_menu(CURRENT_MENU);
     const NavSel s = nav_selection(page);
+
     return (s.field == f && s.is_bits) ? (int8_t)s.bit : -1;
 }
 
 uint8_t ui_is_field_selected(save_field_t f)
 {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
-    const menu_list_t page = page_for_ctrl_id(menu_controls[f].groups); // from menus.c
+
+    // Selection is a UI concept → always use the CURRENT menu page.
+    menu_list_t page = (menu_list_t)get_current_menu(CURRENT_MENU);
     const NavSel s = nav_selection(page);
+
     return (s.field == f) ? 1u : 0u;
 }
-
 // -------------------------
 // Change-bit tracking (unchanged)
 // -------------------------
