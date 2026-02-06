@@ -78,12 +78,14 @@ typedef struct page_group_rule_s {
 static uint8_t sel_mod_change_split() { return (save_get(MODIFY_CHANGE_OR_SPLIT)  == MIDI_MODIFY_SPLIT)    ? 1 : 0; }
 static uint8_t sel_mod_vel_type()     { return (save_get(MODIFY_VELOCITY_TYPE)    == MIDI_MODIFY_FIXED_VEL) ? 1 : 0; }
 static uint8_t sel_transpose_type()   { return (save_get(TRANSPOSE_TRANSPOSE_TYPE)== MIDI_TRANSPOSE_SCALED) ? 1 : 0; }
-static uint8_t sel_fixed0()           { return 0; }
+static uint8_t sel_fixed0()           { return 0u; }
 
 // -------------------------
 // Group-id lists (avoid compound literals in static tables)
 // -------------------------
 static const ctrl_group_id_t GR_TEMPO_ALL[]        = { CTRL_TEMPO_ALL };
+static const ctrl_group_id_t GR_TEMPO_SHARED[] = { CTRL_TEMPO_SHARED };
+
 static const ctrl_group_id_t GR_MODIFY_ALL[]       = { CTRL_MODIFY_ALL };
 static const ctrl_group_id_t GR_MODIFY_TYPE[]      = { CTRL_MODIFY_CHANGE, CTRL_MODIFY_SPLIT };
 static const ctrl_group_id_t GR_MODIFY_VEL_TYPE[]  = { CTRL_MODIFY_VEL_CHANGED, CTRL_MODIFY_VEL_FIXED };
@@ -103,48 +105,25 @@ static const ctrl_group_id_t GR_ARPEGGIATOR_ALL[]  = { CTRL_ARPEGGIATOR_ALL };
 
 // Selector table (DATA only, page-driven)
 static const page_group_rule_t kPageGroupRules[] = {
-    // TEMPO: ALWAYS include CTRL_TEMPO_ALL
-		{ GROUP_STATE_BASED,     1,
-		  GR_TEMPO_ALL,
-		  SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_TEMPO },
-    // MODIFY: ALWAYS + type splits
-		 { GROUP_STATE_BASED,     1,
-		    GR_MODIFY_ALL,
-		    SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_MODIFY },
+    { GROUP_STATE_BASED, 1, GR_TEMPO_ALL,         SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TEMPO },
+    { GROUP_STATE_BASED, 1, GR_TEMPO_SHARED,      SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TEMPO },
 
-		  { GROUP_STATE_BASED,     2,
-		    GR_MODIFY_TYPE,
-		    MODIFY_CHANGE_OR_SPLIT,  sel_mod_change_split, 1, MENU_MODIFY },
+    { GROUP_STATE_BASED, 1, GR_MODIFY_ALL,        SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_MODIFY },
+    { GROUP_STATE_BASED, 2, GR_MODIFY_TYPE,       MODIFY_CHANGE_OR_SPLIT,      sel_mod_change_split, 1, MENU_MODIFY },
+    { GROUP_STATE_BASED, 2, GR_MODIFY_VEL_TYPE,   MODIFY_VELOCITY_TYPE,        sel_mod_vel_type,     1, MENU_MODIFY },
 
-		  { GROUP_STATE_BASED,     2,
-		    GR_MODIFY_VEL_TYPE,
-		    MODIFY_VELOCITY_TYPE,    sel_mod_vel_type,     1, MENU_MODIFY },
+    { GROUP_STATE_BASED, 1, GR_TRANSPOSE_ALL,     SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TRANSPOSE },
+    { GROUP_STATE_BASED, 2, GR_TRANSPOSE_TYPE,    TRANSPOSE_TRANSPOSE_TYPE,    sel_transpose_type,   1, MENU_TRANSPOSE },
 
-          // TRANSPOSE: ALWAYS + type split
-		  { GROUP_STATE_BASED,     1,
-			GR_TRANSPOSE_ALL,
-			SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_TRANSPOSE },
+    { GROUP_STATE_BASED, 1, GR_SETTINGS_ALWAYS,   SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_SETTINGS },
+    { CURRENT_POSITION_BASED, 4, GR_SETTINGS_SECTIONS, SAVE_FIELD_INVALID,     NULL,                0, MENU_SETTINGS },
 
-		  { GROUP_STATE_BASED,     2,
-			GR_TRANSPOSE_TYPE,
-			TRANSPOSE_TRANSPOSE_TYPE, sel_transpose_type,   1, MENU_TRANSPOSE },
-
-          // SETTINGS: ALWAYS + page-position selector
-		  { GROUP_STATE_BASED,     1,
-			GR_SETTINGS_ALWAYS,
-			SAVE_FIELD_INVALID,       sel_fixed0,           0, MENU_SETTINGS },
-
-		  { CURRENT_POSITION_BASED, 4,
-			  GR_SETTINGS_SECTIONS,
-			  SAVE_FIELD_INVALID,       NULL,                  0, MENU_SETTINGS },
-
-		// Arpeggiator
-		  { GROUP_STATE_BASED,     1,
-			 GR_ARPEGGIATOR_ALL,
-			 SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_ARPEGGIATOR },
+    { GROUP_STATE_BASED, 1, GR_ARPEGGIATOR_ALL,   SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_ARPEGGIATOR },
+    { GROUP_STATE_BASED, 1, GR_TEMPO_SHARED,      SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_ARPEGGIATOR },
 };
 
-#define KPAGEGROUPRULES_COUNT (sizeof(kPageGroupRules)/sizeof(kPageGroupRules[0]))
+#define KPAGEGROUPRULES_COUNT (sizeof(kPageGroupRules) / sizeof(kPageGroupRules[0]))
+
 
 // -------------------------
 // Active lists cache per page

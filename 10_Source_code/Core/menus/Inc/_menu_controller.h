@@ -25,6 +25,7 @@
 // ---------------------
 typedef enum {
     CTRL_TEMPO_ALL = 1,
+    CTRL_TEMPO_SHARED,
 
     CTRL_MODIFY_CHANGE,
     CTRL_MODIFY_SPLIT,

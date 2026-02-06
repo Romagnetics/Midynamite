@@ -71,7 +71,7 @@ STATIC_PRODUCTION void update_channel_filter(save_field_t field, uint8_t bit_ind
 // -------------------------
 const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     //                                wrap     handler             handler_arg   group
-    [TEMPO_CURRENT_TEMPO]        = { NO_WRAP, update_value,            10,      CTRL_TEMPO_ALL },
+    [TEMPO_CURRENT_TEMPO]        = { NO_WRAP, update_value,            10,      CTRL_TEMPO_SHARED   },
     [TEMPO_CURRENTLY_SENDING]    = {   WRAP,  no_update,                0,      CTRL_TEMPO_ALL },
     [TEMPO_SEND_TO_MIDI_OUT]     = {   WRAP,  update_value,             1,      CTRL_TEMPO_ALL },
 
@@ -101,10 +101,6 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
 
     [TRANSPOSE_SEND_ORIGINAL]    = {   WRAP,  update_value,             1,      CTRL_TRANSPOSE_ALL },
     [TRANSPOSE_SENDING]          = {   WRAP,  no_update,                0,      0 },
-
-
-
-
 
 
     [SETTINGS_START_MENU]        = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL1 },

@@ -23,7 +23,7 @@ void ui_update_tempo(void)
         { ELEM_TEXT ,  0,                     TEXT_(target),           UI_6x8,   TXT_LEFT, LINE_1, CTRL_TEMPO_ALL },
         { ELEM_ITEM ,  TEMPO_SEND_TO_MIDI_OUT, TEXT_(midi_outs),       UI_6x8,   TXT_LEFT, LINE_2, CTRL_TEMPO_ALL },
         { ELEM_ITEM ,  TEMPO_CURRENTLY_SENDING,TEXT_(off_on),          UI_11x18, 15,      42     , CTRL_TEMPO_ALL },
-        { ELEM_ITEM ,  TEMPO_CURRENT_TEMPO,    TEXT_(zer_to_300),      UI_16x24, 80,      20     , CTRL_TEMPO_ALL },
+        { ELEM_ITEM ,  TEMPO_CURRENT_TEMPO,    TEXT_(zer_to_300),      UI_16x24, 80,      20     , CTRL_TEMPO_SHARED  },
         { ELEM_TEXT ,  0,                     TEXT_(bpm),              UI_6x8,   80,      48     , CTRL_TEMPO_ALL },
     };
 
