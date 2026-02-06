@@ -64,15 +64,15 @@ typedef enum {
     SEL_POSITION_BASED
 } selector_kind_t;
 
-typedef struct selector_def_s {
+typedef struct page_group_rule_s {
     selector_kind_t   kind;
-    uint8_t           cases;
+    uint8_t           case_count;
     const ctrl_group_id_t *groups;
     save_field_t      field;
     selector_compute_fn_t compute;
     uint8_t           cycle_on_press;
     menu_list_t       page;
-} selector_def_t;
+} page_group_rule_t;
 
 // save-based computes
 static uint8_t sel_mod_change_split() { return (save_get(MODIFY_CHANGE_OR_SPLIT)  == MIDI_MODIFY_SPLIT)    ? 1 : 0; }
@@ -81,7 +81,7 @@ static uint8_t sel_transpose_type()   { return (save_get(TRANSPOSE_TRANSPOSE_TYP
 static uint8_t sel_fixed0()           { return 0; }
 
 // Selector table (DATA only, page-driven)
-static const selector_def_t kSelectors[] = {
+static const page_group_rule_t kPageGroupRules[] = {
     // TEMPO: ALWAYS include CTRL_TEMPO_ALL
     { SEL_SAVE_BASED,     1,
       (const ctrl_group_id_t[]){ CTRL_TEMPO_ALL },
@@ -126,7 +126,7 @@ static const selector_def_t kSelectors[] = {
 		 SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_ARPEGGIATOR },
 };
 
-#define KSELECTORS_COUNT (sizeof(kSelectors)/sizeof(kSelectors[0]))
+#define KPAGEGROUPRULES_COUNT (sizeof(kPageGroupRules)/sizeof(kPageGroupRules[0]))
 
 // -------------------------
 // Active lists cache per page
@@ -170,22 +170,22 @@ static void build_union_for_groups_local(const ctrl_group_id_t *groups, uint8_t 
     out->count = count;
 }
 
-static uint8_t idx_from_save(save_field_t f, uint8_t cases) {
+static uint8_t idx_from_save(save_field_t f, uint8_t case_count) {
     int32_t v = (f != SAVE_FIELD_INVALID) ? save_get(f) : 0;
     if (v < 0) v = 0;
     uint8_t idx = (uint8_t)v;
-    return (idx < cases) ? idx : 0;
+    return (idx < case_count) ? idx : 0;
 }
 
-static const selector_def_t* first_pos_selector_for_page(menu_list_t page) {
-    for (size_t i = 0; i < KSELECTORS_COUNT; ++i)
-        if (kSelectors[i].page == page && kSelectors[i].kind == SEL_POSITION_BASED) return &kSelectors[i];
+static const page_group_rule_t* first_position_rule_for_page(menu_list_t page) {
+    for (size_t i = 0; i < KPAGEGROUPRULES_COUNT; ++i)
+        if (kPageGroupRules[i].page == page && kPageGroupRules[i].kind == SEL_POSITION_BASED) return &kPageGroupRules[i];
     return 0;
 }
 
-static uint8_t idx_from_position_selector(const selector_def_t *sel) {
+static uint8_t idx_from_position_selector(const page_group_rule_t *sel) {
     CtrlActiveList u = {0};
-    build_union_for_groups_local(sel->groups, sel->cases, &u);
+    build_union_for_groups_local(sel->groups, sel->case_count, &u);
 
     const uint8_t sel_row = menu_nav_get_select(sel->page);
     uint8_t cursor = 0;
@@ -196,7 +196,7 @@ static uint8_t idx_from_position_selector(const selector_def_t *sel) {
 
         if (sel_row < (uint8_t)(cursor + span)) {
             const ctrl_group_id_t gid = (ctrl_group_id_t)menu_controls[f].groups;
-            for (uint8_t k = 0; k < sel->cases; ++k)
+            for (uint8_t k = 0; k < sel->case_count; ++k)
                 if (sel->groups[k] == gid) return k;
             return 0;
         }
@@ -212,17 +212,17 @@ uint32_t ctrl_active_mask_for_page(menu_list_t page)
 {
     uint32_t mask = 0;
 
-    for (size_t i = 0; i < KSELECTORS_COUNT; ++i) {
-        const selector_def_t *sel = &kSelectors[i];
+    for (size_t i = 0; i < KPAGEGROUPRULES_COUNT; ++i) {
+        const page_group_rule_t *sel = &kPageGroupRules[i];
         if (sel->page != page) continue;
 
         uint8_t idx = 0;
         if (sel->kind == SEL_SAVE_BASED) {
-            idx = sel->compute ? sel->compute() : idx_from_save(sel->field, sel->cases);
+            idx = sel->compute ? sel->compute() : idx_from_save(sel->field, sel->case_count);
         } else { // SEL_POSITION_BASED
             idx = idx_from_position_selector(sel);
         }
-        if (idx >= sel->cases) idx = 0;
+        if (idx >= sel->case_count) idx = 0;
         mask |= (1u << (sel->groups[idx] - 1));
     }
     return mask;
@@ -230,17 +230,17 @@ uint32_t ctrl_active_mask_for_page(menu_list_t page)
 
 uint8_t build_union_for_position_page(menu_list_t page, CtrlActiveList *out)
 {
-    const selector_def_t *pos_sel = first_pos_selector_for_page(page);
+    const page_group_rule_t *pos_sel = first_position_rule_for_page(page);
     if (!pos_sel) return 0;
-    build_union_for_groups_local(pos_sel->groups, pos_sel->cases, out);
+    build_union_for_groups_local(pos_sel->groups, pos_sel->case_count, out);
     return 1;
 }
 
 menu_list_t page_for_ctrl_id(uint32_t id)
 {
-    for (size_t i = 0; i < KSELECTORS_COUNT; ++i) {
-        const selector_def_t *sel = &kSelectors[i];
-        for (uint8_t k = 0; k < sel->cases; ++k) {
+    for (size_t i = 0; i < KPAGEGROUPRULES_COUNT; ++i) {
+        const page_group_rule_t *sel = &kPageGroupRules[i];
+        for (uint8_t k = 0; k < sel->case_count; ++k) {
             if (sel->groups[k] == id) return sel->page;
         }
     }
@@ -297,13 +297,13 @@ uint8_t menus_cycle_on_press(menu_list_t page)
     if (!gid) return 0;
 
     // Find save-based selector that owns this gid and cycles on press
-    for (size_t i = 0; i < KSELECTORS_COUNT; ++i) {
-        const selector_def_t *sel = &kSelectors[i];
+    for (size_t i = 0; i < KPAGEGROUPRULES_COUNT; ++i) {
+        const page_group_rule_t *sel = &kPageGroupRules[i];
         if (sel->page != page) continue;
         if (sel->kind != SEL_SAVE_BASED) continue;
         if (!sel->cycle_on_press) continue;
 
-        for (uint8_t k = 0; k < sel->cases; ++k) {
+        for (uint8_t k = 0; k < sel->case_count; ++k) {
             if (sel->groups[k] == gid) {
                 if (sel->field != SAVE_FIELD_INVALID) {
                     save_modify_u8(sel->field, SAVE_MODIFY_INCREMENT, 0);
