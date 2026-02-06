@@ -60,8 +60,8 @@ void cont_update_menu(menu_list_t field){
 // ==============================
 
 typedef enum {
-    SEL_SAVE_BASED = 0,
-    SEL_POSITION_BASED
+    GROUP_STATE_BASED = 0,
+    CURRENT_POSITION_BASED
 } selector_kind_t;
 
 typedef struct page_group_rule_s {
@@ -80,50 +80,68 @@ static uint8_t sel_mod_vel_type()     { return (save_get(MODIFY_VELOCITY_TYPE)  
 static uint8_t sel_transpose_type()   { return (save_get(TRANSPOSE_TRANSPOSE_TYPE)== MIDI_TRANSPOSE_SCALED) ? 1 : 0; }
 static uint8_t sel_fixed0()           { return 0; }
 
+// -------------------------
+// Group-id lists (avoid compound literals in static tables)
+// -------------------------
+static const ctrl_group_id_t GR_TEMPO_ALL[]        = { CTRL_TEMPO_ALL };
+static const ctrl_group_id_t GR_MODIFY_ALL[]       = { CTRL_MODIFY_ALL };
+static const ctrl_group_id_t GR_MODIFY_TYPE[]      = { CTRL_MODIFY_CHANGE, CTRL_MODIFY_SPLIT };
+static const ctrl_group_id_t GR_MODIFY_VEL_TYPE[]  = { CTRL_MODIFY_VEL_CHANGED, CTRL_MODIFY_VEL_FIXED };
+
+static const ctrl_group_id_t GR_TRANSPOSE_ALL[]    = { CTRL_TRANSPOSE_ALL };
+static const ctrl_group_id_t GR_TRANSPOSE_TYPE[]   = { CTRL_TRANSPOSE_SHIFT, CTRL_TRANSPOSE_SCALED };
+
+static const ctrl_group_id_t GR_SETTINGS_ALWAYS[]  = { CTRL_SETTINGS_ALWAYS };
+static const ctrl_group_id_t GR_SETTINGS_SECTIONS[] = {
+    CTRL_SETTINGS_GLOBAL1,
+    CTRL_SETTINGS_GLOBAL2,
+    CTRL_SETTINGS_FILTER,
+    CTRL_SETTINGS_ABOUT
+};
+
+static const ctrl_group_id_t GR_ARPEGGIATOR_ALL[]  = { CTRL_ARPEGGIATOR_ALL };
+
 // Selector table (DATA only, page-driven)
 static const page_group_rule_t kPageGroupRules[] = {
     // TEMPO: ALWAYS include CTRL_TEMPO_ALL
-    { SEL_SAVE_BASED,     1,
-      (const ctrl_group_id_t[]){ CTRL_TEMPO_ALL },
-      SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_TEMPO },
-
+		{ GROUP_STATE_BASED,     1,
+		  GR_TEMPO_ALL,
+		  SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_TEMPO },
     // MODIFY: ALWAYS + type splits
-    { SEL_SAVE_BASED,     1,
-      (const ctrl_group_id_t[]){ CTRL_MODIFY_ALL },
-      SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_MODIFY },
+		 { GROUP_STATE_BASED,     1,
+		    GR_MODIFY_ALL,
+		    SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_MODIFY },
 
-    { SEL_SAVE_BASED,     2,
-      (const ctrl_group_id_t[]){ CTRL_MODIFY_CHANGE, CTRL_MODIFY_SPLIT },
-      MODIFY_CHANGE_OR_SPLIT,  sel_mod_change_split, 1, MENU_MODIFY },
+		  { GROUP_STATE_BASED,     2,
+		    GR_MODIFY_TYPE,
+		    MODIFY_CHANGE_OR_SPLIT,  sel_mod_change_split, 1, MENU_MODIFY },
 
-    { SEL_SAVE_BASED,     2,
-      (const ctrl_group_id_t[]){ CTRL_MODIFY_VEL_CHANGED, CTRL_MODIFY_VEL_FIXED },
-      MODIFY_VELOCITY_TYPE,    sel_mod_vel_type,     1, MENU_MODIFY },
+		  { GROUP_STATE_BASED,     2,
+		    GR_MODIFY_VEL_TYPE,
+		    MODIFY_VELOCITY_TYPE,    sel_mod_vel_type,     1, MENU_MODIFY },
 
-    // TRANSPOSE: ALWAYS + type split
-    { SEL_SAVE_BASED,     1,
-      (const ctrl_group_id_t[]){ CTRL_TRANSPOSE_ALL },
-      SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_TRANSPOSE },
+          // TRANSPOSE: ALWAYS + type split
+		  { GROUP_STATE_BASED,     1,
+			GR_TRANSPOSE_ALL,
+			SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_TRANSPOSE },
 
-    { SEL_SAVE_BASED,     2,
-      (const ctrl_group_id_t[]){ CTRL_TRANSPOSE_SHIFT, CTRL_TRANSPOSE_SCALED },
-      TRANSPOSE_TRANSPOSE_TYPE, sel_transpose_type,   1, MENU_TRANSPOSE },
+		  { GROUP_STATE_BASED,     2,
+			GR_TRANSPOSE_TYPE,
+			TRANSPOSE_TRANSPOSE_TYPE, sel_transpose_type,   1, MENU_TRANSPOSE },
 
+          // SETTINGS: ALWAYS + page-position selector
+		  { GROUP_STATE_BASED,     1,
+			GR_SETTINGS_ALWAYS,
+			SAVE_FIELD_INVALID,       sel_fixed0,           0, MENU_SETTINGS },
 
-
-    // SETTINGS: ALWAYS + page-position selector
-    { SEL_SAVE_BASED,     1,
-      (const ctrl_group_id_t[]){ CTRL_SETTINGS_ALWAYS },
-      SAVE_FIELD_INVALID,       sel_fixed0,           0, MENU_SETTINGS },
-
-    { SEL_POSITION_BASED, 4,
-      (const ctrl_group_id_t[]){ CTRL_SETTINGS_GLOBAL1, CTRL_SETTINGS_GLOBAL2, CTRL_SETTINGS_FILTER, CTRL_SETTINGS_ABOUT },
-      SAVE_FIELD_INVALID,       NULL,                  0, MENU_SETTINGS },
+		  { CURRENT_POSITION_BASED, 4,
+			  GR_SETTINGS_SECTIONS,
+			  SAVE_FIELD_INVALID,       NULL,                  0, MENU_SETTINGS },
 
 		// Arpeggiator
-		{ SEL_SAVE_BASED,     1,
-		(const ctrl_group_id_t[]){ CTRL_ARPEGGIATOR_ALL },
-		 SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_ARPEGGIATOR },
+		  { GROUP_STATE_BASED,     1,
+			 GR_ARPEGGIATOR_ALL,
+			 SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_ARPEGGIATOR },
 };
 
 #define KPAGEGROUPRULES_COUNT (sizeof(kPageGroupRules)/sizeof(kPageGroupRules[0]))
@@ -179,7 +197,7 @@ static uint8_t idx_from_save(save_field_t f, uint8_t case_count) {
 
 static const page_group_rule_t* first_position_rule_for_page(menu_list_t page) {
     for (size_t i = 0; i < KPAGEGROUPRULES_COUNT; ++i)
-        if (kPageGroupRules[i].page == page && kPageGroupRules[i].kind == SEL_POSITION_BASED) return &kPageGroupRules[i];
+        if (kPageGroupRules[i].page == page && kPageGroupRules[i].kind == CURRENT_POSITION_BASED) return &kPageGroupRules[i];
     return 0;
 }
 
@@ -217,9 +235,9 @@ uint32_t ctrl_active_mask_for_page(menu_list_t page)
         if (sel->page != page) continue;
 
         uint8_t idx = 0;
-        if (sel->kind == SEL_SAVE_BASED) {
+        if (sel->kind == GROUP_STATE_BASED) {
             idx = sel->compute ? sel->compute() : idx_from_save(sel->field, sel->case_count);
-        } else { // SEL_POSITION_BASED
+        } else { // CURRENT_POSITION_BASED
             idx = idx_from_position_selector(sel);
         }
         if (idx >= sel->case_count) idx = 0;
@@ -300,7 +318,7 @@ uint8_t menus_cycle_on_press(menu_list_t page)
     for (size_t i = 0; i < KPAGEGROUPRULES_COUNT; ++i) {
         const page_group_rule_t *sel = &kPageGroupRules[i];
         if (sel->page != page) continue;
-        if (sel->kind != SEL_SAVE_BASED) continue;
+        if (sel->kind != GROUP_STATE_BASED) continue;
         if (!sel->cycle_on_press) continue;
 
         for (uint8_t k = 0; k < sel->case_count; ++k) {
