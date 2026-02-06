@@ -17,6 +17,8 @@ static uint8_t s_prev_selects[AMOUNT_OF_MENUS] = {0};
 
 uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
 
+static volatile uint8_t s_ui_reload = 0;
+
 // -------------------------
 // Encoder & value helpers (logic-agnostic)
 // -------------------------
@@ -49,6 +51,7 @@ STATIC_PRODUCTION void update_value(save_field_t field, uint8_t multiplier)
 
     if (u32_fields[field]) { (void)save_modify_u32(field, SAVE_MODIFY_SET, (uint32_t)next); }
     else                  { (void)save_modify_u8 (field, SAVE_MODIFY_SET, (uint8_t) next); }
+    s_ui_reload = 1;
 }
 
 STATIC_PRODUCTION void update_contrast(save_field_t f, uint8_t step) {
@@ -64,6 +67,7 @@ STATIC_PRODUCTION void update_channel_filter(save_field_t field, uint8_t bit_ind
     uint32_t mask = (uint32_t)save_get(field);
     mask ^= (1UL << bit_index);
     (void)save_modify_u32(field, SAVE_MODIFY_SET, mask);
+    s_ui_reload = 1;
 }
 
 // -------------------------
@@ -352,10 +356,13 @@ static uint8_t has_menu_changed(menu_list_t page, uint8_t current_select)
 {
     const uint8_t old_select  = (page < AMOUNT_OF_MENUS) ? s_prev_selects[page] : 0;
     const uint8_t sel_changed = (page < AMOUNT_OF_MENUS) && (old_select != current_select);
-    const uint8_t data_changed = any_field_changed();
+    const uint8_t data_changed = (uint8_t)(any_field_changed() | s_ui_reload);
 
     if (page < AMOUNT_OF_MENUS) s_menu_selects[page] = current_select;
-    if (data_changed) clear_all_field_changed();
+    if (data_changed) {
+        clear_all_field_changed();
+        s_ui_reload = 0;
+    }
 
     return (uint8_t)(sel_changed | data_changed);
 }
@@ -372,14 +379,12 @@ static uint8_t menu_nav_end_auto(menu_list_t page)
     return changed;
 }
 
-void update_menu(menu_list_t menu_page)
+void update_menu()
 {
-    if (menu_page >= AMOUNT_OF_MENUS) menu_page = 0;
+    menu_list_t page = (menu_list_t)get_current_menu(CURRENT_MENU);
+    if (page >= AMOUNT_OF_MENUS) page = 0;
 
-    // Drive nav state from data (no menu-specific logic)
-    menu_nav_begin_and_update(menu_page);
-
-    cont_update_menu(menu_page);
-
-    (void)menu_nav_end_auto(menu_page);
+    menu_nav_begin_and_update(page);
+    cont_update_menu(page);
+    (void)menu_nav_end_auto(page);
 }

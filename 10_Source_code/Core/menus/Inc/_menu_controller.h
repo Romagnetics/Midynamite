@@ -117,7 +117,7 @@ void     save_mark_all_changed(void);
 uint8_t  menu_nav_get_select(menu_list_t field);
 
 int8_t   filter_selected_bits(save_field_t f); // (if implemented elsewhere)
-void     update_menu(menu_list_t menu);
+void     update_menu();
 
 #ifdef UNIT_TEST
 void no_update(save_field_t field, uint8_t arg);
