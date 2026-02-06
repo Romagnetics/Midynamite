@@ -103,8 +103,6 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     [TRANSPOSE_SENDING]          = {   WRAP,  no_update,                0,      0 },
 
 
-    [ARPEGGIATOR_INTERVAL]          = {   WRAP,  no_update,                0,      CTRL_ARPEGGIATOR_ALL },
-    [ARPEGGIATOR_PATTERN]          = {   WRAP,  no_update,                0,      CTRL_ARPEGGIATOR_ALL },
 
 
 
@@ -120,6 +118,10 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     [SETTINGS_FILTERED_CH]       = {   WRAP,  update_channel_filter,    1,      CTRL_SETTINGS_FILTER },
 
     [SETTINGS_ABOUT]             = { NO_WRAP, shadow_select,            0,      CTRL_SETTINGS_ABOUT },
+
+    [ARPEGGIATOR_INTERVAL]          = {   WRAP,  no_update,                0,      CTRL_ARPEGGIATOR_ALL },
+    [ARPEGGIATOR_PATTERN]          = {   WRAP,  no_update,                0,      CTRL_ARPEGGIATOR_ALL },
+
 };
 
 // -------------------------
