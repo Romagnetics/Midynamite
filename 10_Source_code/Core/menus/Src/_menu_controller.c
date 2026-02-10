@@ -100,7 +100,7 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     [MODIFY_VEL_PLUS_MINUS]      = { NO_WRAP, update_value,            10,      CTRL_MODIFY_VEL_CHANGED },
     [MODIFY_VEL_ABSOLUTE]        = { NO_WRAP, update_value,            10,      CTRL_MODIFY_VEL_FIXED },
 
-    [MODIFY_SENDING]             = {   WRAP,  no_update,                0,      CTRL_MODIFY_ALL },
+    [MODIFY_CURRENTLY_SENDING]             = {   WRAP,  no_update,                0,      CTRL_MODIFY_ALL },
 
     [TRANSPOSE_TRANSPOSE_TYPE]   = {   WRAP,  no_update,                0,      0 },
     [TRANSPOSE_MIDI_SHIFT_VALUE] = { NO_WRAP, update_value,            12,      CTRL_TRANSPOSE_SHIFT },
@@ -110,7 +110,9 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     [TRANSPOSE_TRANSPOSE_SCALE]  = {   WRAP,  update_value,             1,      CTRL_TRANSPOSE_SCALED },
 
     [TRANSPOSE_SEND_ORIGINAL]    = {   WRAP,  update_value,             1,      CTRL_TRANSPOSE_ALL },
-    [TRANSPOSE_SENDING]          = {   WRAP,  no_update,                0,      0 },
+    [TRANSPOSE_CURRENTLY_SENDING]          = {   WRAP,  no_update,                0,      0 },
+
+    [ARPEGGIATOR_CURRENTLY_SENDING] = {   WRAP,  no_update,                0,      CTRL_ARPEGGIATOR_ALL  },
 
 
     [SETTINGS_START_MENU]        = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL1 },
@@ -124,9 +126,6 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     [SETTINGS_FILTERED_CH]       = {   WRAP,  update_channel_filter,    1,      CTRL_SETTINGS_FILTER },
 
     [SETTINGS_ABOUT]             = { NO_WRAP, shadow_select,            0,      CTRL_SETTINGS_ABOUT },
-
-    [ARPEGGIATOR_INTERVAL]          = {   WRAP,  no_update,                0,      CTRL_ARPEGGIATOR_ALL },
-    [ARPEGGIATOR_PATTERN]          = {   WRAP,  no_update,                0,      CTRL_ARPEGGIATOR_ALL },
 
 };
 

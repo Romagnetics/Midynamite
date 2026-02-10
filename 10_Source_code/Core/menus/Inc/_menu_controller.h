@@ -94,10 +94,10 @@ static inline uint32_t flag_for_menu(menu_list_t m) {
 static inline save_field_t sending_field_for_menu(menu_list_t m) {
     switch (m) {
         case MENU_TEMPO:     return TEMPO_CURRENTLY_SENDING;
-        case MENU_MODIFY:    return MODIFY_SENDING;
-        case MENU_TRANSPOSE: return TRANSPOSE_SENDING;
+        case MENU_MODIFY:    return MODIFY_CURRENTLY_SENDING;
+        case MENU_TRANSPOSE: return TRANSPOSE_CURRENTLY_SENDING;
         case MENU_SETTINGS:  return SAVE_FIELD_INVALID;
-        case MENU_ARPEGGIATOR: return SAVE_FIELD_INVALID;
+        case MENU_ARPEGGIATOR: return ARPEGGIATOR_CURRENTLY_SENDING;
         default:             return SAVE_FIELD_INVALID;
     }
 }

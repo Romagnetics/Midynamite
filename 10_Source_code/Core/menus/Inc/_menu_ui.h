@@ -16,6 +16,7 @@
 #define LINE_3 35
 #define LINE_4 45
 #define B_LINE LINE_4 + 3
+#define SCREEN_BOTTOM 64
 
 #define TXT_LEFT 5
 

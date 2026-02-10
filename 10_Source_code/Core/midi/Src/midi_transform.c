@@ -145,8 +145,8 @@ void pipeline_start(midi_note *midi_msg) {
     if (is_channel_blocked(status)) return;
 
     // Nothing active: do only MIDI/USB thru
-    if (save_get(MODIFY_SENDING) == 0 &&
-        save_get(TRANSPOSE_SENDING)   == 0) {
+    if (save_get(MODIFY_CURRENTLY_SENDING) == 0 &&
+        save_get(TRANSPOSE_CURRENTLY_SENDING)   == 0) {
 
         if (save_get(SETTINGS_MIDI_THRU) == 1) {
             send_midi_out(midi_msg, length);
@@ -160,10 +160,10 @@ void pipeline_start(midi_note *midi_msg) {
     }
 
     // Send to appropriate pipeline
-    if (save_get(MODIFY_SENDING) == 1) {
+    if (save_get(MODIFY_CURRENTLY_SENDING) == 1) {
         pipeline_midi_modify(midi_msg);
         return;
-    } else if (save_get(TRANSPOSE_SENDING) == 1) {
+    } else if (save_get(TRANSPOSE_CURRENTLY_SENDING) == 1) {
         pipeline_midi_transpose(midi_msg);
         return;
     }
@@ -372,7 +372,7 @@ static void midi_pitch_shift(midi_note *midi_msg) {
 // Transpose pipeline
 // ---------------------
 void pipeline_midi_transpose(midi_note *midi_msg) {
-    if (save_get(TRANSPOSE_SENDING) == 0){
+    if (save_get(TRANSPOSE_CURRENTLY_SENDING) == 0){
         pipeline_final(midi_msg, 3);
         return;
     }

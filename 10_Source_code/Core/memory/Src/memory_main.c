@@ -30,7 +30,7 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [MODIFY_VEL_PLUS_MINUS]      = {    -80,         80,          0 },
     [MODIFY_VEL_ABSOLUTE]        = {      0,        127,         64 },
 
-    [MODIFY_SENDING]             = {      0,          1,          0 },
+    [MODIFY_CURRENTLY_SENDING]             = {      0,          1,          0 },
 
     [TRANSPOSE_TRANSPOSE_TYPE]   = {      0,          1,          0 },
     [TRANSPOSE_MIDI_SHIFT_VALUE] = {    -36,         36,          0 },
@@ -38,9 +38,9 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [TRANSPOSE_INTERVAL]         = {      0,          9,          0 },
     [TRANSPOSE_TRANSPOSE_SCALE]  = {      0,          6,          0 },
     [TRANSPOSE_SEND_ORIGINAL]    = {      0,          1,          0 },
-    [TRANSPOSE_SENDING]          = {      0,          1,          0 },
+    [TRANSPOSE_CURRENTLY_SENDING]          = {      0,          1,          0 },
 
-	[ARPEGGIATOR_SENDING]        = {      0,       1,          0 },
+	[ARPEGGIATOR_CURRENTLY_SENDING]        = {      0,       1,          0 },
 	[ARPEGGIATOR_INTERVAL]       = {      4,       32,          4 },
 	[ARPEGGIATOR_PATTERN]        = {      0,       10,          0 },
 	[ARPEGGIATOR_GATE]        = {      10,       100,          100 },
