@@ -11,7 +11,7 @@
 void cont_update_tempo() {
   //BPM recalculation
   const uint32_t bpm = save_get(TEMPO_CURRENT_TEMPO);
-  const uint32_t rate = bpm ? (6000000u / (bpm * 24u)) : 0u;
+  const uint32_t rate = bpm ? (6000000u / (bpm * 48u)) : 0u;
   save_modify_u32(TEMPO_TEMPO_CLICK_RATE, SAVE_MODIFY_SET, rate);
 }
 

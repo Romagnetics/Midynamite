@@ -9,6 +9,15 @@
 #include "midi_usb.h"
 
 void send_midi_tempo_out(int32_t tempo_click_rate, uint8_t send_to_midi_out){
+	TIM2->ARR = tempo_click_rate;
+
+    static uint8_t div2 = 0;
+    div2 ^= 1u;
+    if (div2) {
+        return;
+    }
+
+
 	uint8_t clock_tick = 0xF8;
 
 	static UART_HandleTypeDef *UART_list_tempo[2];
@@ -21,7 +30,6 @@ void send_midi_tempo_out(int32_t tempo_click_rate, uint8_t send_to_midi_out){
             HAL_UART_Transmit(UART_list_tempo[i], &clock_tick, 1, 1000);
         	}
     	}
-	TIM2->ARR = tempo_click_rate;
     }
 
 void mt_start_stop(TIM_HandleTypeDef *timer) {
