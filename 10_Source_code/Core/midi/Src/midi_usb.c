@@ -45,12 +45,11 @@ void send_usb_midi_message(uint8_t *midi_message, uint8_t length) {
 		}
 
 
-		uint8_t packetsBuffer[4] = {
-			(0x00 << 4) | cin,  // Cable 0
-			midi_message[0],
-			(length > 1) ? midi_message[1] : 0,
-			(length > 2) ? midi_message[2] : 0
-		};
+	    static uint8_t packetsBuffer[4];
+	    packetsBuffer[0] = (0x00u << 4) | cin;
+	    packetsBuffer[1] = midi_message[0];
+	    packetsBuffer[2] = (length > 1) ? midi_message[1] : 0;
+	    packetsBuffer[3] = (length > 2) ? midi_message[2] : 0;
 
 		USBD_MIDI_SendPackets(&hUsbDeviceFS, packetsBuffer, 4);
     }

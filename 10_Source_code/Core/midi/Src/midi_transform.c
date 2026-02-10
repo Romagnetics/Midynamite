@@ -449,8 +449,9 @@ void send_midi_out(midi_note *midi_message_raw, uint8_t length) {
 }
 
 void send_usb_midi_out(midi_note *msg, uint8_t length) {
-    if (save_get(SETTINGS_SEND_USB) == 0)
+    if (save_get(SETTINGS_SEND_USB) == USB_MIDI_OFF){
         return;
+    }
 
     uint8_t bytes[3] = {
         msg->status,

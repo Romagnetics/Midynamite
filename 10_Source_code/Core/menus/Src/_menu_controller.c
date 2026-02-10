@@ -62,10 +62,16 @@ STATIC_PRODUCTION void update_contrast(save_field_t f, uint8_t step) {
 STATIC_PRODUCTION void update_channel_filter(save_field_t field, uint8_t bit_index)
 {
     if (bit_index > 15) return;
+
     int8_t step = encoder_read_step(&htim4);
     if (step == 0) return;
+
     uint32_t mask = (uint32_t)save_get(field);
-    mask ^= (1UL << bit_index);
+    const uint32_t bit = (1UL << bit_index);
+
+    if (step > 0)  mask |= bit;   // clockwise => enable channel
+    else           mask &= ~bit;  // counterclockwise => disable channel
+
     (void)save_modify_u32(field, SAVE_MODIFY_SET, mask);
     s_ui_reload = 1;
 }
