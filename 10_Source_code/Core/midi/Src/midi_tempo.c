@@ -20,7 +20,7 @@ void send_midi_tempo_out(int32_t tempo_click_rate, uint8_t send_to_midi_out){
 
 	uint8_t clock_tick = 0xF8;
 
-	static UART_HandleTypeDef *UART_list_tempo[2];
+	UART_HandleTypeDef *UART_list_tempo[2];
 	list_of_UART_to_send_to(send_to_midi_out, UART_list_tempo);
 
 

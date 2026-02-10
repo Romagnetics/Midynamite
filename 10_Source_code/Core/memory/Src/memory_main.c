@@ -40,7 +40,7 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [TRANSPOSE_SEND_ORIGINAL]    = {      0,          1,          0 },
     [TRANSPOSE_SENDING]          = {      0,          1,          0 },
 
-    [SETTINGS_START_MENU]        = {      0,          3,          0 },
+    [SETTINGS_START_MENU]        = {      0,          AMOUNT_OF_MENUS-1,          0 },
     [SETTINGS_SEND_USB]          = {      0,          1,          0 },
     [SETTINGS_BRIGHTNESS]        = {      0,          9,          6 },
     [SETTINGS_MIDI_THRU]         = {      0,          1,          0 },
