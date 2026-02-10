@@ -8,6 +8,7 @@
 #include "cmsis_os.h" //For osDelay
 #include "main.h" // Timer
 #include "menus.h"
+#include "_menu_controller.h" // For menu_field_row_span
 #include "_menu_ui.h" // menu change functions
 #include "midi_tempo.h" //mt_start_stop
 #include "screen_driver.h" //Font
@@ -152,9 +153,6 @@ CtrlActiveList* list_for_page(menu_list_t page) {
 // -------------------------
 // Local helpers (private to menus.c)
 // -------------------------
-static inline uint8_t is_bits_item_local(save_field_t f) {
-    return (f == SETTINGS_FILTERED_CH) ? 1u : 0u;
-}
 
 static void build_union_for_groups_local(const ctrl_group_id_t *groups, uint8_t n_groups, CtrlActiveList *out) {
     uint8_t count = 0;
@@ -189,7 +187,7 @@ static uint8_t idx_from_position_selector(const page_group_rule_t *sel) {
 
     for (uint8_t i = 0; i < u.count; ++i) {
         const save_field_t f = (save_field_t)u.fields_idx[i];
-        const uint8_t span  = is_bits_item_local(f) ? 16u : 1u;
+        const uint8_t span = menu_field_row_span(f);
 
         if (sel_row < (uint8_t)(cursor + span)) {
             const ctrl_group_id_t gid = (ctrl_group_id_t)menu_controls[f].groups;
@@ -257,7 +255,7 @@ uint8_t menus_cycle_on_press(menu_list_t page)
         uint8_t cursor = 0;
         for (uint8_t i = 0; i < u.count; ++i) {
             const save_field_t f = (save_field_t)u.fields_idx[i];
-            const uint8_t span  = is_bits_item_local(f) ? 16u : 1u;
+            const uint8_t span = menu_field_row_span(f);
             if (row < (uint8_t)(cursor + span)) {
                 gid = menu_controls[f].groups;
                 break;
@@ -282,7 +280,7 @@ uint8_t menus_cycle_on_press(menu_list_t page)
         uint8_t cursor = 0;
         for (uint8_t i = 0; i < list.count; ++i) {
             const save_field_t f = (save_field_t)list.fields_idx[i];
-            const uint8_t span  = is_bits_item_local(f) ? 16u : 1u;
+            const uint8_t span = menu_field_row_span(f);
             if (row < (uint8_t)(cursor + span)) {
                 gid = menu_controls[f].groups;
                 break;

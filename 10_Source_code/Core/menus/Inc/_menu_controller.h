@@ -103,6 +103,19 @@ static inline save_field_t sending_field_for_menu(menu_list_t m) {
 }
 
 // ---------------------
+// Row_span helper
+// ---------------------
+static inline uint8_t menu_field_row_span(save_field_t f)
+{
+    switch (f) {
+        case SETTINGS_FILTERED_CH:
+            return 16u;
+        default:
+            return 1u;
+    }
+}
+
+// ---------------------
 // UI API
 // ---------------------
 void     select_press_menu_change(menu_list_t sel_field);

@@ -131,14 +131,14 @@ static inline uint32_t bit(ctrl_group_id_t id) { return (1u << (id - 1)); }
 static inline uint32_t flag_from_id(uint32_t id) { return (id >= 1 && id <= 31) ? (1u << (id - 1)) : 0u; }
 
 static inline uint8_t is_bits_item(save_field_t f) {
-    return menu_controls[f].handler == update_channel_filter;
+    return (menu_field_row_span(f) == 16u);
 }
 
 static uint8_t rows_for_list(const CtrlActiveList *list) {
     uint8_t rows = 0;
     for (uint8_t i = 0; i < list->count; ++i) {
         save_field_t f = (save_field_t)list->fields_idx[i];
-        rows += is_bits_item(f) ? 16 : 1;
+        rows += menu_field_row_span(f);
     }
     return rows;
 }
@@ -251,7 +251,7 @@ static inline NavSel nav_selection(menu_list_t page)
         uint8_t cursor = 0;
         for (uint8_t i = 0; i < u.count; ++i) {
             const save_field_t f = (save_field_t)u.fields_idx[i];
-            const uint8_t span  = is_bits_item(f) ? 16u : 1u;
+            const uint8_t span = menu_field_row_span(f);
 
             if (s.row < (uint8_t)(cursor + span)) {
                 s.field   = f;
@@ -271,7 +271,7 @@ static inline NavSel nav_selection(menu_list_t page)
 
     for (uint8_t i = 0; i < list->count; ++i) {
         const save_field_t f = (save_field_t)list->fields_idx[i];
-        const uint8_t span  = is_bits_item(f) ? 16u : 1u;
+        const uint8_t span = menu_field_row_span(f);
         if (s.row < (uint8_t)(row_cursor + span)) {
             s.field   = f;
             s.is_bits = (span == 16u);
