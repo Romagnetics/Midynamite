@@ -40,6 +40,17 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [TRANSPOSE_SEND_ORIGINAL]    = {      0,          1,          0 },
     [TRANSPOSE_SENDING]          = {      0,          1,          0 },
 
+	[ARPEGGIATOR_SENDING]        = {      0,       1,          0 },
+	[ARPEGGIATOR_INTERVAL]       = {      4,       32,          4 },
+	[ARPEGGIATOR_PATTERN]        = {      0,       10,          0 },
+	[ARPEGGIATOR_GATE]        = {      10,       100,          100 },
+	[ARPEGGIATOR_OCTAVES]        = {      1,       5,          1 },
+	[ARPEGGIATOR_LATCH]        = {      0,       1,          0 },
+	[ARPEGGIATOR_SWING]        = {      0,       100,          50 },
+	[ARPEGGIATOR_RETRIGGER]        = {      0,       1,          0 },
+	[ARPEGGIATOR_LENGTH]   = {      1,       8,          8 },
+	[ARPEGGIATOR_NOTES]  = {      1,       0b11111111,    0b11111111 },
+
     [SETTINGS_START_MENU]        = {      0,          AMOUNT_OF_MENUS-1,          0 },
     [SETTINGS_SEND_USB]          = {      0,          1,          0 },
     [SETTINGS_BRIGHTNESS]        = {      0,          9,          6 },
