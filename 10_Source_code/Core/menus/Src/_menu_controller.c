@@ -158,7 +158,7 @@ static uint8_t rows_for_list(const CtrlActiveList *list) {
 // -------------------------
 // Build active list (pure logic)
 // -------------------------
-static void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out)
+void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out)
 {
     uint8_t count = 0;
 

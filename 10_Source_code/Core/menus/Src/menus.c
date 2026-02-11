@@ -65,65 +65,101 @@ typedef enum {
     CURRENT_POSITION_BASED
 } selector_kind_t;
 
+#define GID_BIT(gid)   ( ((uint32_t)(gid) >= 1u && (uint32_t)(gid) <= 31u) ? (1u << ((uint32_t)(gid) - 1u)) : 0u )
+
 typedef struct page_group_rule_s {
     selector_kind_t   kind;
     uint8_t           case_count;
-    const ctrl_group_id_t *groups;
+
+    const ctrl_group_id_t *case_groups;   // length = case_count (used for position mapping)
+    const uint32_t        *case_masks;    // length = case_count (groups enabled per case)
+
     save_field_t      field;
     selector_compute_fn_t compute;
     uint8_t           cycle_on_press;
     menu_list_t       page;
+
+    uint8_t           default_idx;        // fallback when a gid isn't in case_groups
 } page_group_rule_t;
 
 // save-based computes
-static uint8_t sel_mod_change_split() { return (save_get(MODIFY_CHANGE_OR_SPLIT)  == MIDI_MODIFY_SPLIT)    ? 1 : 0; }
-static uint8_t sel_mod_vel_type()     { return (save_get(MODIFY_VELOCITY_TYPE)    == MIDI_MODIFY_FIXED_VEL) ? 1 : 0; }
-static uint8_t sel_transpose_type()   { return (save_get(TRANSPOSE_TRANSPOSE_TYPE)== MIDI_TRANSPOSE_SCALED) ? 1 : 0; }
+static uint8_t sel_mod_change_split() { return (save_get(MODIFY_CHANGE_OR_SPLIT)   == MIDI_MODIFY_SPLIT)      ? 1u : 0u; }
+static uint8_t sel_mod_vel_type()     { return (save_get(MODIFY_VELOCITY_TYPE)     == MIDI_MODIFY_FIXED_VEL) ? 1u : 0u; }
+static uint8_t sel_transpose_type()   { return (save_get(TRANSPOSE_TRANSPOSE_TYPE) == MIDI_TRANSPOSE_SCALED) ? 1u : 0u; }
 static uint8_t sel_fixed0()           { return 0u; }
 
 // -------------------------
-// Group-id lists (avoid compound literals in static tables)
+// Case group ids + masks
 // -------------------------
-static const ctrl_group_id_t GR_TEMPO_ALL[]        = { CTRL_TEMPO_ALL, CTRL_SHARED_TEMPO, 0};
 
-static const ctrl_group_id_t GR_MODIFY_ALL[]       = { CTRL_MODIFY_ALL };
-static const ctrl_group_id_t GR_MODIFY_TYPE[]      = { CTRL_MODIFY_CHANGE, CTRL_MODIFY_SPLIT };
-static const ctrl_group_id_t GR_MODIFY_VEL_TYPE[]  = { CTRL_MODIFY_VEL_CHANGED, CTRL_MODIFY_VEL_FIXED };
+// TEMPO
+static const uint32_t MSK_TEMPO_CASES[] = {
+    GID_BIT(CTRL_TEMPO_ALL) | GID_BIT(CTRL_SHARED_TEMPO)
+};
+static const ctrl_group_id_t GR_TEMPO_CASE_GROUPS[] = { CTRL_TEMPO_ALL };
 
-static const ctrl_group_id_t GR_TRANSPOSE_ALL[]    = { CTRL_TRANSPOSE_ALL };
-static const ctrl_group_id_t GR_TRANSPOSE_TYPE[]   = { CTRL_TRANSPOSE_SHIFT, CTRL_TRANSPOSE_SCALED };
+// MODIFY
+static const uint32_t MSK_MODIFY_ALL_CASES[] = { GID_BIT(CTRL_MODIFY_ALL) };
+static const ctrl_group_id_t GR_MODIFY_ALL_CASE_GROUPS[] = { CTRL_MODIFY_ALL };
 
-static const ctrl_group_id_t GR_ARPEGGIATOR_PAGE_1[]  = { CTRL_ARPEGGIATOR_PAGE_1,  CTRL_SHARED_TEMPO, 0 };
+static const ctrl_group_id_t GR_MODIFY_TYPE_CASE_GROUPS[] = { CTRL_MODIFY_CHANGE, CTRL_MODIFY_SPLIT };
+static const uint32_t MSK_MODIFY_TYPE_CASES[] = { GID_BIT(CTRL_MODIFY_CHANGE), GID_BIT(CTRL_MODIFY_SPLIT) };
 
-static const ctrl_group_id_t GR_SETTINGS_ALWAYS[]  = { CTRL_SETTINGS_ALWAYS };
+static const ctrl_group_id_t GR_MODIFY_VEL_CASE_GROUPS[]  = { CTRL_MODIFY_VEL_CHANGED, CTRL_MODIFY_VEL_FIXED };
+static const uint32_t MSK_MODIFY_VEL_CASES[] = { GID_BIT(CTRL_MODIFY_VEL_CHANGED), GID_BIT(CTRL_MODIFY_VEL_FIXED) };
+
+// TRANSPOSE
+static const uint32_t MSK_TRANSPOSE_ALL_CASES[] = { GID_BIT(CTRL_TRANSPOSE_ALL) };
+static const ctrl_group_id_t GR_TRANSPOSE_ALL_CASE_GROUPS[] = { CTRL_TRANSPOSE_ALL };
+
+static const ctrl_group_id_t GR_TRANSPOSE_TYPE_CASE_GROUPS[] = { CTRL_TRANSPOSE_SHIFT, CTRL_TRANSPOSE_SCALED };
+static const uint32_t MSK_TRANSPOSE_TYPE_CASES[] = { GID_BIT(CTRL_TRANSPOSE_SHIFT), GID_BIT(CTRL_TRANSPOSE_SCALED) };
+
+// SETTINGS
+static const uint32_t MSK_SETTINGS_ALWAYS_CASES[] = { GID_BIT(CTRL_SETTINGS_ALWAYS) };
+static const ctrl_group_id_t GR_SETTINGS_ALWAYS_CASE_GROUPS[] = { CTRL_SETTINGS_ALWAYS };
+
 static const ctrl_group_id_t GR_SETTINGS_SECTIONS[] = {
     CTRL_SETTINGS_GLOBAL1,
     CTRL_SETTINGS_GLOBAL2,
     CTRL_SETTINGS_FILTER,
     CTRL_SETTINGS_ABOUT
 };
+static const uint32_t MSK_SETTINGS_SECTIONS[] = {
+    GID_BIT(CTRL_SETTINGS_GLOBAL1),
+    GID_BIT(CTRL_SETTINGS_GLOBAL2),
+    GID_BIT(CTRL_SETTINGS_FILTER),
+    GID_BIT(CTRL_SETTINGS_ABOUT)
+};
 
-
+// ARPEGGIATOR
+static const ctrl_group_id_t GR_ARPEGGIATOR_SECTIONS[] = {
+    CTRL_ARPEGGIATOR_PAGE_1,
+    CTRL_ARPEGGIATOR_PAGE_2
+};
+static const uint32_t MSK_ARP_SECTIONS[] = {
+    GID_BIT(CTRL_ARPEGGIATOR_PAGE_1) | GID_BIT(CTRL_SHARED_TEMPO),
+    GID_BIT(CTRL_ARPEGGIATOR_PAGE_2)
+};
 
 // Selector table (DATA only, page-driven)
 static const page_group_rule_t kPageGroupRules[] = {
-    { GROUP_STATE_BASED, 1, GR_TEMPO_ALL,         SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TEMPO },
+    { GROUP_STATE_BASED,     1, GR_TEMPO_CASE_GROUPS,       MSK_TEMPO_CASES,          SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TEMPO,       0 },
 
-    { GROUP_STATE_BASED, 1, GR_MODIFY_ALL,        SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_MODIFY },
-    { GROUP_STATE_BASED, 2, GR_MODIFY_TYPE,       MODIFY_CHANGE_OR_SPLIT,      sel_mod_change_split, 1, MENU_MODIFY },
-    { GROUP_STATE_BASED, 2, GR_MODIFY_VEL_TYPE,   MODIFY_VELOCITY_TYPE,        sel_mod_vel_type,     1, MENU_MODIFY },
+    { GROUP_STATE_BASED,     1, GR_MODIFY_ALL_CASE_GROUPS,  MSK_MODIFY_ALL_CASES,     SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_MODIFY,      0 },
+    { GROUP_STATE_BASED,     2, GR_MODIFY_TYPE_CASE_GROUPS, MSK_MODIFY_TYPE_CASES,    MODIFY_CHANGE_OR_SPLIT,      sel_mod_change_split, 1, MENU_MODIFY,      0 },
+    { GROUP_STATE_BASED,     2, GR_MODIFY_VEL_CASE_GROUPS,  MSK_MODIFY_VEL_CASES,     MODIFY_VELOCITY_TYPE,        sel_mod_vel_type,     1, MENU_MODIFY,      0 },
 
-    { GROUP_STATE_BASED, 1, GR_TRANSPOSE_ALL,     SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TRANSPOSE },
-    { GROUP_STATE_BASED, 2, GR_TRANSPOSE_TYPE,    TRANSPOSE_TRANSPOSE_TYPE,    sel_transpose_type,   1, MENU_TRANSPOSE },
+    { GROUP_STATE_BASED,     1, GR_TRANSPOSE_ALL_CASE_GROUPS, MSK_TRANSPOSE_ALL_CASES, SAVE_FIELD_INVALID,         sel_fixed0,           0, MENU_TRANSPOSE,   0 },
+    { GROUP_STATE_BASED,     2, GR_TRANSPOSE_TYPE_CASE_GROUPS, MSK_TRANSPOSE_TYPE_CASES, TRANSPOSE_TRANSPOSE_TYPE, sel_transpose_type,   1, MENU_TRANSPOSE,   0 },
 
-    { GROUP_STATE_BASED, 1, GR_SETTINGS_ALWAYS,   SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_SETTINGS },
-    { CURRENT_POSITION_BASED, 4, GR_SETTINGS_SECTIONS, SAVE_FIELD_INVALID,     NULL,                0, MENU_SETTINGS },
+    { GROUP_STATE_BASED,     1, GR_SETTINGS_ALWAYS_CASE_GROUPS, MSK_SETTINGS_ALWAYS_CASES, SAVE_FIELD_INVALID,     sel_fixed0,           0, MENU_SETTINGS,    0 },
+    { CURRENT_POSITION_BASED,4, GR_SETTINGS_SECTIONS,         MSK_SETTINGS_SECTIONS,   SAVE_FIELD_INVALID,          NULL,                0, MENU_SETTINGS,    0 },
 
-	{ GROUP_STATE_BASED, 1, GR_ARPEGGIATOR_PAGE_1, SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_ARPEGGIATOR },
+    { CURRENT_POSITION_BASED,2, GR_ARPEGGIATOR_SECTIONS,      MSK_ARP_SECTIONS,        SAVE_FIELD_INVALID,          NULL,                0, MENU_ARPEGGIATOR, 0 },
 };
 
 #define KPAGEGROUPRULES_COUNT (sizeof(kPageGroupRules) / sizeof(kPageGroupRules[0]))
-
 
 // -------------------------
 // Active lists cache per page
@@ -140,12 +176,12 @@ static MenuActiveLists s_menu_lists;
 
 CtrlActiveList* list_for_page(menu_list_t page) {
     switch (page) {
-        case MENU_TEMPO:     return &s_menu_lists.tempo_item_list;
-        case MENU_MODIFY:    return &s_menu_lists.modify_item_list;
-        case MENU_TRANSPOSE: return &s_menu_lists.transpose_item_list;
+        case MENU_TEMPO:        return &s_menu_lists.tempo_item_list;
+        case MENU_MODIFY:       return &s_menu_lists.modify_item_list;
+        case MENU_TRANSPOSE:    return &s_menu_lists.transpose_item_list;
         case MENU_ARPEGGIATOR:  return &s_menu_lists.arpeggiator_item_list;
-        case MENU_SETTINGS:  return &s_menu_lists.settings_item_list;
-        default:             return &s_menu_lists.tempo_item_list;
+        case MENU_SETTINGS:     return &s_menu_lists.settings_item_list;
+        default:                return &s_menu_lists.tempo_item_list;
     }
 }
 
@@ -153,198 +189,129 @@ CtrlActiveList* list_for_page(menu_list_t page) {
 // Local helpers (private to menus.c)
 // -------------------------
 
-static void build_union_for_groups_local(const ctrl_group_id_t *groups, uint8_t n_groups, CtrlActiveList *out)
-{
-    uint8_t count = 0;
-
-    for (uint16_t f = 0; f < SAVE_FIELD_COUNT && count < MENU_ACTIVE_LIST_CAP; ++f) {
-        const menu_controls_t mt = menu_controls[f];
-
-        // must be one of requested groups
-        uint8_t ok = 0;
-        for (uint8_t g = 0; g < n_groups; ++g) {
-        	 if (groups[g] == 0) break;
-        	 if (mt.groups == groups[g]) { ok = 1; break; }
-        }
-        if (!ok) continue;
-
-        // only include selectable fields
-        if (mt.handler == NULL) continue;
-
-        // insert sorted by ui_order (same ordering rule as controller uses)
-        uint8_t pos = count;
-        while (pos > 0) {
-            const save_field_t prev_f = (save_field_t)out->fields_idx[pos - 1];
-            if (menu_controls[prev_f].ui_order <= mt.ui_order) break;
-            out->fields_idx[pos] = out->fields_idx[pos - 1];
-            --pos;
-        }
-        out->fields_idx[pos] = f;
-        ++count;
-    }
-
-    out->count = count;
-}
-
-
 static uint8_t idx_from_save(save_field_t f, uint8_t case_count) {
     int32_t v = (f != SAVE_FIELD_INVALID) ? save_get(f) : 0;
     if (v < 0) v = 0;
-    uint8_t idx = (uint8_t)v;
-    return (idx < case_count) ? idx : 0;
+    {
+        uint8_t idx = (uint8_t)v;
+        return (idx < case_count) ? idx : 0;
+    }
 }
 
-static const page_group_rule_t* first_position_rule_for_page(menu_list_t page) {
-    for (size_t i = 0; i < KPAGEGROUPRULES_COUNT; ++i)
-        if (kPageGroupRules[i].page == page && kPageGroupRules[i].kind == CURRENT_POSITION_BASED) return &kPageGroupRules[i];
-    return 0;
-}
 
-static uint8_t group_list_len(const ctrl_group_id_t *groups)
+static uint32_t or_all_case_masks(const page_group_rule_t *sel)
 {
-    uint8_t n = 0;
-    while (n < 31 && groups[n] != 0) n++;   // 0 terminator
-    return n;
+    uint32_t m = 0;
+    for (uint8_t i = 0; i < sel->case_count; ++i) m |= sel->case_masks[i];
+    return m;
 }
 
-static uint8_t idx_from_position_selector(const page_group_rule_t *sel) {
-    CtrlActiveList u = {0};
+static uint8_t idx_from_position_selector(const page_group_rule_t *sel, uint32_t base_mask)
+{
+    CtrlActiveList list = {0};
 
-    const uint8_t n_groups =
-        (sel->case_count == 1) ? group_list_len(sel->groups) : sel->case_count;
+    // Build the row-map from the base mask plus all cases of this selector.
+    // This keeps row-to-group mapping stable (prevents “dead” cursor slots).
+    const uint32_t map_mask = base_mask | or_all_case_masks(sel);
+    ctrl_build_active_fields(map_mask, &list);
 
-    build_union_for_groups_local(sel->groups, n_groups, &u);
-
-    const uint8_t sel_row = menu_nav_get_select(sel->page);
+    const uint8_t row = menu_nav_get_select(sel->page);
     uint8_t cursor = 0;
 
-    for (uint8_t i = 0; i < u.count; ++i) {
-        const save_field_t f = (save_field_t)u.fields_idx[i];
+    for (uint8_t i = 0; i < list.count; ++i) {
+        const save_field_t f = (save_field_t)list.fields_idx[i];
         const uint8_t span = menu_field_row_span(f);
 
-        if (sel_row < (uint8_t)(cursor + span)) {
+        if (row < (uint8_t)(cursor + span)) {
             const ctrl_group_id_t gid = (ctrl_group_id_t)menu_controls[f].groups;
 
-            for (uint8_t k = 0; k < n_groups; ++k) {
-                if (sel->groups[k] == 0) break;
-                if (sel->groups[k] == gid) return k;
+            for (uint8_t k = 0; k < sel->case_count; ++k) {
+                if (sel->case_groups[k] == gid) return k;
             }
-            return 0;
+            return sel->default_idx;
         }
         cursor = (uint8_t)(cursor + span);
     }
-    return 0;
-}
 
+    return sel->default_idx;
+}
 
 // ==============================
 // Public selector-facing surface
 // ==============================
 
-
 uint32_t ctrl_active_mask_for_page(menu_list_t page)
 {
     uint32_t mask = 0;
 
+    // pass 1: state-based selectors
     for (size_t i = 0; i < KPAGEGROUPRULES_COUNT; ++i) {
         const page_group_rule_t *sel = &kPageGroupRules[i];
         if (sel->page != page) continue;
+        if (sel->kind != GROUP_STATE_BASED) continue;
 
-        uint8_t idx = 0;
-        if (sel->kind == GROUP_STATE_BASED) {
-            idx = sel->compute ? sel->compute() : idx_from_save(sel->field, sel->case_count);
-        } else {
-            idx = idx_from_position_selector(sel);
-        }
+        uint8_t idx = sel->compute ? sel->compute() : idx_from_save(sel->field, sel->case_count);
         if (idx >= sel->case_count) idx = 0;
 
-        // ✅ NEW: if this is a 1-case rule, treat groups[] as a union list (0-terminated)
-        if (sel->case_count == 1) {
-            const uint8_t n = group_list_len(sel->groups);
-            for (uint8_t k = 0; k < n; ++k) {
-                const uint32_t gid = (uint32_t)sel->groups[k];
-                if (gid >= 1u && gid <= 31u) mask |= (1u << (gid - 1u));
-            }
-        } else {
-            const uint32_t gid = (uint32_t)sel->groups[idx];
-            if (gid >= 1u && gid <= 31u) mask |= (1u << (gid - 1u));
-        }
+        mask |= sel->case_masks[idx];
     }
+
+    // pass 2: position-based selectors (map against rows implied by current mask + selector cases)
+    for (size_t i = 0; i < KPAGEGROUPRULES_COUNT; ++i) {
+        const page_group_rule_t *sel = &kPageGroupRules[i];
+        if (sel->page != page) continue;
+        if (sel->kind != CURRENT_POSITION_BASED) continue;
+
+        uint8_t idx = idx_from_position_selector(sel, mask);
+        if (idx >= sel->case_count) idx = sel->default_idx;
+
+        // Apply only this selected case
+        // (mask already includes state-based always groups from pass 1)
+        mask |= sel->case_masks[idx];
+    }
+
     return mask;
 }
 
-
 uint8_t build_union_for_position_page(menu_list_t page, CtrlActiveList *out)
 {
-    const page_group_rule_t *pos_sel = first_position_rule_for_page(page);
-    if (!pos_sel) return 0;
-
-    const uint8_t n_groups =
-        (pos_sel->case_count == 1) ? group_list_len(pos_sel->groups) : pos_sel->case_count;
-
-    build_union_for_groups_local(pos_sel->groups, n_groups, out);
+    const uint32_t mask = ctrl_active_mask_for_page(page);
+    ctrl_build_active_fields(mask, out);
     return 1;
 }
 
-
 menu_list_t page_for_ctrl_id(uint32_t id)
 {
+    const uint32_t bit = GID_BIT((ctrl_group_id_t)id);
+
     for (size_t i = 0; i < KPAGEGROUPRULES_COUNT; ++i) {
         const page_group_rule_t *sel = &kPageGroupRules[i];
-
-        const uint8_t n =
-            (sel->case_count == 1) ? group_list_len(sel->groups) : sel->case_count;
-
-        for (uint8_t k = 0; k < n; ++k) {
-            if (sel->case_count == 1 && sel->groups[k] == 0) break;
-            if (sel->groups[k] == id) return sel->page;
+        for (uint8_t k = 0; k < sel->case_count; ++k) {
+            if ((sel->case_masks[k] & bit) != 0u) return sel->page;
         }
     }
-    return 0; // fallback to first menu
+    return 0;
 }
 
-
-// Press-to-cycle owner detection & action
 uint8_t menus_cycle_on_press(menu_list_t page)
 {
+    const uint32_t mask = ctrl_active_mask_for_page(page);
+
+    CtrlActiveList list = {0};
+    ctrl_build_active_fields(mask, &list);
+
     // Determine which group owns the current row
     uint32_t gid = 0;
-
-    CtrlActiveList u = {0};
-    if (build_union_for_position_page(page, &u)) {
-        // position-based page
+    {
         const uint8_t row = menu_nav_get_select(page);
         uint8_t cursor = 0;
-        for (uint8_t i = 0; i < u.count; ++i) {
-            const save_field_t f = (save_field_t)u.fields_idx[i];
-            const uint8_t span = menu_field_row_span(f);
-            if (row < (uint8_t)(cursor + span)) {
-                gid = menu_controls[f].groups;
-                break;
-            }
-            cursor = (uint8_t)(cursor + span);
-        }
-    } else {
-        // save-based only page: build union from active mask
-        const uint32_t mask = ctrl_active_mask_for_page(page);
-        CtrlActiveList list = {0};
-        // local copy of ctrl_build_active_fields
-        uint8_t count = 0;
-        for (uint16_t f = 0; f < SAVE_FIELD_COUNT && count < MENU_ACTIVE_LIST_CAP; ++f) {
-            const menu_controls_t mt = menu_controls[f];
-            const uint32_t gm = (mt.groups >= 1 && mt.groups <= 31) ? (1u << (mt.groups - 1)) : 0u;
-            if ((gm & mask) == 0) continue;
-            list.fields_idx[count++] = f;
-        }
-        list.count = count;
 
-        const uint8_t row = menu_nav_get_select(page);
-        uint8_t cursor = 0;
         for (uint8_t i = 0; i < list.count; ++i) {
             const save_field_t f = (save_field_t)list.fields_idx[i];
             const uint8_t span = menu_field_row_span(f);
+
             if (row < (uint8_t)(cursor + span)) {
-                gid = menu_controls[f].groups;
+                gid = (uint32_t)menu_controls[f].groups;
                 break;
             }
             cursor = (uint8_t)(cursor + span);
@@ -353,31 +320,25 @@ uint8_t menus_cycle_on_press(menu_list_t page)
 
     if (!gid) return 0;
 
+    const uint32_t gid_m = GID_BIT((ctrl_group_id_t)gid);
+
     // Find save-based selector that owns this gid and cycles on press
     for (size_t i = 0; i < KPAGEGROUPRULES_COUNT; ++i) {
         const page_group_rule_t *sel = &kPageGroupRules[i];
         if (sel->page != page) continue;
         if (sel->kind != GROUP_STATE_BASED) continue;
         if (!sel->cycle_on_press) continue;
+        if (sel->field == SAVE_FIELD_INVALID) continue;
 
-        {
-            const uint8_t n =
-                (sel->case_count == 1) ? group_list_len(sel->groups) : sel->case_count;
+        uint32_t owns = 0;
+        for (uint8_t k = 0; k < sel->case_count; ++k) owns |= sel->case_masks[k];
 
-            for (uint8_t k = 0; k < n; ++k) {
-                if (sel->case_count == 1 && sel->groups[k] == 0) break;
-
-                if (sel->groups[k] == gid) {
-                    if (sel->field != SAVE_FIELD_INVALID) {
-                        save_modify_u8(sel->field, SAVE_MODIFY_INCREMENT, 0);
-                        return 1;
-                    }
-                    return 0;
-                }
-            }
+        if ((owns & gid_m) != 0u) {
+            save_modify_u8(sel->field, SAVE_MODIFY_INCREMENT, 0);
+            return 1;
         }
-
     }
+
     return 0;
 }
 
