@@ -94,7 +94,6 @@ static const ctrl_group_id_t GR_TRANSPOSE_ALL[]    = { CTRL_TRANSPOSE_ALL };
 static const ctrl_group_id_t GR_TRANSPOSE_TYPE[]   = { CTRL_TRANSPOSE_SHIFT, CTRL_TRANSPOSE_SCALED };
 
 static const ctrl_group_id_t GR_ARPEGGIATOR_PAGE_1[]  = { CTRL_ARPEGGIATOR_PAGE_1,  CTRL_SHARED_TEMPO, 0 };
-static const ctrl_group_id_t GR_ARPEGGIATOR_PAGE_2[]  = { CTRL_ARPEGGIATOR_PAGE_2, 0 };
 
 static const ctrl_group_id_t GR_SETTINGS_ALWAYS[]  = { CTRL_SETTINGS_ALWAYS };
 static const ctrl_group_id_t GR_SETTINGS_SECTIONS[] = {
@@ -120,7 +119,7 @@ static const page_group_rule_t kPageGroupRules[] = {
     { GROUP_STATE_BASED, 1, GR_SETTINGS_ALWAYS,   SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_SETTINGS },
     { CURRENT_POSITION_BASED, 4, GR_SETTINGS_SECTIONS, SAVE_FIELD_INVALID,     NULL,                0, MENU_SETTINGS },
 
-	{ CURRENT_POSITION_BASED, 2, (const ctrl_group_id_t[]){ CTRL_ARPEGGIATOR_PAGE_1, CTRL_ARPEGGIATOR_PAGE_2 }, SAVE_FIELD_INVALID, NULL, 0, MENU_ARPEGGIATOR },
+	{ GROUP_STATE_BASED, 1, GR_ARPEGGIATOR_PAGE_1, SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_ARPEGGIATOR },
 };
 
 #define KPAGEGROUPRULES_COUNT (sizeof(kPageGroupRules) / sizeof(kPageGroupRules[0]))
