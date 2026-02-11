@@ -156,16 +156,38 @@ CtrlActiveList* list_for_page(menu_list_t page) {
 // Local helpers (private to menus.c)
 // -------------------------
 
-static void build_union_for_groups_local(const ctrl_group_id_t *groups, uint8_t n_groups, CtrlActiveList *out) {
+static void build_union_for_groups_local(const ctrl_group_id_t *groups, uint8_t n_groups, CtrlActiveList *out)
+{
     uint8_t count = 0;
+
     for (uint16_t f = 0; f < SAVE_FIELD_COUNT && count < MENU_ACTIVE_LIST_CAP; ++f) {
         const menu_controls_t mt = menu_controls[f];
+
+        // must be one of requested groups
+        uint8_t ok = 0;
         for (uint8_t g = 0; g < n_groups; ++g) {
-            if (mt.groups == groups[g]) { out->fields_idx[count++] = f; break; }
+            if (mt.groups == groups[g]) { ok = 1; break; }
         }
+        if (!ok) continue;
+
+        // only include selectable fields
+        if (mt.handler == NULL) continue;
+
+        // insert sorted by ui_order (same ordering rule as controller uses)
+        uint8_t pos = count;
+        while (pos > 0) {
+            const save_field_t prev_f = (save_field_t)out->fields_idx[pos - 1];
+            if (menu_controls[prev_f].ui_order <= mt.ui_order) break;
+            out->fields_idx[pos] = out->fields_idx[pos - 1];
+            --pos;
+        }
+        out->fields_idx[pos] = f;
+        ++count;
     }
+
     out->count = count;
 }
+
 
 static uint8_t idx_from_save(save_field_t f, uint8_t case_count) {
     int32_t v = (f != SAVE_FIELD_INVALID) ? save_get(f) : 0;
