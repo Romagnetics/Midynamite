@@ -29,7 +29,6 @@ static int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
     return 0; // no step
 }
 
-STATIC_PRODUCTION void no_update(save_field_t field, uint8_t arg) { (void)field; (void)arg; }
 STATIC_PRODUCTION void shadow_select(save_field_t field, uint8_t arg) { (void)field; (void)arg; }
 
 STATIC_PRODUCTION void update_value(save_field_t field, uint8_t multiplier)
@@ -88,11 +87,11 @@ STATIC_PRODUCTION void update_channel_filter(save_field_t field, uint8_t bit_ind
 const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     //                                  wrap     handler               handler_arg   group                   ui_order(auto)
     MC(TEMPO_CURRENT_TEMPO,          NO_WRAP, update_value,              10,        CTRL_SHARED_TEMPO),
-    MC(TEMPO_CURRENTLY_SENDING,        WRAP,  no_update,                  0,        CTRL_TEMPO_ALL),
+    MC(TEMPO_CURRENTLY_SENDING,        WRAP,  NULL,                       0,        CTRL_TEMPO_ALL),
     MC(TEMPO_SEND_TO_MIDI_OUT,         WRAP,  update_value,               1,        CTRL_TEMPO_ALL),
 
-    MC(MODIFY_CHANGE_OR_SPLIT,         WRAP,  no_update,                  0,        0),
-    MC(MODIFY_VELOCITY_TYPE,           WRAP,  no_update,                  0,        0),
+    MC(MODIFY_CHANGE_OR_SPLIT,         WRAP,  NULL,                       0,        0),
+    MC(MODIFY_VELOCITY_TYPE,           WRAP,  NULL,                       0,        0),
 
     MC(MODIFY_SEND_TO_MIDI_CH1,      NO_WRAP, update_value,               1,        CTRL_MODIFY_CHANGE),
     MC(MODIFY_SEND_TO_MIDI_CH2,      NO_WRAP, update_value,               1,        CTRL_MODIFY_CHANGE),
@@ -103,12 +102,12 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
 
     MC(MODIFY_SEND_TO_MIDI_OUT,        WRAP,  update_value,               1,        CTRL_MODIFY_ALL),
 
-    MC(MODIFY_VEL_PLUS_MINUS,       NO_WRAP, update_value,              10,        CTRL_MODIFY_VEL_CHANGED),
-    MC(MODIFY_VEL_ABSOLUTE,         NO_WRAP, update_value,              10,        CTRL_MODIFY_VEL_FIXED),
+    MC(MODIFY_VEL_PLUS_MINUS,       NO_WRAP, update_value,               10,        CTRL_MODIFY_VEL_CHANGED),
+    MC(MODIFY_VEL_ABSOLUTE,         NO_WRAP, update_value,               10,        CTRL_MODIFY_VEL_FIXED),
 
-    MC(MODIFY_CURRENTLY_SENDING,       WRAP,  no_update,                  0,        CTRL_MODIFY_ALL),
+    MC(MODIFY_CURRENTLY_SENDING,       WRAP,  NULL,                       0,        CTRL_MODIFY_ALL),
 
-    MC(TRANSPOSE_TRANSPOSE_TYPE,       WRAP,  no_update,                  0,        0),
+    MC(TRANSPOSE_TRANSPOSE_TYPE,       WRAP,  NULL,                       0,        0),
     MC(TRANSPOSE_MIDI_SHIFT_VALUE,   NO_WRAP, update_value,              12,        CTRL_TRANSPOSE_SHIFT),
 
     MC(TRANSPOSE_BASE_NOTE,         NO_WRAP, update_value,               1,        CTRL_TRANSPOSE_SCALED),
@@ -116,9 +115,9 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     MC(TRANSPOSE_TRANSPOSE_SCALE,     WRAP,  update_value,               1,        CTRL_TRANSPOSE_SCALED),
 
     MC(TRANSPOSE_SEND_ORIGINAL,       WRAP,  update_value,               1,        CTRL_TRANSPOSE_ALL),
-    MC(TRANSPOSE_CURRENTLY_SENDING,   WRAP,  no_update,                  0,        0),
+    MC(TRANSPOSE_CURRENTLY_SENDING,   WRAP,  NULL,                       0,        0),
 
-    MC(ARPEGGIATOR_CURRENTLY_SENDING,  WRAP,  no_update,                 0,        CTRL_ARPEGGIATOR_PAGE_1),
+    MC(ARPEGGIATOR_CURRENTLY_SENDING,  WRAP,  NULL,                      0,        CTRL_ARPEGGIATOR_PAGE_1),
     MC(ARPEGGIATOR_DIVISION,           WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_PAGE_1),
     MC(ARPEGGIATOR_GATE,               WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_PAGE_1),
     MC(ARPEGGIATOR_OCTAVES,            WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_PAGE_1),
@@ -185,7 +184,7 @@ static void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out
         const uint32_t gm = flag_from_id(mt.groups);
 
         if ((gm & active_groups) == 0) continue;
-        if (mt.handler == no_update) continue;
+        if (mt.handler == NULL) continue;
 
         // Insert in ascending ui_order
         uint8_t pos = count;

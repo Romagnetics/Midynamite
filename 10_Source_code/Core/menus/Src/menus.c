@@ -97,6 +97,16 @@ static const ctrl_group_id_t GR_TRANSPOSE_TYPE[]   = { CTRL_TRANSPOSE_SHIFT, CTR
 
 static const ctrl_group_id_t GR_ARPEGGIATOR_PAGE_1[]  = { CTRL_ARPEGGIATOR_PAGE_1,  CTRL_SHARED_TEMPO, 0 };
 
+static const ctrl_group_id_t GR_ARP_SECTIONS[] = {
+    CTRL_ARPEGGIATOR_PAGE_1,
+    CTRL_ARPEGGIATOR_PAGE_2,
+};
+
+static const ctrl_group_id_t GR_ARP_TEMPO_GATE[] = {
+    CTRL_SHARED_TEMPO, // when section index = 0 (page1)
+    0                  // when section index = 1 (page2) => nothing
+};
+
 static const ctrl_group_id_t GR_SETTINGS_ALWAYS[]  = { CTRL_SETTINGS_ALWAYS };
 static const ctrl_group_id_t GR_SETTINGS_SECTIONS[] = {
     CTRL_SETTINGS_GLOBAL1,
@@ -121,7 +131,8 @@ static const page_group_rule_t kPageGroupRules[] = {
     { GROUP_STATE_BASED, 1, GR_SETTINGS_ALWAYS,   SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_SETTINGS },
     { CURRENT_POSITION_BASED, 4, GR_SETTINGS_SECTIONS, SAVE_FIELD_INVALID,     NULL,                0, MENU_SETTINGS },
 
-	{ GROUP_STATE_BASED, 1, GR_ARPEGGIATOR_PAGE_1, SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_ARPEGGIATOR },
+	{ CURRENT_POSITION_BASED, 2, GR_ARP_SECTIONS,    SAVE_FIELD_INVALID, NULL, 0, MENU_ARPEGGIATOR },
+	{ CURRENT_POSITION_BASED, 2, GR_ARP_TEMPO_GATE,  SAVE_FIELD_INVALID, NULL, 0, MENU_ARPEGGIATOR },
 };
 
 #define KPAGEGROUPRULES_COUNT (sizeof(kPageGroupRules) / sizeof(kPageGroupRules[0]))
@@ -188,11 +199,6 @@ static uint8_t idx_from_save(save_field_t f, uint8_t case_count) {
     return (idx < case_count) ? idx : 0;
 }
 
-static const page_group_rule_t* first_position_rule_for_page(menu_list_t page) {
-    for (size_t i = 0; i < KPAGEGROUPRULES_COUNT; ++i)
-        if (kPageGroupRules[i].page == page && kPageGroupRules[i].kind == CURRENT_POSITION_BASED) return &kPageGroupRules[i];
-    return 0;
-}
 
 static uint8_t group_list_len(const ctrl_group_id_t *groups)
 {
@@ -240,19 +246,27 @@ uint32_t ctrl_active_mask_for_page(menu_list_t page)
 {
     uint32_t mask = 0;
 
+    uint8_t  have_pos_idx = 0;
+    uint8_t  pos_idx = 0;
+
     for (size_t i = 0; i < KPAGEGROUPRULES_COUNT; ++i) {
         const page_group_rule_t *sel = &kPageGroupRules[i];
         if (sel->page != page) continue;
 
         uint8_t idx = 0;
+
         if (sel->kind == GROUP_STATE_BASED) {
             idx = sel->compute ? sel->compute() : idx_from_save(sel->field, sel->case_count);
         } else {
-            idx = idx_from_position_selector(sel);
+            if (!have_pos_idx) {
+                pos_idx = idx_from_position_selector(sel); // compute once
+                have_pos_idx = 1;
+            }
+            idx = pos_idx; // reuse
         }
+
         if (idx >= sel->case_count) idx = 0;
 
-        // ✅ NEW: if this is a 1-case rule, treat groups[] as a union list (0-terminated)
         if (sel->case_count == 1) {
             const uint8_t n = group_list_len(sel->groups);
             for (uint8_t k = 0; k < n; ++k) {
@@ -268,33 +282,41 @@ uint32_t ctrl_active_mask_for_page(menu_list_t page)
 }
 
 
+
 uint8_t build_union_for_position_page(menu_list_t page, CtrlActiveList *out)
 {
-    const page_group_rule_t *pos_sel = first_position_rule_for_page(page);
-    if (!pos_sel) return 0;
+    // Collect unique group IDs from ALL CURRENT_POSITION_BASED rules for this page
+    ctrl_group_id_t tmp[32] = {0};
+    uint8_t tmp_count = 0;
 
-    const uint8_t n_groups =
-        (pos_sel->case_count == 1) ? group_list_len(pos_sel->groups) : pos_sel->case_count;
-
-    build_union_for_groups_local(pos_sel->groups, n_groups, out);
-    return 1;
-}
-
-
-menu_list_t page_for_ctrl_id(uint32_t id)
-{
     for (size_t i = 0; i < KPAGEGROUPRULES_COUNT; ++i) {
         const page_group_rule_t *sel = &kPageGroupRules[i];
+        if (sel->page != page) continue;
+        if (sel->kind != CURRENT_POSITION_BASED) continue;
 
         const uint8_t n =
             (sel->case_count == 1) ? group_list_len(sel->groups) : sel->case_count;
 
         for (uint8_t k = 0; k < n; ++k) {
-            if (sel->case_count == 1 && sel->groups[k] == 0) break;
-            if (sel->groups[k] == id) return sel->page;
+            const ctrl_group_id_t gid = sel->groups[k];
+            if (gid == 0) continue; // allow gating arrays like {CTRL_SHARED_TEMPO, 0}
+
+            // insert if not already present
+            uint8_t exists = 0;
+            for (uint8_t j = 0; j < tmp_count; ++j) {
+                if (tmp[j] == gid) { exists = 1; break; }
+            }
+            if (!exists && tmp_count < (uint8_t)(sizeof(tmp)/sizeof(tmp[0]) - 1u)) {
+                tmp[tmp_count++] = gid;
+                tmp[tmp_count] = 0; // keep 0-terminated
+            }
         }
     }
-    return 0; // fallback to first menu
+
+    if (tmp_count == 0) return 0;
+
+    build_union_for_groups_local(tmp, tmp_count, out);
+    return 1;
 }
 
 
