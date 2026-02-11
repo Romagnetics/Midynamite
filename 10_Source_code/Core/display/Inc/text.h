@@ -50,9 +50,6 @@ typedef struct {
     const char *change_velocity;
     const char *fixed_velocity;
 
-    // Arpeggiator
-    const char *pattern;
-
 
     // Transpose
     const char *type;
@@ -99,7 +96,9 @@ typedef struct {
 
     // Contrast
     const char *contrast;
-    const char *contrast_levels[10];
+    const char *ten_hundred_ten_percent[10];
+    const char *zero_hundred_ten[11];
+
 
     // About
     const char *about_brand;
@@ -128,11 +127,13 @@ typedef struct {
     //Upgrade mode
     const char *upgrade_mode;
 
-	//Arpeggio
-    const char *error;
+    // Arpeggiator
+    const char *pattern;
+    const char *division;
 
     //Error handlers
-    const char *division;
+    const char *error;
+
 
     // Note names
     const char *midi_note_names[128];
@@ -156,8 +157,8 @@ typedef struct {
     const char *midi_channels[17];
     const char *menu_list[5];
 
-    const char *zero_hundred_ten[5];
     const char *division_list[7];
+    const char *arp_patterns[8];
 
 
 } Message;

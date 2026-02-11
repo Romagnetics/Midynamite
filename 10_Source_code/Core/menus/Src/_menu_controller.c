@@ -114,6 +114,7 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
 
     [ARPEGGIATOR_CURRENTLY_SENDING] = {   WRAP,  no_update,             0,      CTRL_ARPEGGIATOR_ALL  },
     [ARPEGGIATOR_INTERVAL ] = {   WRAP,  update_value,                  1,      CTRL_ARPEGGIATOR_ALL  },
+    [ARPEGGIATOR_PATTERN  ] = {   WRAP,  update_value,                  1,      CTRL_ARPEGGIATOR_ALL  },
 
 
     [SETTINGS_START_MENU]        = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL1 },

@@ -50,7 +50,7 @@ void ui_update_settings(void)
         { ELEM_ITEM , SETTINGS_SEND_USB,       TEXT_(usb_receive_send),    UI_6x8, 70,       LINE_2, CTRL_SETTINGS_GLOBAL1 },
 
         { ELEM_TEXT , 0,                       TEXT_(contrast),            UI_6x8, TXT_LEFT, LINE_3, CTRL_SETTINGS_GLOBAL1 },
-        { ELEM_ITEM , SETTINGS_BRIGHTNESS,     TEXT_(contrast_levels),     UI_6x8, 70,       LINE_3, CTRL_SETTINGS_GLOBAL1 },
+        { ELEM_ITEM , SETTINGS_BRIGHTNESS,     TEXT_(ten_hundred_ten_percent),     UI_6x8, 70,       LINE_3, CTRL_SETTINGS_GLOBAL1 },
         // -------- GLOBAL 2 --------
         { ELEM_TEXT , 0,                       TEXT_(global_settings_2),   UI_6x8, TXT_LEFT, LINE_0, CTRL_SETTINGS_GLOBAL2 },
         { ELEM_TEXT , 0,                       TEXT_(MIDI_Thru),           UI_6x8, TXT_LEFT, LINE_1, CTRL_SETTINGS_GLOBAL2 },

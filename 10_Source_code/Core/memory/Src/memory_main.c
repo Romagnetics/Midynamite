@@ -42,10 +42,10 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
 
 	[ARPEGGIATOR_CURRENTLY_SENDING]        = {      0,       1,          0 },
 	[ARPEGGIATOR_INTERVAL]       = {      0,       6,          0 },
-	[ARPEGGIATOR_PATTERN]        = {      0,       10,          0 },
+	[ARPEGGIATOR_PATTERN]        = {      0,       7,          0 },
 	[ARPEGGIATOR_GATE]        = {      10,       100,          100 },
 	[ARPEGGIATOR_OCTAVES]        = {      1,       5,          1 },
-	[ARPEGGIATOR_LATCH]        = {      0,       1,          0 },
+	[ARPEGGIATOR_HOLD]        = {      0,       1,          0 },
 	[ARPEGGIATOR_SWING]        = {      0,       100,          50 },
 	[ARPEGGIATOR_RETRIGGER]        = {      0,       1,          0 },
 	[ARPEGGIATOR_LENGTH]   = {      1,       8,          8 },

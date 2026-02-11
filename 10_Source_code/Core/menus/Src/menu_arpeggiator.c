@@ -27,6 +27,10 @@ void ui_update_arpeggiator(void)
 		{ ELEM_TEXT , 0,                       TEXT_(division),        UI_6x8, TXT_LEFT, LINE_2,      CTRL_ARPEGGIATOR_ALL},
         { ELEM_ITEM ,  ARPEGGIATOR_INTERVAL,    TEXT_(division_list),   UI_6x8, 60,      LINE_2     , CTRL_ARPEGGIATOR_ALL  },
 
+		{ ELEM_TEXT , 0,                       TEXT_(pattern),        UI_6x8, TXT_LEFT, LINE_4,      CTRL_ARPEGGIATOR_ALL},
+        { ELEM_ITEM ,  ARPEGGIATOR_PATTERN,    TEXT_(arp_patterns),   UI_6x8, 60,      LINE_4     , CTRL_ARPEGGIATOR_ALL  },
+
+
     };
     menu_ui_render(MENU_ARPEGGIATOR, elems, (uint8_t)(sizeof(elems)/sizeof(elems[0])));
 }
