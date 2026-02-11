@@ -22,9 +22,10 @@ void ui_update_arpeggiator(void)
 
         //Tempo
 		{ ELEM_TEXT , 0,                       TEXT_(tempo),        UI_6x8, TXT_LEFT, LINE_1,      CTRL_ARPEGGIATOR_ALL},
-        { ELEM_ITEM ,  TEMPO_CURRENT_TEMPO,    TEXT_(zer_to_300),   UI_6x8, 50,      LINE_1     , CTRL_TEMPO_SHARED  },
+        { ELEM_ITEM ,  TEMPO_CURRENT_TEMPO,    TEXT_(zer_to_300),   UI_6x8, 60,      LINE_1     , CTRL_TEMPO_SHARED  },
 
-
+		{ ELEM_TEXT , 0,                       TEXT_(division),        UI_6x8, TXT_LEFT, LINE_2,      CTRL_ARPEGGIATOR_ALL},
+        { ELEM_ITEM ,  ARPEGGIATOR_INTERVAL,    TEXT_(division_list),   UI_6x8, 60,      LINE_2     , CTRL_ARPEGGIATOR_ALL  },
 
     };
     menu_ui_render(MENU_ARPEGGIATOR, elems, (uint8_t)(sizeof(elems)/sizeof(elems[0])));
@@ -33,7 +34,8 @@ void ui_update_arpeggiator(void)
 
 void ui_code_arpeggiator()    {
 
-	midi_display_on_off(save_get(ARPEGGIATOR_CURRENTLY_SENDING), SCREEN_BOTTOM);
+	midi_display_on_off(save_get(ARPEGGIATOR_CURRENTLY_SENDING), LINE_3);
+	draw_line(ON_OFF_VERT_LINE, LINE_3, 127, LINE_3);
 
 
 }

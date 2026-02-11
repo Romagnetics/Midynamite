@@ -41,7 +41,7 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [TRANSPOSE_CURRENTLY_SENDING]          = {      0,          1,          0 },
 
 	[ARPEGGIATOR_CURRENTLY_SENDING]        = {      0,       1,          0 },
-	[ARPEGGIATOR_INTERVAL]       = {      4,       32,          4 },
+	[ARPEGGIATOR_INTERVAL]       = {      0,       6,          0 },
 	[ARPEGGIATOR_PATTERN]        = {      0,       10,          0 },
 	[ARPEGGIATOR_GATE]        = {      10,       100,          100 },
 	[ARPEGGIATOR_OCTAVES]        = {      1,       5,          1 },

@@ -18,6 +18,9 @@
 #define B_LINE LINE_4 + 3
 #define SCREEN_BOTTOM 64
 
+#define ON_OFF_VERT_LINE 92
+
+
 #define TXT_LEFT 5
 
 // Fonts you already use via write_* functions

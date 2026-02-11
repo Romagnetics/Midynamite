@@ -128,8 +128,11 @@ typedef struct {
     //Upgrade mode
     const char *upgrade_mode;
 
-    //Error handlers
+	//Arpeggio
     const char *error;
+
+    //Error handlers
+    const char *division;
 
     // Note names
     const char *midi_note_names[128];
@@ -152,6 +155,10 @@ typedef struct {
     const char *usb_receive_send[2];
     const char *midi_channels[17];
     const char *menu_list[5];
+
+    const char *zero_hundred_ten[5];
+    const char *division_list[7];
+
 
 } Message;
 // Global access to UI strings and options

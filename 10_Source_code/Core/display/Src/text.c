@@ -96,6 +96,8 @@ static const Message _message = {
         "10%", "20%", "30%", "40%", "50%",
         "60%", "70%", "80%", "90%", "100%"
     },
+	.zero_hundred_ten = { " 0", " 10", " 20", " 30" , " 40", " 50", " 60", " 70", " 80" , " 90", "100"},
+
 
     // About
     .about_brand = "Romagnetics",
@@ -121,6 +123,9 @@ static const Message _message = {
 
     //USB Midi
 	.upgrade_mode = "Upgrade Mode",
+
+	//Arpeggio
+	.division = "Division",
 
     // MIDI Note Names (C-1 to G9)
     .midi_note_names = {
@@ -232,6 +237,9 @@ static const Message _message = {
          "Ch. 13", "Ch. 14", "Ch. 15", "Ch. 16"
      },
     .menu_list = { "Tempo", "Modify", "Transpose", "Arp." , "Settings"},
+
+	//Arpeggio
+	.division_list = { "1/4", "1/6", "1/8", "1/12", "1/16", "1/24", "1/32" },
 };
 
 const Message *message = &_message;
