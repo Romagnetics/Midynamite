@@ -85,7 +85,7 @@ static uint8_t sel_fixed0()           { return 0u; }
 // Group-id lists (avoid compound literals in static tables)
 // -------------------------
 static const ctrl_group_id_t GR_TEMPO_ALL[]        = { CTRL_TEMPO_ALL };
-static const ctrl_group_id_t GR_TEMPO_SHARED[] = { CTRL_TEMPO_SHARED };
+static const ctrl_group_id_t GR_SHARED_TEMPO[] = { CTRL_SHARED_TEMPO };
 
 static const ctrl_group_id_t GR_MODIFY_ALL[]       = { CTRL_MODIFY_ALL };
 static const ctrl_group_id_t GR_MODIFY_TYPE[]      = { CTRL_MODIFY_CHANGE, CTRL_MODIFY_SPLIT };
@@ -93,6 +93,8 @@ static const ctrl_group_id_t GR_MODIFY_VEL_TYPE[]  = { CTRL_MODIFY_VEL_CHANGED, 
 
 static const ctrl_group_id_t GR_TRANSPOSE_ALL[]    = { CTRL_TRANSPOSE_ALL };
 static const ctrl_group_id_t GR_TRANSPOSE_TYPE[]   = { CTRL_TRANSPOSE_SHIFT, CTRL_TRANSPOSE_SCALED };
+
+static const ctrl_group_id_t GR_ARPEGGIATOR_ALL[]  = { CTRL_ARPEGGIATOR_PAGE_1  };
 
 static const ctrl_group_id_t GR_SETTINGS_ALWAYS[]  = { CTRL_SETTINGS_ALWAYS };
 static const ctrl_group_id_t GR_SETTINGS_SECTIONS[] = {
@@ -102,12 +104,12 @@ static const ctrl_group_id_t GR_SETTINGS_SECTIONS[] = {
     CTRL_SETTINGS_ABOUT
 };
 
-static const ctrl_group_id_t GR_ARPEGGIATOR_ALL[]  = { CTRL_ARPEGGIATOR_ALL };
+
 
 // Selector table (DATA only, page-driven)
 static const page_group_rule_t kPageGroupRules[] = {
     { GROUP_STATE_BASED, 1, GR_TEMPO_ALL,         SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TEMPO },
-    { GROUP_STATE_BASED, 1, GR_TEMPO_SHARED,      SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TEMPO },
+	{ GROUP_STATE_BASED, 1, GR_SHARED_TEMPO,      SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TEMPO },
 
     { GROUP_STATE_BASED, 1, GR_MODIFY_ALL,        SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_MODIFY },
     { GROUP_STATE_BASED, 2, GR_MODIFY_TYPE,       MODIFY_CHANGE_OR_SPLIT,      sel_mod_change_split, 1, MENU_MODIFY },
@@ -119,8 +121,8 @@ static const page_group_rule_t kPageGroupRules[] = {
     { GROUP_STATE_BASED, 1, GR_SETTINGS_ALWAYS,   SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_SETTINGS },
     { CURRENT_POSITION_BASED, 4, GR_SETTINGS_SECTIONS, SAVE_FIELD_INVALID,     NULL,                0, MENU_SETTINGS },
 
-    { GROUP_STATE_BASED, 1, GR_ARPEGGIATOR_ALL,   SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_ARPEGGIATOR },
-    { GROUP_STATE_BASED, 1, GR_TEMPO_SHARED,      SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_ARPEGGIATOR },
+	{ GROUP_STATE_BASED, 1, GR_ARPEGGIATOR_ALL, SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_ARPEGGIATOR },
+	{ GROUP_STATE_BASED, 1, GR_SHARED_TEMPO, SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_ARPEGGIATOR },
 };
 
 #define KPAGEGROUPRULES_COUNT (sizeof(kPageGroupRules) / sizeof(kPageGroupRules[0]))

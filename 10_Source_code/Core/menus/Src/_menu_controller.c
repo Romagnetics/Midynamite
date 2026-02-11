@@ -87,7 +87,7 @@ STATIC_PRODUCTION void update_channel_filter(save_field_t field, uint8_t bit_ind
 
 const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     //                                  wrap     handler               handler_arg   group                   ui_order(auto)
-    MC(TEMPO_CURRENT_TEMPO,          NO_WRAP, update_value,              10,        CTRL_TEMPO_SHARED),
+    MC(TEMPO_CURRENT_TEMPO,          NO_WRAP, update_value,              10,        CTRL_SHARED_TEMPO),
     MC(TEMPO_CURRENTLY_SENDING,        WRAP,  no_update,                  0,        CTRL_TEMPO_ALL),
     MC(TEMPO_SEND_TO_MIDI_OUT,         WRAP,  update_value,               1,        CTRL_TEMPO_ALL),
 
@@ -118,11 +118,11 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     MC(TRANSPOSE_SEND_ORIGINAL,       WRAP,  update_value,               1,        CTRL_TRANSPOSE_ALL),
     MC(TRANSPOSE_CURRENTLY_SENDING,   WRAP,  no_update,                  0,        0),
 
-    MC(ARPEGGIATOR_CURRENTLY_SENDING,  WRAP,  no_update,                 0,        CTRL_ARPEGGIATOR_ALL),
-    MC(ARPEGGIATOR_DIVISION,           WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_ALL),
-    MC(ARPEGGIATOR_GATE,               WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_ALL),
-    MC(ARPEGGIATOR_OCTAVES,            WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_ALL),
-    MC(ARPEGGIATOR_PATTERN,            WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_ALL),
+    MC(ARPEGGIATOR_CURRENTLY_SENDING,  WRAP,  no_update,                 0,        CTRL_ARPEGGIATOR_PAGE_1),
+    MC(ARPEGGIATOR_DIVISION,           WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_PAGE_1),
+    MC(ARPEGGIATOR_GATE,               WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_PAGE_1),
+    MC(ARPEGGIATOR_OCTAVES,            WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_PAGE_1),
+    MC(ARPEGGIATOR_PATTERN,            WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_PAGE_1),
 
     MC(SETTINGS_START_MENU,            WRAP,  update_value,              1,        CTRL_SETTINGS_GLOBAL1),
     MC(SETTINGS_SEND_USB,              WRAP,  update_value,              1,        CTRL_SETTINGS_GLOBAL1),

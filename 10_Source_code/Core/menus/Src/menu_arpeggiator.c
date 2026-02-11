@@ -20,24 +20,24 @@ void ui_update_arpeggiator(void)
 
     const ui_element elems[] = {
         // type       save_item               text                          font    x             y        ctrl_group_id
-        { ELEM_TEXT , 0,                      TEXT_(arpeggiator),           UI_6x8, TXT_LEFT,     LINE_0,  CTRL_ARPEGGIATOR_ALL },
+        { ELEM_TEXT , 0,                      TEXT_(arpeggiator),           UI_6x8, TXT_LEFT,     LINE_0,  CTRL_ARPEGGIATOR_PAGE_1 },
 
         // Tempo
-        { ELEM_TEXT , 0,                      TEXT_(tempo),                 UI_6x8, TXT_LEFT,     LINE_1,  CTRL_ARPEGGIATOR_ALL },
-        { ELEM_ITEM , TEMPO_CURRENT_TEMPO,    TEXT_(zer_to_300),            UI_6x8, CENTER_SPLIT, LINE_1,  CTRL_TEMPO_SHARED     },
+        { ELEM_TEXT , 0,                      TEXT_(tempo),                 UI_6x8, TXT_LEFT,     LINE_1,  CTRL_ARPEGGIATOR_PAGE_1 },
+        { ELEM_ITEM , TEMPO_CURRENT_TEMPO,    TEXT_(zer_to_300),            UI_6x8, CENTER_SPLIT, LINE_1,  CTRL_SHARED_TEMPO      },
 
         // Division
-        { ELEM_TEXT , 0,                      TEXT_(division),              UI_6x8, TXT_LEFT,     LINE_2,  CTRL_ARPEGGIATOR_ALL },
-        { ELEM_ITEM , ARPEGGIATOR_DIVISION,   TEXT_(division_list),         UI_6x8, CENTER_SPLIT, LINE_2,  CTRL_ARPEGGIATOR_ALL },
+        { ELEM_TEXT , 0,                      TEXT_(division),              UI_6x8, TXT_LEFT,     LINE_2,  CTRL_ARPEGGIATOR_PAGE_1 },
+        { ELEM_ITEM , ARPEGGIATOR_DIVISION,   TEXT_(division_list),         UI_6x8, CENTER_SPLIT, LINE_2,  CTRL_ARPEGGIATOR_PAGE_1 },
 
         // Gate
-        { ELEM_TEXT , 0,                      TEXT_(gate),                  UI_6x8, TXT_LEFT,     LINE_3,  CTRL_ARPEGGIATOR_ALL },
-        { ELEM_ITEM , ARPEGGIATOR_GATE,       TEXT_(ten_hundred_ten_percent), UI_6x8, 33,         LINE_3,  CTRL_ARPEGGIATOR_ALL },
-        { ELEM_ITEM , ARPEGGIATOR_OCTAVES,    TEXT_(octave_count),          UI_6x8, CENTER_SPLIT, LINE_3,  CTRL_ARPEGGIATOR_ALL },
+        { ELEM_TEXT , 0,                      TEXT_(gate),                  UI_6x8, TXT_LEFT,     LINE_3,  CTRL_ARPEGGIATOR_PAGE_1 },
+        { ELEM_ITEM , ARPEGGIATOR_GATE,       TEXT_(ten_hundred_ten_percent), UI_6x8, 33,         LINE_3,  CTRL_ARPEGGIATOR_PAGE_1 },
+        { ELEM_ITEM , ARPEGGIATOR_OCTAVES,    TEXT_(octave_count),          UI_6x8, CENTER_SPLIT, LINE_3,  CTRL_ARPEGGIATOR_PAGE_1 },
 
         // Pattern
-        { ELEM_TEXT , 0,                      TEXT_(pattern),               UI_6x8, TXT_LEFT,     LINE_4,  CTRL_ARPEGGIATOR_ALL },
-        { ELEM_ITEM , ARPEGGIATOR_PATTERN,    TEXT_(arp_patterns),          UI_6x8, CENTER_SPLIT, LINE_4,  CTRL_ARPEGGIATOR_ALL },
+        { ELEM_TEXT , 0,                      TEXT_(pattern),               UI_6x8, TXT_LEFT,     LINE_4,  CTRL_ARPEGGIATOR_PAGE_1 },
+        { ELEM_ITEM , ARPEGGIATOR_PATTERN,    TEXT_(arp_patterns),          UI_6x8, CENTER_SPLIT, LINE_4,  CTRL_ARPEGGIATOR_PAGE_1 },
     };
 
     menu_ui_render(
