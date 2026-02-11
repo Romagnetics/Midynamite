@@ -84,8 +84,7 @@ static uint8_t sel_fixed0()           { return 0u; }
 // -------------------------
 // Group-id lists (avoid compound literals in static tables)
 // -------------------------
-static const ctrl_group_id_t GR_TEMPO_ALL[]        = { CTRL_TEMPO_ALL };
-static const ctrl_group_id_t GR_SHARED_TEMPO[] = { CTRL_SHARED_TEMPO };
+static const ctrl_group_id_t GR_TEMPO_ALL[]        = { CTRL_TEMPO_ALL, CTRL_SHARED_TEMPO, 0};
 
 static const ctrl_group_id_t GR_MODIFY_ALL[]       = { CTRL_MODIFY_ALL };
 static const ctrl_group_id_t GR_MODIFY_TYPE[]      = { CTRL_MODIFY_CHANGE, CTRL_MODIFY_SPLIT };
@@ -94,7 +93,8 @@ static const ctrl_group_id_t GR_MODIFY_VEL_TYPE[]  = { CTRL_MODIFY_VEL_CHANGED, 
 static const ctrl_group_id_t GR_TRANSPOSE_ALL[]    = { CTRL_TRANSPOSE_ALL };
 static const ctrl_group_id_t GR_TRANSPOSE_TYPE[]   = { CTRL_TRANSPOSE_SHIFT, CTRL_TRANSPOSE_SCALED };
 
-static const ctrl_group_id_t GR_ARPEGGIATOR_ALL[]  = { CTRL_ARPEGGIATOR_PAGE_1  };
+static const ctrl_group_id_t GR_ARPEGGIATOR_PAGE_1[]  = { CTRL_ARPEGGIATOR_PAGE_1,  CTRL_SHARED_TEMPO, 0 };
+static const ctrl_group_id_t GR_ARPEGGIATOR_PAGE_2[]  = { CTRL_ARPEGGIATOR_PAGE_2, 0 };
 
 static const ctrl_group_id_t GR_SETTINGS_ALWAYS[]  = { CTRL_SETTINGS_ALWAYS };
 static const ctrl_group_id_t GR_SETTINGS_SECTIONS[] = {
@@ -109,7 +109,6 @@ static const ctrl_group_id_t GR_SETTINGS_SECTIONS[] = {
 // Selector table (DATA only, page-driven)
 static const page_group_rule_t kPageGroupRules[] = {
     { GROUP_STATE_BASED, 1, GR_TEMPO_ALL,         SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TEMPO },
-	{ GROUP_STATE_BASED, 1, GR_SHARED_TEMPO,      SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TEMPO },
 
     { GROUP_STATE_BASED, 1, GR_MODIFY_ALL,        SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_MODIFY },
     { GROUP_STATE_BASED, 2, GR_MODIFY_TYPE,       MODIFY_CHANGE_OR_SPLIT,      sel_mod_change_split, 1, MENU_MODIFY },
@@ -121,8 +120,7 @@ static const page_group_rule_t kPageGroupRules[] = {
     { GROUP_STATE_BASED, 1, GR_SETTINGS_ALWAYS,   SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_SETTINGS },
     { CURRENT_POSITION_BASED, 4, GR_SETTINGS_SECTIONS, SAVE_FIELD_INVALID,     NULL,                0, MENU_SETTINGS },
 
-	{ GROUP_STATE_BASED, 1, GR_ARPEGGIATOR_ALL, SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_ARPEGGIATOR },
-	{ GROUP_STATE_BASED, 1, GR_SHARED_TEMPO, SAVE_FIELD_INVALID, sel_fixed0, 0, MENU_ARPEGGIATOR },
+	{ CURRENT_POSITION_BASED, 2, (const ctrl_group_id_t[]){ CTRL_ARPEGGIATOR_PAGE_1, CTRL_ARPEGGIATOR_PAGE_2 }, SAVE_FIELD_INVALID, NULL, 0, MENU_ARPEGGIATOR },
 };
 
 #define KPAGEGROUPRULES_COUNT (sizeof(kPageGroupRules) / sizeof(kPageGroupRules[0]))
@@ -166,7 +164,8 @@ static void build_union_for_groups_local(const ctrl_group_id_t *groups, uint8_t 
         // must be one of requested groups
         uint8_t ok = 0;
         for (uint8_t g = 0; g < n_groups; ++g) {
-            if (mt.groups == groups[g]) { ok = 1; break; }
+        	 if (groups[g] == 0) break;
+        	 if (mt.groups == groups[g]) { ok = 1; break; }
         }
         if (!ok) continue;
 
@@ -202,9 +201,20 @@ static const page_group_rule_t* first_position_rule_for_page(menu_list_t page) {
     return 0;
 }
 
+static uint8_t group_list_len(const ctrl_group_id_t *groups)
+{
+    uint8_t n = 0;
+    while (n < 31 && groups[n] != 0) n++;   // 0 terminator
+    return n;
+}
+
 static uint8_t idx_from_position_selector(const page_group_rule_t *sel) {
     CtrlActiveList u = {0};
-    build_union_for_groups_local(sel->groups, sel->case_count, &u);
+
+    const uint8_t n_groups =
+        (sel->case_count == 1) ? group_list_len(sel->groups) : sel->case_count;
+
+    build_union_for_groups_local(sel->groups, n_groups, &u);
 
     const uint8_t sel_row = menu_nav_get_select(sel->page);
     uint8_t cursor = 0;
@@ -215,8 +225,11 @@ static uint8_t idx_from_position_selector(const page_group_rule_t *sel) {
 
         if (sel_row < (uint8_t)(cursor + span)) {
             const ctrl_group_id_t gid = (ctrl_group_id_t)menu_controls[f].groups;
-            for (uint8_t k = 0; k < sel->case_count; ++k)
+
+            for (uint8_t k = 0; k < n_groups; ++k) {
+                if (sel->groups[k] == 0) break;
                 if (sel->groups[k] == gid) return k;
+            }
             return 0;
         }
         cursor = (uint8_t)(cursor + span);
@@ -224,9 +237,12 @@ static uint8_t idx_from_position_selector(const page_group_rule_t *sel) {
     return 0;
 }
 
+
 // ==============================
 // Public selector-facing surface
 // ==============================
+
+
 uint32_t ctrl_active_mask_for_page(menu_list_t page)
 {
     uint32_t mask = 0;
@@ -238,33 +254,56 @@ uint32_t ctrl_active_mask_for_page(menu_list_t page)
         uint8_t idx = 0;
         if (sel->kind == GROUP_STATE_BASED) {
             idx = sel->compute ? sel->compute() : idx_from_save(sel->field, sel->case_count);
-        } else { // CURRENT_POSITION_BASED
+        } else {
             idx = idx_from_position_selector(sel);
         }
         if (idx >= sel->case_count) idx = 0;
-        mask |= (1u << (sel->groups[idx] - 1));
+
+        // ✅ NEW: if this is a 1-case rule, treat groups[] as a union list (0-terminated)
+        if (sel->case_count == 1) {
+            const uint8_t n = group_list_len(sel->groups);
+            for (uint8_t k = 0; k < n; ++k) {
+                const uint32_t gid = (uint32_t)sel->groups[k];
+                if (gid >= 1u && gid <= 31u) mask |= (1u << (gid - 1u));
+            }
+        } else {
+            const uint32_t gid = (uint32_t)sel->groups[idx];
+            if (gid >= 1u && gid <= 31u) mask |= (1u << (gid - 1u));
+        }
     }
     return mask;
 }
+
 
 uint8_t build_union_for_position_page(menu_list_t page, CtrlActiveList *out)
 {
     const page_group_rule_t *pos_sel = first_position_rule_for_page(page);
     if (!pos_sel) return 0;
-    build_union_for_groups_local(pos_sel->groups, pos_sel->case_count, out);
+
+    const uint8_t n_groups =
+        (pos_sel->case_count == 1) ? group_list_len(pos_sel->groups) : pos_sel->case_count;
+
+    build_union_for_groups_local(pos_sel->groups, n_groups, out);
     return 1;
 }
+
 
 menu_list_t page_for_ctrl_id(uint32_t id)
 {
     for (size_t i = 0; i < KPAGEGROUPRULES_COUNT; ++i) {
         const page_group_rule_t *sel = &kPageGroupRules[i];
-        for (uint8_t k = 0; k < sel->case_count; ++k) {
+
+        const uint8_t n =
+            (sel->case_count == 1) ? group_list_len(sel->groups) : sel->case_count;
+
+        for (uint8_t k = 0; k < n; ++k) {
+            if (sel->case_count == 1 && sel->groups[k] == 0) break;
             if (sel->groups[k] == id) return sel->page;
         }
     }
     return 0; // fallback to first menu
 }
+
 
 // Press-to-cycle owner detection & action
 uint8_t menus_cycle_on_press(menu_list_t page)
@@ -322,15 +361,23 @@ uint8_t menus_cycle_on_press(menu_list_t page)
         if (sel->kind != GROUP_STATE_BASED) continue;
         if (!sel->cycle_on_press) continue;
 
-        for (uint8_t k = 0; k < sel->case_count; ++k) {
-            if (sel->groups[k] == gid) {
-                if (sel->field != SAVE_FIELD_INVALID) {
-                    save_modify_u8(sel->field, SAVE_MODIFY_INCREMENT, 0);
-                    return 1; // tell controller to reset cursor
+        {
+            const uint8_t n =
+                (sel->case_count == 1) ? group_list_len(sel->groups) : sel->case_count;
+
+            for (uint8_t k = 0; k < n; ++k) {
+                if (sel->case_count == 1 && sel->groups[k] == 0) break;
+
+                if (sel->groups[k] == gid) {
+                    if (sel->field != SAVE_FIELD_INVALID) {
+                        save_modify_u8(sel->field, SAVE_MODIFY_INCREMENT, 0);
+                        return 1;
+                    }
+                    return 0;
                 }
-                return 0;
             }
         }
+
     }
     return 0;
 }

@@ -144,12 +144,7 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
 // -------------------------
 // Utility (pure logic, data-agnostic)
 // -------------------------
-static inline uint32_t bit(ctrl_group_id_t id) { return (1u << (id - 1)); }
 static inline uint32_t flag_from_id(uint32_t id) { return (id >= 1 && id <= 31) ? (1u << (id - 1)) : 0u; }
-
-static inline uint8_t is_bits_item(save_field_t f) {
-    return (menu_field_row_span(f) == 16u);
-}
 
 static uint8_t rows_for_list(const CtrlActiveList *list) {
     uint8_t rows = 0;
