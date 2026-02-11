@@ -68,9 +68,6 @@ extern uint32_t s_field_change_bits[CHANGE_BITS_WORDS];
 // ---------------------
 // Menu controls
 // ---------------------
-void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out);
-
-
 typedef void (*save_handler_t)(save_field_t field, uint8_t arg);
 
 typedef struct {
