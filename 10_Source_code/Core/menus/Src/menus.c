@@ -21,39 +21,41 @@ extern TIM_HandleTypeDef htim2;
 // UI update fan-out
 // ==============================
 
-void screen_update_menu(uint32_t flag){
-    uint8_t current = get_current_menu(CURRENT_MENU);
-    if (flag & flag_for_menu((menu_list_t)current)) {
-        switch (current) {
-            case MENU_TEMPO:     ui_update_tempo();          break;
-            case MENU_MODIFY:    ui_update_modify();         break;
-            case MENU_TRANSPOSE: ui_update_transpose();      break;
-            case MENU_ARPEGGIATOR:  ui_update_arpeggiator(); break;
-            case MENU_SETTINGS:  ui_update_settings();       break;
-        }
-    }
+typedef void (*ui_fn0_t)(void);
+typedef void (*cont_fn1_t)(menu_list_t);
+
+typedef struct {
+    ui_fn0_t   ui_update;
+    ui_fn0_t   ui_code;
+    cont_fn1_t cont_update;
+} MenuVTable;
+
+static inline menu_list_t current_menu(void) {
+    uint8_t m = get_current_menu(CURRENT_MENU);
+    return (m < AMOUNT_OF_MENUS) ? (menu_list_t)m : MENU_TEMPO;
 }
 
-void ui_code_menu(){
-    uint8_t current = get_current_menu(CURRENT_MENU);
-    switch (current) {
-        case MENU_TEMPO:     ui_code_tempo();     break;
-        case MENU_MODIFY:    ui_code_modify();    break;
-        case MENU_TRANSPOSE: ui_code_transpose(); break;
-        case MENU_ARPEGGIATOR:  ui_code_arpeggiator();       break;
-        case MENU_SETTINGS:  ui_code_settings();  break;
-    }
+static const MenuVTable kMenuVT[AMOUNT_OF_MENUS] = {
+    [MENU_TEMPO]       = { ui_update_tempo,       ui_code_tempo,       (cont_fn1_t)cont_update_tempo },
+    [MENU_MODIFY]      = { ui_update_modify,      ui_code_modify,      cont_update_modify },
+    [MENU_TRANSPOSE]   = { ui_update_transpose,   ui_code_transpose,   cont_update_transpose },
+    [MENU_ARPEGGIATOR] = { ui_update_arpeggiator, ui_code_arpeggiator, cont_update_arpeggiator },
+    [MENU_SETTINGS]    = { ui_update_settings,    ui_code_settings,    (cont_fn1_t)cont_update_settings },
+};
+
+void screen_update_menu(uint32_t flag){
+    const menu_list_t m = current_menu();
+    if (flag & flag_for_menu(m)) kMenuVT[m].ui_update();
+}
+
+void ui_code_menu(void){
+    const menu_list_t m = current_menu();
+    kMenuVT[m].ui_code();
 }
 
 void cont_update_menu(menu_list_t field){
-    uint8_t current = get_current_menu(CURRENT_MENU);
-    switch (current) {
-        case MENU_TEMPO:     cont_update_tempo();          break;
-        case MENU_MODIFY:    cont_update_modify(field);    break;
-        case MENU_TRANSPOSE: cont_update_transpose(field); break;
-        case MENU_ARPEGGIATOR:  cont_update_arpeggiator(field);       break;
-        case MENU_SETTINGS:  cont_update_settings();       break;
-    }
+    const menu_list_t m = current_menu();
+    kMenuVT[m].cont_update(field);
 }
 
 // ==============================
@@ -129,25 +131,17 @@ static const page_group_rule_t kPageGroupRules[] = {
 // Active lists cache per page
 // -------------------------
 typedef struct {
-    CtrlActiveList tempo_item_list;
-    CtrlActiveList modify_item_list;
-    CtrlActiveList transpose_item_list;
-    CtrlActiveList arpeggiator_item_list;
-    CtrlActiveList settings_item_list;
+    CtrlActiveList list[AMOUNT_OF_MENUS];
 } MenuActiveLists;
 
 static MenuActiveLists s_menu_lists;
 
-CtrlActiveList* list_for_page(menu_list_t page) {
-    switch (page) {
-        case MENU_TEMPO:     return &s_menu_lists.tempo_item_list;
-        case MENU_MODIFY:    return &s_menu_lists.modify_item_list;
-        case MENU_TRANSPOSE: return &s_menu_lists.transpose_item_list;
-        case MENU_ARPEGGIATOR:  return &s_menu_lists.arpeggiator_item_list;
-        case MENU_SETTINGS:  return &s_menu_lists.settings_item_list;
-        default:             return &s_menu_lists.tempo_item_list;
-    }
+CtrlActiveList* list_for_page(menu_list_t page)
+{
+    if (page >= AMOUNT_OF_MENUS) page = MENU_TEMPO;
+    return &s_menu_lists.list[page];
 }
+
 
 // -------------------------
 // Local helpers (private to menus.c)
@@ -305,50 +299,61 @@ menu_list_t page_for_ctrl_id(uint32_t id)
 
 
 // Press-to-cycle owner detection & action
+static uint32_t gid_for_row_in_list(const CtrlActiveList *list, uint8_t row)
+{
+    uint8_t cursor = 0;
+    for (uint8_t i = 0; i < list->count; ++i) {
+        save_field_t f = (save_field_t)list->fields_idx[i];
+        uint8_t span = menu_field_row_span(f);
+        if (row < (uint8_t)(cursor + span)) return (uint32_t)menu_controls[f].groups;
+        cursor = (uint8_t)(cursor + span);
+    }
+    return 0;
+}
+
+// Build active list from mask, sorted by ui_order (matches controller ordering)
+static void build_active_list_from_mask(uint32_t mask, CtrlActiveList *out)
+{
+    uint8_t count = 0;
+
+    for (uint16_t f = 0; f < SAVE_FIELD_COUNT && count < MENU_ACTIVE_LIST_CAP; ++f) {
+        const menu_controls_t mt = menu_controls[f];
+        const uint32_t gm = (mt.groups >= 1u && mt.groups <= 31u) ? (1u << (mt.groups - 1u)) : 0u;
+
+        if ((gm & mask) == 0u) continue;
+        if (mt.handler == NULL) continue; // selectable only
+
+        // Insert sorted by ui_order
+        uint8_t pos = count;
+        while (pos > 0) {
+            save_field_t prev_f = (save_field_t)out->fields_idx[pos - 1];
+            if (menu_controls[prev_f].ui_order <= mt.ui_order) break;
+            out->fields_idx[pos] = out->fields_idx[pos - 1];
+            --pos;
+        }
+        out->fields_idx[pos] = f;
+        ++count;
+    }
+
+    out->count = count;
+}
+
+
 uint8_t menus_cycle_on_press(menu_list_t page)
 {
-    // Determine which group owns the current row
     uint32_t gid = 0;
+    const uint8_t row = menu_nav_get_select(page);
 
-    CtrlActiveList u = {0};
-    if (build_union_for_position_page(page, &u)) {
-        // position-based page
-        const uint8_t row = menu_nav_get_select(page);
-        uint8_t cursor = 0;
-        for (uint8_t i = 0; i < u.count; ++i) {
-            const save_field_t f = (save_field_t)u.fields_idx[i];
-            const uint8_t span = menu_field_row_span(f);
-            if (row < (uint8_t)(cursor + span)) {
-                gid = menu_controls[f].groups;
-                break;
-            }
-            cursor = (uint8_t)(cursor + span);
-        }
+    CtrlActiveList list = {0};
+
+    if (build_union_for_position_page(page, &list)) {
+        // position-based page uses union list
+        gid = gid_for_row_in_list(&list, row);
     } else {
-        // save-based only page: build union from active mask
+        // save-based page uses active mask list (sorted by ui_order)
         const uint32_t mask = ctrl_active_mask_for_page(page);
-        CtrlActiveList list = {0};
-        // local copy of ctrl_build_active_fields
-        uint8_t count = 0;
-        for (uint16_t f = 0; f < SAVE_FIELD_COUNT && count < MENU_ACTIVE_LIST_CAP; ++f) {
-            const menu_controls_t mt = menu_controls[f];
-            const uint32_t gm = (mt.groups >= 1 && mt.groups <= 31) ? (1u << (mt.groups - 1)) : 0u;
-            if ((gm & mask) == 0) continue;
-            list.fields_idx[count++] = f;
-        }
-        list.count = count;
-
-        const uint8_t row = menu_nav_get_select(page);
-        uint8_t cursor = 0;
-        for (uint8_t i = 0; i < list.count; ++i) {
-            const save_field_t f = (save_field_t)list.fields_idx[i];
-            const uint8_t span = menu_field_row_span(f);
-            if (row < (uint8_t)(cursor + span)) {
-                gid = menu_controls[f].groups;
-                break;
-            }
-            cursor = (uint8_t)(cursor + span);
-        }
+        build_active_list_from_mask(mask, &list);
+        gid = gid_for_row_in_list(&list, row);
     }
 
     if (!gid) return 0;
@@ -360,26 +365,25 @@ uint8_t menus_cycle_on_press(menu_list_t page)
         if (sel->kind != GROUP_STATE_BASED) continue;
         if (!sel->cycle_on_press) continue;
 
-        {
-            const uint8_t n =
-                (sel->case_count == 1) ? group_list_len(sel->groups) : sel->case_count;
+        const uint8_t n =
+            (sel->case_count == 1) ? group_list_len(sel->groups) : sel->case_count;
 
-            for (uint8_t k = 0; k < n; ++k) {
-                if (sel->case_count == 1 && sel->groups[k] == 0) break;
+        for (uint8_t k = 0; k < n; ++k) {
+            if (sel->case_count == 1 && sel->groups[k] == 0) break;
 
-                if (sel->groups[k] == gid) {
-                    if (sel->field != SAVE_FIELD_INVALID) {
-                        save_modify_u8(sel->field, SAVE_MODIFY_INCREMENT, 0);
-                        return 1;
-                    }
-                    return 0;
+            if ((uint32_t)sel->groups[k] == gid) {
+                if (sel->field != SAVE_FIELD_INVALID) {
+                    save_modify_u8(sel->field, SAVE_MODIFY_INCREMENT, 0);
+                    return 1;
                 }
+                return 0;
             }
         }
-
     }
+
     return 0;
 }
+
 
 // ==============================
 // Save helper functions / small UI IO
@@ -393,8 +397,7 @@ void menu_change_check(){
 }
 
 void refresh_screen(){
-    menu_list_t menu = (menu_list_t)get_current_menu(CURRENT_MENU);
-    threads_display_notify(flag_for_menu(menu));
+    threads_display_notify(flag_for_menu(current_menu()));
 }
 
 static uint8_t handle_menu_toggle(GPIO_TypeDef *port, uint16_t pin1, uint16_t pin2)
