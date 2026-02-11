@@ -146,6 +146,24 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
 // -------------------------
 static inline uint32_t flag_from_id(uint32_t id) { return (id >= 1 && id <= 31) ? (1u << (id - 1)) : 0u; }
 
+uint8_t menu_row_hit(const CtrlActiveList *list, uint8_t row, save_field_t *out_field, uint8_t *out_bit, uint32_t *out_gid)
+{
+    uint8_t cursor = 0;
+    for (uint8_t i = 0; i < list->count; ++i) {
+        save_field_t f = (save_field_t)list->fields_idx[i];
+        uint8_t span = menu_field_row_span(f);
+        if (row < (uint8_t)(cursor + span)) {
+            if (out_field) *out_field = f;
+            if (out_gid)   *out_gid   = (uint32_t)menu_controls[f].groups;
+            if (out_bit)   *out_bit   = (span == 16u) ? (uint8_t)(row - cursor) : 0xFF;
+            return 1;
+        }
+        cursor = (uint8_t)(cursor + span);
+    }
+    return 0;
+}
+
+
 static uint8_t rows_for_list(const CtrlActiveList *list) {
     uint8_t rows = 0;
     for (uint8_t i = 0; i < list->count; ++i) {
@@ -273,43 +291,31 @@ static inline NavSel nav_selection(menu_list_t page)
     s.bit   = 0xFF;
     s.field = SAVE_FIELD_INVALID;
 
-    CtrlActiveList u = {0};
-    if (build_union_for_position_page(page, &u)) { // position-based page (from menus.c)
-        uint8_t cursor = 0;
-        for (uint8_t i = 0; i < u.count; ++i) {
-            const save_field_t f = (save_field_t)u.fields_idx[i];
-            const uint8_t span = menu_field_row_span(f);
+    uint32_t gid = 0;
+    uint8_t  bit = 0xFF;
+    save_field_t f = SAVE_FIELD_INVALID;
 
-            if (s.row < (uint8_t)(cursor + span)) {
-                s.field   = f;
-                s.is_bits = (span == 16u);
-                s.bit     = s.is_bits ? (uint8_t)(s.row - cursor) : 0xFF;
-                s.gid     = menu_controls[f].groups;
-                return s;
-            }
-            cursor = (uint8_t)(cursor + span);
+    CtrlActiveList u = {0};
+    if (build_union_for_position_page(page, &u)) {
+        if (menu_row_hit(&u, s.row, &f, &bit, &gid)) {
+            s.field   = f;
+            s.is_bits = (bit != 0xFF);
+            s.bit     = bit;
+            s.gid     = gid;
         }
         return s;
     }
 
-    // save-based only page: use active list
     const CtrlActiveList *list = get_list_for_page(page);
-    uint8_t row_cursor = 0;
-
-    for (uint8_t i = 0; i < list->count; ++i) {
-        const save_field_t f = (save_field_t)list->fields_idx[i];
-        const uint8_t span = menu_field_row_span(f);
-        if (s.row < (uint8_t)(row_cursor + span)) {
-            s.field   = f;
-            s.is_bits = (span == 16u);
-            s.bit     = s.is_bits ? (uint8_t)(s.row - row_cursor) : 0xFF;
-            s.gid     = menu_controls[f].groups;
-            return s;
-        }
-        row_cursor = (uint8_t)(row_cursor + span);
+    if (menu_row_hit(list, s.row, &f, &bit, &gid)) {
+        s.field   = f;
+        s.is_bits = (bit != 0xFF);
+        s.bit     = bit;
+        s.gid     = gid;
     }
     return s;
 }
+
 
 // -------------------------
 // Press-to-cycle (menus decides if/what cycles)

@@ -84,6 +84,8 @@ extern const menu_controls_t menu_controls[SAVE_FIELD_COUNT];
 // Display flag helpers
 // =====================
 
+uint8_t menu_row_hit(const CtrlActiveList *list, uint8_t row, save_field_t *out_field, uint8_t *out_bit, uint32_t *out_gid);
+
 // Forward declaration used elsewhere
 void threads_display_notify(uint32_t flags);
 

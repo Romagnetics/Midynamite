@@ -298,86 +298,64 @@ menu_list_t page_for_ctrl_id(uint32_t id)
 }
 
 
-// Press-to-cycle owner detection & action
-static uint32_t gid_for_row_in_list(const CtrlActiveList *list, uint8_t row)
-{
-    uint8_t cursor = 0;
-    for (uint8_t i = 0; i < list->count; ++i) {
-        save_field_t f = (save_field_t)list->fields_idx[i];
-        uint8_t span = menu_field_row_span(f);
-        if (row < (uint8_t)(cursor + span)) return (uint32_t)menu_controls[f].groups;
-        cursor = (uint8_t)(cursor + span);
-    }
-    return 0;
-}
-
-// Build active list from mask, sorted by ui_order (matches controller ordering)
-static void build_active_list_from_mask(uint32_t mask, CtrlActiveList *out)
-{
-    uint8_t count = 0;
-
-    for (uint16_t f = 0; f < SAVE_FIELD_COUNT && count < MENU_ACTIVE_LIST_CAP; ++f) {
-        const menu_controls_t mt = menu_controls[f];
-        const uint32_t gm = (mt.groups >= 1u && mt.groups <= 31u) ? (1u << (mt.groups - 1u)) : 0u;
-
-        if ((gm & mask) == 0u) continue;
-        if (mt.handler == NULL) continue; // selectable only
-
-        // Insert sorted by ui_order
-        uint8_t pos = count;
-        while (pos > 0) {
-            save_field_t prev_f = (save_field_t)out->fields_idx[pos - 1];
-            if (menu_controls[prev_f].ui_order <= mt.ui_order) break;
-            out->fields_idx[pos] = out->fields_idx[pos - 1];
-            --pos;
-        }
-        out->fields_idx[pos] = f;
-        ++count;
-    }
-
-    out->count = count;
-}
-
-
 uint8_t menus_cycle_on_press(menu_list_t page)
 {
-    uint32_t gid = 0;
     const uint8_t row = menu_nav_get_select(page);
 
-    CtrlActiveList list = {0};
+    uint32_t gid = 0;
+    CtrlActiveList u = {0};
 
-    if (build_union_for_position_page(page, &list)) {
-        // position-based page uses union list
-        gid = gid_for_row_in_list(&list, row);
+    if (build_union_for_position_page(page, &u)) {
+        (void)menu_row_hit(&u, row, NULL, NULL, &gid);
     } else {
-        // save-based page uses active mask list (sorted by ui_order)
+        // reuse controller’s cached list_for_page by rebuilding it the same way controller does:
+        // build active list from mask, in correct ui_order
         const uint32_t mask = ctrl_active_mask_for_page(page);
-        build_active_list_from_mask(mask, &list);
-        gid = gid_for_row_in_list(&list, row);
+        CtrlActiveList *dst = list_for_page(page);
+
+        // controller already has this logic, but it's static there.
+        // So we do the minimal equivalent *once* here:
+        uint8_t count = 0;
+        for (uint16_t f = 0; f < SAVE_FIELD_COUNT && count < MENU_ACTIVE_LIST_CAP; ++f) {
+            const menu_controls_t mt = menu_controls[f];
+            const uint32_t gm = (mt.groups >= 1u && mt.groups <= 31u) ? (1u << (mt.groups - 1u)) : 0u;
+            if ((gm & mask) == 0u) continue;
+            if (mt.handler == NULL) continue;
+
+            uint8_t pos = count;
+            while (pos > 0) {
+                save_field_t prev_f = (save_field_t)dst->fields_idx[pos - 1];
+                if (menu_controls[prev_f].ui_order <= mt.ui_order) break;
+                dst->fields_idx[pos] = dst->fields_idx[pos - 1];
+                --pos;
+            }
+            dst->fields_idx[pos] = f;
+            ++count;
+        }
+        dst->count = count;
+
+        (void)menu_row_hit(dst, row, NULL, NULL, &gid);
     }
 
     if (!gid) return 0;
 
-    // Find save-based selector that owns this gid and cycles on press
     for (size_t i = 0; i < KPAGEGROUPRULES_COUNT; ++i) {
         const page_group_rule_t *sel = &kPageGroupRules[i];
         if (sel->page != page) continue;
         if (sel->kind != GROUP_STATE_BASED) continue;
         if (!sel->cycle_on_press) continue;
 
-        const uint8_t n =
-            (sel->case_count == 1) ? group_list_len(sel->groups) : sel->case_count;
+        const uint8_t n = (sel->case_count == 1) ? group_list_len(sel->groups) : sel->case_count;
 
         for (uint8_t k = 0; k < n; ++k) {
             if (sel->case_count == 1 && sel->groups[k] == 0) break;
+            if ((uint32_t)sel->groups[k] != gid) continue;
 
-            if ((uint32_t)sel->groups[k] == gid) {
-                if (sel->field != SAVE_FIELD_INVALID) {
-                    save_modify_u8(sel->field, SAVE_MODIFY_INCREMENT, 0);
-                    return 1;
-                }
-                return 0;
+            if (sel->field != SAVE_FIELD_INVALID) {
+                save_modify_u8(sel->field, SAVE_MODIFY_INCREMENT, 0);
+                return 1;
             }
+            return 0;
         }
     }
 
