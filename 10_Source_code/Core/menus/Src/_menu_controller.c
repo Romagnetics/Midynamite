@@ -123,6 +123,8 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     MC(ARPEGGIATOR_OCTAVES,            WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_PAGE_1),
     MC(ARPEGGIATOR_PATTERN,            WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_PAGE_1),
 
+    MC(ARPEGGIATOR_HOLD,               WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_PAGE_2),
+
     MC(SETTINGS_START_MENU,            WRAP,  update_value,              1,        CTRL_SETTINGS_GLOBAL1),
     MC(SETTINGS_SEND_USB,              WRAP,  update_value,              1,        CTRL_SETTINGS_GLOBAL1),
     MC(SETTINGS_BRIGHTNESS,          NO_WRAP, update_contrast,           1,        CTRL_SETTINGS_GLOBAL1),

@@ -95,17 +95,9 @@ static const ctrl_group_id_t GR_MODIFY_VEL_TYPE[]  = { CTRL_MODIFY_VEL_CHANGED, 
 static const ctrl_group_id_t GR_TRANSPOSE_ALL[]    = { CTRL_TRANSPOSE_ALL };
 static const ctrl_group_id_t GR_TRANSPOSE_TYPE[]   = { CTRL_TRANSPOSE_SHIFT, CTRL_TRANSPOSE_SCALED };
 
-static const ctrl_group_id_t GR_ARPEGGIATOR_PAGE_1[]  = { CTRL_ARPEGGIATOR_PAGE_1,  CTRL_SHARED_TEMPO, 0 };
+static const ctrl_group_id_t GR_ARP_SECTIONS[] = {CTRL_ARPEGGIATOR_PAGE_1, CTRL_ARPEGGIATOR_PAGE_2,};
 
-static const ctrl_group_id_t GR_ARP_SECTIONS[] = {
-    CTRL_ARPEGGIATOR_PAGE_1,
-    CTRL_ARPEGGIATOR_PAGE_2,
-};
-
-static const ctrl_group_id_t GR_ARP_TEMPO_GATE[] = {
-    CTRL_SHARED_TEMPO, // when section index = 0 (page1)
-    0                  // when section index = 1 (page2) => nothing
-};
+static const ctrl_group_id_t GR_ARP_TEMPO_GATE[] = {CTRL_SHARED_TEMPO, 0};
 
 static const ctrl_group_id_t GR_SETTINGS_ALWAYS[]  = { CTRL_SETTINGS_ALWAYS };
 static const ctrl_group_id_t GR_SETTINGS_SECTIONS[] = {
@@ -207,13 +199,10 @@ static uint8_t group_list_len(const ctrl_group_id_t *groups)
     return n;
 }
 
-static uint8_t idx_from_position_selector(const page_group_rule_t *sel) {
+static uint8_t idx_from_position_selector(const page_group_rule_t *sel)
+{
     CtrlActiveList u = {0};
-
-    const uint8_t n_groups =
-        (sel->case_count == 1) ? group_list_len(sel->groups) : sel->case_count;
-
-    build_union_for_groups_local(sel->groups, n_groups, &u);
+    if (!build_union_for_position_page(sel->page, &u)) return 0;
 
     const uint8_t sel_row = menu_nav_get_select(sel->page);
     uint8_t cursor = 0;
@@ -225,6 +214,10 @@ static uint8_t idx_from_position_selector(const page_group_rule_t *sel) {
         if (sel_row < (uint8_t)(cursor + span)) {
             const ctrl_group_id_t gid = (ctrl_group_id_t)menu_controls[f].groups;
 
+            // Map gid -> index within THIS selector's groups[]
+            const uint8_t n_groups =
+                (sel->case_count == 1) ? group_list_len(sel->groups) : sel->case_count;
+
             for (uint8_t k = 0; k < n_groups; ++k) {
                 if (sel->groups[k] == 0) break;
                 if (sel->groups[k] == gid) return k;
@@ -235,6 +228,7 @@ static uint8_t idx_from_position_selector(const page_group_rule_t *sel) {
     }
     return 0;
 }
+
 
 
 // ==============================

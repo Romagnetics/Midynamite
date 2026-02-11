@@ -131,6 +131,7 @@ typedef struct {
     const char *pattern;
     const char *division;
     const char *gate;
+    const char *hold;
 
 
     //Error handlers

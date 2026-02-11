@@ -38,6 +38,11 @@ void ui_update_arpeggiator(void)
         // Pattern
         { ELEM_TEXT , 0,                      TEXT_(pattern),               UI_6x8, TXT_LEFT,     LINE_4,  CTRL_ARPEGGIATOR_PAGE_1 },
         { ELEM_ITEM , ARPEGGIATOR_PATTERN,    TEXT_(arp_patterns),          UI_6x8, CENTER_SPLIT, LINE_4,  CTRL_ARPEGGIATOR_PAGE_1 },
+
+        // Page 2 Start
+        { ELEM_TEXT , 0,                      TEXT_(hold),                  UI_6x8, TXT_LEFT,     LINE_1,  CTRL_ARPEGGIATOR_PAGE_2 },
+        { ELEM_ITEM , ARPEGGIATOR_HOLD,       TEXT_(off_on),                UI_6x8, CENTER_SPLIT, LINE_1,  CTRL_ARPEGGIATOR_PAGE_2 },
+
     };
 
     menu_ui_render(

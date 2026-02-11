@@ -128,6 +128,7 @@ static const Message _message = {
 	.division = "Division",
 	.pattern = "Pattern",
 	.gate = "Gate",
+	.hold = "Hold",
 
 
     // MIDI Note Names (C-1 to G9)
