@@ -71,9 +71,10 @@ typedef void (*save_handler_t)(save_field_t field, uint8_t arg);
 
 typedef struct {
     uint8_t        wrap;
-    save_handler_t handler;
+    void         (*handler)(save_field_t field, uint8_t arg);
     uint8_t        handler_arg;
     uint32_t       groups;
+    uint16_t       ui_order;
 } menu_controls_t;
 
 extern const menu_controls_t menu_controls[SAVE_FIELD_COUNT];
