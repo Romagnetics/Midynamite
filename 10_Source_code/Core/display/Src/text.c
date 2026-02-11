@@ -19,7 +19,6 @@ static const Message _message = {
     .about = "About",
     .midi_modify = "MIDI Modify",
     .midi_transpose = "MIDI Transpose",
-    .arpeggiator = "Arpeggiator",
 	.output_sem = "Output:",
 
 	.MIDI_Thru = "MIDI Thru",
@@ -43,8 +42,7 @@ static const Message _message = {
     .change_velocity = "Change Velocity",
     .fixed_velocity = "Fixed Velocity",
 
-    // Arpeggiator
-    .pattern = "Pattern",
+
 
     // Transpose
     .type = "Type",
@@ -125,6 +123,8 @@ static const Message _message = {
 	.upgrade_mode = "Upgrade Mode",
 
 	//Arpeggio
+    .arpeggiator_1 = "Arpeggiator 1/2",
+    .arpeggiator_2 = "Arpeggiator 2/2",
 	.division = "Division",
 	.pattern = "Pattern",
 	.gate = "Gate",

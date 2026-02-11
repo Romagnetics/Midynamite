@@ -20,7 +20,7 @@ void ui_update_arpeggiator(void)
 
     const ui_element elems[] = {
         // type       save_item               text                          font    x             y        ctrl_group_id
-        { ELEM_TEXT , 0,                      TEXT_(arpeggiator),           UI_6x8, TXT_LEFT,     LINE_0,  CTRL_ARPEGGIATOR_PAGE_1 },
+        { ELEM_TEXT , 0,                      TEXT_(arpeggiator_1),         UI_6x8, TXT_LEFT,     LINE_0,  CTRL_ARPEGGIATOR_PAGE_1 },
 
         // Tempo
         { ELEM_TEXT , 0,                      TEXT_(tempo),                 UI_6x8, TXT_LEFT,     LINE_1,  CTRL_ARPEGGIATOR_PAGE_1 },
@@ -39,7 +39,10 @@ void ui_update_arpeggiator(void)
         { ELEM_TEXT , 0,                      TEXT_(pattern),               UI_6x8, TXT_LEFT,     LINE_4,  CTRL_ARPEGGIATOR_PAGE_1 },
         { ELEM_ITEM , ARPEGGIATOR_PATTERN,    TEXT_(arp_patterns),          UI_6x8, CENTER_SPLIT, LINE_4,  CTRL_ARPEGGIATOR_PAGE_1 },
 
-        // Page 2 Start
+        // Page 2
+        { ELEM_TEXT , 0,                      TEXT_(arpeggiator_2),         UI_6x8, TXT_LEFT,     LINE_0,  CTRL_ARPEGGIATOR_PAGE_2 },
+
+
         { ELEM_TEXT , 0,                      TEXT_(hold),                  UI_6x8, TXT_LEFT,     LINE_1,  CTRL_ARPEGGIATOR_PAGE_2 },
         { ELEM_ITEM , ARPEGGIATOR_HOLD,       TEXT_(off_on),                UI_6x8, CENTER_SPLIT, LINE_1,  CTRL_ARPEGGIATOR_PAGE_2 },
 

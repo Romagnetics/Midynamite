@@ -23,7 +23,6 @@ typedef struct {
     const char *about;
     const char *midi_modify;
     const char *midi_transpose;
-    const char *arpeggiator;
     const char *output_sem;
 
     // Settings
@@ -128,6 +127,8 @@ typedef struct {
     const char *upgrade_mode;
 
     // Arpeggiator
+    const char *arpeggiator_1;
+    const char *arpeggiator_2;
     const char *pattern;
     const char *division;
     const char *gate;
