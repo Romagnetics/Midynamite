@@ -41,10 +41,10 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [TRANSPOSE_CURRENTLY_SENDING]          = {      0,          1,          0 },
 
 	[ARPEGGIATOR_CURRENTLY_SENDING]        = {      0,       1,          0 },
-	[ARPEGGIATOR_INTERVAL]       = {      0,       6,          0 },
+	[ARPEGGIATOR_DIVISION]       = {      0,       6,          0 },
+	[ARPEGGIATOR_GATE]        = {      1,       10,          10 },
+	[ARPEGGIATOR_OCTAVES]        = {      1,       4,          1 },
 	[ARPEGGIATOR_PATTERN]        = {      0,       7,          0 },
-	[ARPEGGIATOR_GATE]        = {      10,       100,          100 },
-	[ARPEGGIATOR_OCTAVES]        = {      1,       5,          1 },
 	[ARPEGGIATOR_HOLD]        = {      0,       1,          0 },
 	[ARPEGGIATOR_SWING]        = {      0,       100,          50 },
 	[ARPEGGIATOR_RETRIGGER]        = {      0,       1,          0 },
@@ -53,7 +53,7 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
 
     [SETTINGS_START_MENU]        = {      0,          AMOUNT_OF_MENUS-1,          0 },
     [SETTINGS_SEND_USB]          = {      0,          1,          0 },
-    [SETTINGS_BRIGHTNESS]        = {      0,          9,          6 },
+    [SETTINGS_BRIGHTNESS]        = {      1,          10,          7 },
     [SETTINGS_MIDI_THRU]         = {      0,          1,          0 },
     [SETTINGS_USB_THRU]          = {      0,          1,          0 },
     [SETTINGS_CHANNEL_FILTER]    = {      0,          1,          0 },

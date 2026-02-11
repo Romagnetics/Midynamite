@@ -368,7 +368,7 @@ void start_stop_pressed() {
 
 void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
     draw_line(ON_OFF_VERT_LINE, 10, ON_OFF_VERT_LINE, bottom_line);
-    uint8_t text_position = bottom_line/2;
+    uint8_t text_position = bottom_line/2-2;
     const char *text_print = message->off_on[on_or_off];
     write_1118(text_print, 95, text_position);
 }

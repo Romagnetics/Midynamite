@@ -96,7 +96,7 @@ typedef struct {
 
     // Contrast
     const char *contrast;
-    const char *ten_hundred_ten_percent[10];
+    const char *ten_hundred_ten_percent[11];
     const char *zero_hundred_ten[11];
 
 
@@ -130,6 +130,8 @@ typedef struct {
     // Arpeggiator
     const char *pattern;
     const char *division;
+    const char *gate;
+
 
     //Error handlers
     const char *error;
@@ -159,6 +161,7 @@ typedef struct {
 
     const char *division_list[7];
     const char *arp_patterns[8];
+    const char *octave_count[5];
 
 
 } Message;

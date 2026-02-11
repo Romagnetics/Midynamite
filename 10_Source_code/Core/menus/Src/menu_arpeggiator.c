@@ -16,30 +16,43 @@ void cont_update_arpeggiator(menu_list_t field) {
 
 void ui_update_arpeggiator(void)
 {
+    #define CENTER_SPLIT 62
+
     const ui_element elems[] = {
-        // type      save_item                text                        font    x       y           ctrl_group_id
-        { ELEM_TEXT , 0,                       TEXT_(arpeggiator),        UI_6x8, TXT_LEFT, LINE_0,      CTRL_ARPEGGIATOR_ALL },
+        // type       save_item               text                          font    x             y        ctrl_group_id
+        { ELEM_TEXT , 0,                      TEXT_(arpeggiator),           UI_6x8, TXT_LEFT,     LINE_0,  CTRL_ARPEGGIATOR_ALL },
 
-        //Tempo
-		{ ELEM_TEXT , 0,                       TEXT_(tempo),        UI_6x8, TXT_LEFT, LINE_1,      CTRL_ARPEGGIATOR_ALL},
-        { ELEM_ITEM ,  TEMPO_CURRENT_TEMPO,    TEXT_(zer_to_300),   UI_6x8, 60,      LINE_1     , CTRL_TEMPO_SHARED  },
+        // Tempo
+        { ELEM_TEXT , 0,                      TEXT_(tempo),                 UI_6x8, TXT_LEFT,     LINE_1,  CTRL_ARPEGGIATOR_ALL },
+        { ELEM_ITEM , TEMPO_CURRENT_TEMPO,    TEXT_(zer_to_300),            UI_6x8, CENTER_SPLIT, LINE_1,  CTRL_TEMPO_SHARED     },
 
-		{ ELEM_TEXT , 0,                       TEXT_(division),        UI_6x8, TXT_LEFT, LINE_2,      CTRL_ARPEGGIATOR_ALL},
-        { ELEM_ITEM ,  ARPEGGIATOR_INTERVAL,    TEXT_(division_list),   UI_6x8, 60,      LINE_2     , CTRL_ARPEGGIATOR_ALL  },
+        // Division
+        { ELEM_TEXT , 0,                      TEXT_(division),              UI_6x8, TXT_LEFT,     LINE_2,  CTRL_ARPEGGIATOR_ALL },
+        { ELEM_ITEM , ARPEGGIATOR_DIVISION,   TEXT_(division_list),         UI_6x8, CENTER_SPLIT, LINE_2,  CTRL_ARPEGGIATOR_ALL },
 
-		{ ELEM_TEXT , 0,                       TEXT_(pattern),        UI_6x8, TXT_LEFT, LINE_4,      CTRL_ARPEGGIATOR_ALL},
-        { ELEM_ITEM ,  ARPEGGIATOR_PATTERN,    TEXT_(arp_patterns),   UI_6x8, 60,      LINE_4     , CTRL_ARPEGGIATOR_ALL  },
+        // Gate
+        { ELEM_TEXT , 0,                      TEXT_(gate),                  UI_6x8, TXT_LEFT,     LINE_3,  CTRL_ARPEGGIATOR_ALL },
+        { ELEM_ITEM , ARPEGGIATOR_GATE,       TEXT_(ten_hundred_ten_percent), UI_6x8, 33,         LINE_3,  CTRL_ARPEGGIATOR_ALL },
+        { ELEM_ITEM , ARPEGGIATOR_OCTAVES,    TEXT_(octave_count),          UI_6x8, CENTER_SPLIT, LINE_3,  CTRL_ARPEGGIATOR_ALL },
 
-
+        // Pattern
+        { ELEM_TEXT , 0,                      TEXT_(pattern),               UI_6x8, TXT_LEFT,     LINE_4,  CTRL_ARPEGGIATOR_ALL },
+        { ELEM_ITEM , ARPEGGIATOR_PATTERN,    TEXT_(arp_patterns),          UI_6x8, CENTER_SPLIT, LINE_4,  CTRL_ARPEGGIATOR_ALL },
     };
-    menu_ui_render(MENU_ARPEGGIATOR, elems, (uint8_t)(sizeof(elems)/sizeof(elems[0])));
+
+    menu_ui_render(
+        MENU_ARPEGGIATOR,
+        elems,
+        (uint8_t)(sizeof(elems) / sizeof(elems[0]))
+    );
 }
+
 
 
 void ui_code_arpeggiator()    {
 
-	midi_display_on_off(save_get(ARPEGGIATOR_CURRENTLY_SENDING), LINE_3);
-	draw_line(ON_OFF_VERT_LINE, LINE_3, 127, LINE_3);
+	midi_display_on_off(save_get(ARPEGGIATOR_CURRENTLY_SENDING), LINE_3 - 3);
+	draw_line(ON_OFF_VERT_LINE, LINE_3-3, 127, LINE_3-3);
 
 
 }

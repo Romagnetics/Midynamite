@@ -92,7 +92,7 @@ static const Message _message = {
 
     // Contrast
     .contrast = "Contrast",
-    .ten_hundred_ten_percent = {
+    .ten_hundred_ten_percent = { " 0%",
         "10%", "20%", "30%", "40%", "50%",
         "60%", "70%", "80%", "90%", "100%"
     },
@@ -127,6 +127,8 @@ static const Message _message = {
 	//Arpeggio
 	.division = "Division",
 	.pattern = "Pattern",
+	.gate = "Gate",
+
 
     // MIDI Note Names (C-1 to G9)
     .midi_note_names = {
@@ -242,7 +244,7 @@ static const Message _message = {
 	//Arpeggio
 	.division_list = { "1/4", "1/6", "1/8", "1/12", "1/16", "1/24", "1/32" },
 	.arp_patterns = { "Up", "Down", "Up/Down", "Up/Down 2", "Random", "Double Up", "Double Down", "Order"},
-	.octave_count = { "Error", "1 Octave", "2 Octaves", "3 Octaves", "4 Ocaves"},
+	.octave_count = { "Error", "1 Octave", "2 Octaves", "3 Octaves", "4 Octaves"},
 };
 
 const Message *message = &_message;

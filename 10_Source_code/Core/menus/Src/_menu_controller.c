@@ -113,7 +113,9 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     [TRANSPOSE_CURRENTLY_SENDING]= {   WRAP,  no_update,                0,      0 },
 
     [ARPEGGIATOR_CURRENTLY_SENDING] = {   WRAP,  no_update,             0,      CTRL_ARPEGGIATOR_ALL  },
-    [ARPEGGIATOR_INTERVAL ] = {   WRAP,  update_value,                  1,      CTRL_ARPEGGIATOR_ALL  },
+    [ARPEGGIATOR_DIVISION ] = {   WRAP,  update_value,                  1,      CTRL_ARPEGGIATOR_ALL  },
+    [ARPEGGIATOR_GATE   ] = {   WRAP,  update_value,                  1,      CTRL_ARPEGGIATOR_ALL  },
+    [ARPEGGIATOR_OCTAVES   ] = {   WRAP,  update_value,                  1,      CTRL_ARPEGGIATOR_ALL  },
     [ARPEGGIATOR_PATTERN  ] = {   WRAP,  update_value,                  1,      CTRL_ARPEGGIATOR_ALL  },
 
 
