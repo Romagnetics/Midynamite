@@ -79,6 +79,10 @@ typedef struct {
 
 extern const menu_controls_t menu_controls[SAVE_FIELD_COUNT];
 
+// Build active list from an active-groups mask (sorted by ui_order).
+// Exported so menus.c can reuse the exact same ordering/filtering logic.
+void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out);
+
 // =====================
 // Display flag helpers
 // =====================

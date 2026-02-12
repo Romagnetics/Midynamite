@@ -324,34 +324,14 @@ uint8_t menus_cycle_on_press(menu_list_t page)
     if (build_union_for_position_page(page, &u)) {
         (void)menu_row_hit(&u, row, NULL, NULL, &gid);
     } else {
-        // reuse controller’s cached list_for_page by rebuilding it the same way controller does:
-        // build active list from mask, in correct ui_order
+        // Build active list from mask, in correct ui_order (shared implementation)
         const uint32_t mask = ctrl_active_mask_for_page(page);
         CtrlActiveList *dst = list_for_page(page);
-
-        // controller already has this logic, but it's static there.
-        // So we do the minimal equivalent *once* here:
-        uint8_t count = 0;
-        for (uint16_t f = 0; f < SAVE_FIELD_COUNT && count < MENU_ACTIVE_LIST_CAP; ++f) {
-            const menu_controls_t mt = menu_controls[f];
-            const uint32_t gm = (mt.groups >= 1u && mt.groups <= 31u) ? (1u << (mt.groups - 1u)) : 0u;
-            if ((gm & mask) == 0u) continue;
-            if (mt.handler == NULL) continue;
-
-            uint8_t pos = count;
-            while (pos > 0) {
-                save_field_t prev_f = (save_field_t)dst->fields_idx[pos - 1];
-                if (menu_controls[prev_f].ui_order <= mt.ui_order) break;
-                dst->fields_idx[pos] = dst->fields_idx[pos - 1];
-                --pos;
-            }
-            dst->fields_idx[pos] = f;
-            ++count;
-        }
-        dst->count = count;
+        ctrl_build_active_fields(mask, dst);
 
         (void)menu_row_hit(dst, row, NULL, NULL, &gid);
     }
+
 
     if (!gid) return 0;
 
