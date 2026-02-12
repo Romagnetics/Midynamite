@@ -19,6 +19,15 @@ uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
 
 static volatile uint8_t s_ui_reload = 0;
 
+uint8_t ctrl_get_arp_length_clamped(void)
+{
+    uint8_t len = (uint8_t)save_get(ARPEGGIATOR_LENGTH);
+    if (len < 1u) len = 1u;
+    if (len > 8u) len = 8u;
+    return len;
+}
+
+
 // -------------------------
 // Encoder & value helpers (logic-agnostic)
 // -------------------------
@@ -101,9 +110,7 @@ void update_bits_8_steps(save_field_t field)
     const int8_t bit = ui_selected_bit(field);
     if (bit < 0) return;
 
-    uint8_t len = (uint8_t)save_get(ARPEGGIATOR_LENGTH);
-    if (len < 1u) len = 1u;
-    if (len > 8u) len = 8u;
+    const uint8_t len = ctrl_get_arp_length_clamped();
 
     // Don’t allow edits beyond length
     if ((uint8_t)bit >= len) return;
@@ -153,7 +160,8 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     MC(ARPEGGIATOR_OCTAVES,            WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
     MC(ARPEGGIATOR_PATTERN,            WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
 
-    MC(ARPEGGIATOR_LENGTH,          NO_WRAP,  update_value_inc10,            CTRL_ARPEGGIATOR_PAGE_2),
+    MC(ARPEGGIATOR_SWING,           NO_WRAP,  update_value_inc1,             CTRL_ARPEGGIATOR_PAGE_2),
+    MC(ARPEGGIATOR_LENGTH,          NO_WRAP,  update_value_inc1,             CTRL_ARPEGGIATOR_PAGE_2),
     MC(ARPEGGIATOR_NOTES,              WRAP, update_bits_8_steps,           CTRL_ARPEGGIATOR_PAGE_2),
 	MC(ARPEGGIATOR_HOLD,               WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_2),
 	MC(ARPEGGIATOR_KEY_SYNC,           WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_2),

@@ -73,6 +73,7 @@ extern const menu_controls_t menu_controls[SAVE_FIELD_COUNT];
 // Build active list from an active-groups mask (sorted by ui_order).
 // Exported so menus.c can reuse the exact same ordering/filtering logic.
 void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out);
+uint8_t ctrl_get_arp_length_clamped(void);
 
 // =====================
 // Display flag helpers
@@ -111,10 +112,7 @@ static inline uint8_t menu_field_row_span(save_field_t f)
             return 16u;
 
         case ARPEGGIATOR_NOTES: {
-            uint8_t len = (uint8_t)save_get(ARPEGGIATOR_LENGTH);
-            if (len < 1u) len = 1u;
-            if (len > 8u) len = 8u;
-            return len;
+            return ctrl_get_arp_length_clamped();
         }
 
         default:

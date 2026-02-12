@@ -17,6 +17,11 @@ void cont_update_arpeggiator(menu_list_t field) {
 void ui_update_arpeggiator(void)
 {
     #define CENTER_SPLIT 62
+    #define ARP_X_GATE 35
+    #define ARP_X_STEPS 45
+    #define ARP_X_HOLD 35
+    #define ARP_X_KEYSYNC_TXT 60
+    #define ARP_X_KEYSYNC_VAL 110
 
     const ui_element elems[] = {
         // type       save_item               text                          font    x             y        ctrl_group_id
@@ -32,7 +37,7 @@ void ui_update_arpeggiator(void)
 
         // Gate
         { ELEM_TEXT , 0,                      TEXT_(gate_),                  UI_6x8, TXT_LEFT,     LINE_3,  CTRL_ARPEGGIATOR_PAGE_1 },
-        { ELEM_ITEM , ARPEGGIATOR_GATE,       TEXT_(ten_hundred_ten_percent), UI_6x8, 35,         LINE_3,  CTRL_ARPEGGIATOR_PAGE_1 },
+        { ELEM_ITEM , ARPEGGIATOR_GATE,       TEXT_(ten_hundred_ten_percent), UI_6x8, ARP_X_GATE,  LINE_3,  CTRL_ARPEGGIATOR_PAGE_1 },
         { ELEM_ITEM , ARPEGGIATOR_OCTAVES,    TEXT_(octave_count),          UI_6x8, CENTER_SPLIT, LINE_3,  CTRL_ARPEGGIATOR_PAGE_1 },
 
         // Pattern
@@ -43,7 +48,7 @@ void ui_update_arpeggiator(void)
         { ELEM_TEXT , 0,                      TEXT_(arpeggiator_2),         UI_6x8, TXT_LEFT,     LINE_0,  CTRL_ARPEGGIATOR_PAGE_2 },
 
         { ELEM_TEXT , 0,                      TEXT_(swing_),                 UI_6x8, TXT_LEFT,     LINE_1,  CTRL_ARPEGGIATOR_PAGE_2 },
-		//Romain insert swing logic here
+        { ELEM_ITEM , ARPEGGIATOR_SWING,      TEXT_(ten_hundred_ten_percent), UI_6x8, CENTER_SPLIT, LINE_1,  CTRL_ARPEGGIATOR_PAGE_2 },
 
         { ELEM_TEXT , 0,                      TEXT_(length_),       UI_6x8, TXT_LEFT,     LINE_2,  CTRL_ARPEGGIATOR_PAGE_2 },
         { ELEM_ITEM , ARPEGGIATOR_LENGTH,     TEXT_(zer_to_300),    UI_6x8, CENTER_SPLIT, LINE_2,  CTRL_ARPEGGIATOR_PAGE_2 },
@@ -51,14 +56,14 @@ void ui_update_arpeggiator(void)
 
 
         { ELEM_TEXT , 0,                      TEXT_(steps_),               UI_6x8, TXT_LEFT,     LINE_3,  CTRL_ARPEGGIATOR_PAGE_2 },
-        { ELEM_8STEPS, ARPEGGIATOR_NOTES,    "X",                          UI_6x8_2, 45,         LINE_3, CTRL_ARPEGGIATOR_PAGE_2 },
+        { ELEM_8STEPS, ARPEGGIATOR_NOTES,    "X",                          UI_6x8_2, ARP_X_STEPS, LINE_3, CTRL_ARPEGGIATOR_PAGE_2 },
 
 
 
         { ELEM_TEXT , 0,                      TEXT_(hold_),                  UI_6x8, TXT_LEFT,     LINE_4,  CTRL_ARPEGGIATOR_PAGE_2 },
-        { ELEM_ITEM , ARPEGGIATOR_HOLD,       TEXT_(off_on),                UI_6x8, 35,           LINE_4,  CTRL_ARPEGGIATOR_PAGE_2 },
-        { ELEM_TEXT , 0,                      TEXT_(key_sync_),             UI_6x8, 60,           LINE_4,  CTRL_ARPEGGIATOR_PAGE_2 },
-        { ELEM_ITEM , ARPEGGIATOR_KEY_SYNC,   TEXT_(off_on),                UI_6x8, 110,         LINE_4,  CTRL_ARPEGGIATOR_PAGE_2 },
+        { ELEM_ITEM , ARPEGGIATOR_HOLD,       TEXT_(off_on),                UI_6x8, ARP_X_HOLD,  LINE_4,  CTRL_ARPEGGIATOR_PAGE_2 },
+        { ELEM_TEXT , 0,                      TEXT_(key_sync_),             UI_6x8, ARP_X_KEYSYNC_TXT, LINE_4,  CTRL_ARPEGGIATOR_PAGE_2 },
+        { ELEM_ITEM , ARPEGGIATOR_KEY_SYNC,   TEXT_(off_on),                UI_6x8, ARP_X_KEYSYNC_VAL, LINE_4,  CTRL_ARPEGGIATOR_PAGE_2 },
 
 
     };
