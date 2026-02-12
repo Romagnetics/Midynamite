@@ -43,8 +43,10 @@ void ui_update_arpeggiator(void)
         { ELEM_TEXT , 0,                      TEXT_(arpeggiator_2),         UI_6x8, TXT_LEFT,     LINE_0,  CTRL_ARPEGGIATOR_PAGE_2 },
 
 
-        { ELEM_TEXT , 0,                      TEXT_(hold),                  UI_6x8, TXT_LEFT,     LINE_1,  CTRL_ARPEGGIATOR_PAGE_2 },
-        { ELEM_ITEM , ARPEGGIATOR_HOLD,       TEXT_(off_on),                UI_6x8, CENTER_SPLIT, LINE_1,  CTRL_ARPEGGIATOR_PAGE_2 },
+        { ELEM_16CH , SETTINGS_FILTERED_CH,    "X",                        UI_6x8_2,TXT_LEFT, LINE_2, CTRL_SETTINGS_FILTER },
+
+        { ELEM_TEXT , 0,                      TEXT_(hold),                  UI_6x8, TXT_LEFT,     LINE_4,  CTRL_ARPEGGIATOR_PAGE_2 },
+        { ELEM_ITEM , ARPEGGIATOR_HOLD,       TEXT_(off_on),                UI_6x8, 30, LINE_4,  CTRL_ARPEGGIATOR_PAGE_2 },
 
     };
 

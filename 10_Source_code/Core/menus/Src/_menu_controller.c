@@ -65,9 +65,11 @@ STATIC_PRODUCTION void update_contrast(save_field_t f) {
 
 
 
-STATIC_PRODUCTION void update_channel_filter(save_field_t field, uint8_t bit_index)
+STATIC_PRODUCTION void update_bits_field(save_field_t field, uint8_t bit_index, uint8_t bits_count)
 {
-    if (bit_index > 15) return;
+    if (bits_count == 0u) return;
+    if (bit_index >= bits_count) return;
+    if (bit_index >= 32u) return; // avoid UB if misconfigured
 
     int8_t step = encoder_read_step(&htim4);
     if (step == 0) return;
@@ -75,18 +77,21 @@ STATIC_PRODUCTION void update_channel_filter(save_field_t field, uint8_t bit_ind
     uint32_t mask = (uint32_t)save_get(field);
     const uint32_t bit = (1UL << bit_index);
 
-    if (step > 0)  mask |= bit;   // clockwise => enable channel
-    else           mask &= ~bit;  // counterclockwise => disable channel
+    if (step > 0)  mask |= bit;
+    else           mask &= ~bit;
 
     (void)save_modify_u32(field, SAVE_MODIFY_SET, mask);
     s_ui_reload = 1;
 }
 
-STATIC_PRODUCTION void update_channel_filter_selected(save_field_t field)
+
+
+STATIC_PRODUCTION void update_bits_16_fields(save_field_t field)
 {
     const int8_t bit = ui_selected_bit(field);
-    if (bit < 0) return;                 // not on this field / not a bit row
-    update_channel_filter(field, (uint8_t)bit);
+    if (bit < 0) return;
+
+    update_bits_field(field, (uint8_t)bit, 16u);
 }
 
 
@@ -129,7 +134,9 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     MC(ARPEGGIATOR_OCTAVES,            WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
     MC(ARPEGGIATOR_PATTERN,            WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
 
-    MC(ARPEGGIATOR_HOLD,               WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_2),
+    MC(ARPEGGIATOR_NOTES,              WRAP, update_bits_16_fields,        CTRL_ARPEGGIATOR_PAGE_2),
+	MC(ARPEGGIATOR_HOLD,               WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_2),
+
 
     MC(SETTINGS_START_MENU,            WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL1),
     MC(SETTINGS_SEND_USB,              WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL1),
@@ -139,7 +146,7 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     MC(SETTINGS_USB_THRU,              WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL2),
     MC(SETTINGS_CHANNEL_FILTER,        WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL2),
 
-    MC(SETTINGS_FILTERED_CH,           WRAP,  update_channel_filter_selected,CTRL_SETTINGS_FILTER),
+    MC(SETTINGS_FILTERED_CH,           WRAP,  update_bits_16_fields,        CTRL_SETTINGS_FILTER),
 
     MC(SETTINGS_ABOUT,               NO_WRAP, shadow_select,                CTRL_SETTINGS_ABOUT),
 };
@@ -163,7 +170,7 @@ uint8_t menu_row_hit(const CtrlActiveList *list, uint8_t row, save_field_t *out_
         if (row < (uint8_t)(cursor + span)) {
             if (out_field) *out_field = f;
             if (out_gid)   *out_gid   = (uint32_t)menu_controls[f].groups;
-            if (out_bit)   *out_bit   = (span == 16u) ? (uint8_t)(row - cursor) : 0xFF;
+            if (out_bit)   *out_bit   = (span > 1u) ? (uint8_t)(row - cursor) : 0xFF;
             return 1;
         }
         cursor = (uint8_t)(cursor + span);

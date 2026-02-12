@@ -68,7 +68,7 @@ extern uint32_t s_field_change_bits[CHANGE_BITS_WORDS];
 // ---------------------
 // Menu controls
 // ---------------------
-typedef void (*save_handler_t)(save_field_t field, uint8_t arg);
+typedef void (*save_handler_t)(save_field_t field);
 
 typedef struct {
     uint8_t wrap;
@@ -112,6 +112,7 @@ static inline uint8_t menu_field_row_span(save_field_t f)
 {
     switch (f) {
         case SETTINGS_FILTERED_CH:
+        case ARPEGGIATOR_NOTES:
             return 16u;
         default:
             return 1u;
@@ -132,15 +133,14 @@ void     save_mark_all_changed(void);
 
 uint8_t  menu_nav_get_select(menu_list_t field);
 
-int8_t   filter_selected_bits(save_field_t f); // (if implemented elsewhere)
 void     update_menu();
 
 #ifdef UNIT_TEST
-void no_update(save_field_t field, uint8_t arg);
-void shadow_select(save_field_t field, uint8_t arg);
+void shadow_select(save_field_t field);
 void update_value(save_field_t field, uint8_t multiplier);
-void update_contrast(save_field_t f, uint8_t step);
-void update_channel_filter(save_field_t field, uint8_t bit_index);
+void update_contrast(save_field_t f);
+void update_bits_field(save_field_t field, uint8_t bit_index, uint8_t bits_count);
+void update_bits_16_fields(save_field_t field);
 #endif
 
 #endif /* MIDI_INC_MENU_CONTROLLER_H_ */
