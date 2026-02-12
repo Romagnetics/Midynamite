@@ -29,9 +29,8 @@ static int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
     return 0; // no step
 }
 
-STATIC_PRODUCTION void shadow_select(save_field_t field) { (void)field; }
 
-STATIC_PRODUCTION void update_value(save_field_t field, uint8_t multiplier)
+static void update_value(save_field_t field, uint8_t multiplier)
 {
     TIM_HandleTypeDef *timer = &htim4;
     uint8_t active_mult = 1;
@@ -53,19 +52,22 @@ STATIC_PRODUCTION void update_value(save_field_t field, uint8_t multiplier)
     s_ui_reload = 1;
 }
 
-STATIC_PRODUCTION void update_value_inc1(save_field_t f)  { update_value(f, 1);  }
-STATIC_PRODUCTION void update_value_inc10(save_field_t f) { update_value(f, 10); }
-STATIC_PRODUCTION void update_value_inc12(save_field_t f) { update_value(f, 12); }
+ void update_value_inc1(save_field_t f)  { update_value(f, 1);  }
+ void update_value_inc10(save_field_t f) { update_value(f, 10); }
+ void update_value_inc12(save_field_t f) { update_value(f, 12); }
+
+ void shadow_select(save_field_t field) { (void)field; }
 
 
-STATIC_PRODUCTION void update_contrast(save_field_t f) {
+
+ void update_contrast(save_field_t f) {
     update_value(f, 1);
     screen_driver_UpdateContrast();
 }
 
 
 
-STATIC_PRODUCTION void update_bits_field(save_field_t field, uint8_t bit_index, uint8_t bits_count)
+void update_bits_field(save_field_t field, uint8_t bit_index, uint8_t bits_count)
 {
     if (bits_count == 0u) return;
     if (bit_index >= bits_count) return;
@@ -86,7 +88,7 @@ STATIC_PRODUCTION void update_bits_field(save_field_t field, uint8_t bit_index, 
 
 
 
-STATIC_PRODUCTION void update_bits_16_fields(save_field_t field)
+void update_bits_16_fields(save_field_t field)
 {
     const int8_t bit = ui_selected_bit(field);
     if (bit < 0) return;

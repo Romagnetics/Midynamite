@@ -11,14 +11,7 @@
 #include "memory_main.h"   // for save_field_t, SAVE_FIELD_COUNT, etc.
 #include "menus.h" // for menu_list_t, CtrlActiveList, list_for_page
 
-// Will be defined somewhere else once functions to be exposed aren't related to memory
-#ifndef STATIC_PRODUCTION
-#  ifdef UNIT_TEST
-#    define STATIC_PRODUCTION   /* empty: export symbol to linker */
-#  else
-#    define STATIC_PRODUCTION static
-#  endif
-#endif
+
 
 // ---------------------
 // UI submenu id
@@ -140,11 +133,15 @@ uint8_t  menu_nav_get_select(menu_list_t field);
 void     update_menu();
 
 #ifdef UNIT_TEST
+
 void shadow_select(save_field_t field);
-void update_value(save_field_t field, uint8_t multiplier);
 void update_contrast(save_field_t f);
+void update_value_inc1(save_field_t);
+void update_value_inc10(save_field_t);
+void update_value_inc12(save_field_t);
 void update_bits_field(save_field_t field, uint8_t bit_index, uint8_t bits_count);
 void update_bits_16_fields(save_field_t field);
+
 #endif
 
 #endif /* MIDI_INC_MENU_CONTROLLER_H_ */

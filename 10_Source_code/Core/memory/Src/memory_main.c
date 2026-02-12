@@ -5,7 +5,7 @@
  *      Author: Romain Dereu
  */
 #include "memory_main.h"
-#include "_menu_controller.h" //For STATIC_PRODUCTION
+#include "_menu_controller.h" // for menu_controls[], s_field_change_bits (mark_field_changed)
 
 // Expose for tests
 const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
@@ -45,11 +45,13 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
 	[ARPEGGIATOR_GATE]        = {      1,       10,          10 },
 	[ARPEGGIATOR_OCTAVES]        = {      1,       4,          1 },
 	[ARPEGGIATOR_PATTERN]        = {      0,       7,          0 },
+
+	[ARPEGGIATOR_LENGTH]   = {      1,       8,          8 },
+	[ARPEGGIATOR_NOTES]  = {      1,       0b11111111,    0b11111111 },
 	[ARPEGGIATOR_HOLD]        = {      0,       1,          0 },
 	[ARPEGGIATOR_SWING]        = {      0,       100,          50 },
 	[ARPEGGIATOR_RETRIGGER]        = {      0,       1,          0 },
-	[ARPEGGIATOR_LENGTH]   = {      1,       8,          8 },
-	[ARPEGGIATOR_NOTES]  = {      1,       0b11111111,    0b11111111 },
+
 
     [SETTINGS_START_MENU]        = {      0,          AMOUNT_OF_MENUS-1,          0 },
     [SETTINGS_SEND_USB]          = {      0,          1,          0 },
@@ -158,7 +160,7 @@ static void mark_field_changed(save_field_t f) {
 }
 
 // Utils: wrap/clamp a value into [min, max] with optional wrap
-STATIC_PRODUCTION int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap)
+int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap)
 {
     if (min > max) { int32_t t = min; min = max; max = t; }
 
