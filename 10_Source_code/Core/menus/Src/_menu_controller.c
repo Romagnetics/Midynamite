@@ -29,7 +29,7 @@ static int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
     return 0; // no step
 }
 
-STATIC_PRODUCTION void shadow_select(save_field_t field, uint8_t arg) { (void)field; (void)arg; }
+STATIC_PRODUCTION void shadow_select(save_field_t field) { (void)field; }
 
 STATIC_PRODUCTION void update_value(save_field_t field, uint8_t multiplier)
 {
@@ -53,8 +53,13 @@ STATIC_PRODUCTION void update_value(save_field_t field, uint8_t multiplier)
     s_ui_reload = 1;
 }
 
-STATIC_PRODUCTION void update_contrast(save_field_t f, uint8_t step) {
-    update_value(f, step);
+STATIC_PRODUCTION void update_value_inc1(save_field_t f)  { update_value(f, 1);  }
+STATIC_PRODUCTION void update_value_inc10(save_field_t f) { update_value(f, 10); }
+STATIC_PRODUCTION void update_value_inc12(save_field_t f) { update_value(f, 12); }
+
+
+STATIC_PRODUCTION void update_contrast(save_field_t f) {
+    update_value(f, 1);
     screen_driver_UpdateContrast();
 }
 
@@ -81,53 +86,54 @@ STATIC_PRODUCTION void update_channel_filter(save_field_t field, uint8_t bit_ind
 
 // Put these macros just above the table (or in a shared header if you prefer)
 #define MC_BASE (__COUNTER__)
-#define MC(field, wrap, handler, arg, group) \
-    [field] = { (wrap), (handler), (arg), (group), (uint16_t)(__COUNTER__ - MC_BASE) }
+#define MC(field, wrap, handler, group) \
+    [field] = { (wrap), (handler), (group), (uint16_t)(__COUNTER__ - MC_BASE) }
 
 const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
-    //                                  wrap     handler               handler_arg   group                   ui_order(auto)
-    MC(TEMPO_CURRENT_TEMPO,          NO_WRAP, update_value,              10,        CTRL_SHARED_TEMPO),
-    MC(TEMPO_SEND_TO_MIDI_OUT,         WRAP,  update_value,               1,        CTRL_TEMPO_ALL),
+    //                                  wrap     handler                   group
+    MC(TEMPO_CURRENT_TEMPO,          NO_WRAP, update_value_inc10,          CTRL_SHARED_TEMPO),
+    MC(TEMPO_SEND_TO_MIDI_OUT,         WRAP,  update_value_inc1,           CTRL_TEMPO_ALL),
 
-    MC(MODIFY_SEND_TO_MIDI_CH1,      NO_WRAP, update_value,               1,        CTRL_MODIFY_CHANGE),
-    MC(MODIFY_SEND_TO_MIDI_CH2,      NO_WRAP, update_value,               1,        CTRL_MODIFY_CHANGE),
+    MC(MODIFY_SEND_TO_MIDI_CH1,      NO_WRAP, update_value_inc1,           CTRL_MODIFY_CHANGE),
+    MC(MODIFY_SEND_TO_MIDI_CH2,      NO_WRAP, update_value_inc1,           CTRL_MODIFY_CHANGE),
 
-    MC(MODIFY_SPLIT_MIDI_CH1,        NO_WRAP, update_value,               1,        CTRL_MODIFY_SPLIT),
-    MC(MODIFY_SPLIT_MIDI_CH2,        NO_WRAP, update_value,               1,        CTRL_MODIFY_SPLIT),
-    MC(MODIFY_SPLIT_NOTE,            NO_WRAP, update_value,              12,        CTRL_MODIFY_SPLIT),
+    MC(MODIFY_SPLIT_MIDI_CH1,        NO_WRAP, update_value_inc1,           CTRL_MODIFY_SPLIT),
+    MC(MODIFY_SPLIT_MIDI_CH2,        NO_WRAP, update_value_inc1,           CTRL_MODIFY_SPLIT),
+    MC(MODIFY_SPLIT_NOTE,            NO_WRAP, update_value_inc12,          CTRL_MODIFY_SPLIT),
 
-    MC(MODIFY_SEND_TO_MIDI_OUT,        WRAP,  update_value,               1,        CTRL_MODIFY_ALL),
+    MC(MODIFY_SEND_TO_MIDI_OUT,        WRAP,  update_value_inc1,           CTRL_MODIFY_ALL),
 
-    MC(MODIFY_VEL_PLUS_MINUS,       NO_WRAP, update_value,               10,        CTRL_MODIFY_VEL_CHANGED),
-    MC(MODIFY_VEL_ABSOLUTE,         NO_WRAP, update_value,               10,        CTRL_MODIFY_VEL_FIXED),
+    MC(MODIFY_VEL_PLUS_MINUS,       NO_WRAP, update_value_inc10,           CTRL_MODIFY_VEL_CHANGED),
+    MC(MODIFY_VEL_ABSOLUTE,         NO_WRAP, update_value_inc10,           CTRL_MODIFY_VEL_FIXED),
 
-    MC(TRANSPOSE_MIDI_SHIFT_VALUE,   NO_WRAP, update_value,              12,        CTRL_TRANSPOSE_SHIFT),
+    MC(TRANSPOSE_MIDI_SHIFT_VALUE,   NO_WRAP, update_value_inc12,          CTRL_TRANSPOSE_SHIFT),
 
-    MC(TRANSPOSE_BASE_NOTE,         NO_WRAP, update_value,               1,        CTRL_TRANSPOSE_SCALED),
-    MC(TRANSPOSE_INTERVAL,          NO_WRAP, update_value,               1,        CTRL_TRANSPOSE_SCALED),
-    MC(TRANSPOSE_TRANSPOSE_SCALE,     WRAP,  update_value,               1,        CTRL_TRANSPOSE_SCALED),
+    MC(TRANSPOSE_BASE_NOTE,         NO_WRAP, update_value_inc1,            CTRL_TRANSPOSE_SCALED),
+    MC(TRANSPOSE_INTERVAL,          NO_WRAP, update_value_inc1,            CTRL_TRANSPOSE_SCALED),
+    MC(TRANSPOSE_TRANSPOSE_SCALE,     WRAP,  update_value_inc1,            CTRL_TRANSPOSE_SCALED),
 
-    MC(TRANSPOSE_SEND_ORIGINAL,       WRAP,  update_value,               1,        CTRL_TRANSPOSE_ALL),
+    MC(TRANSPOSE_SEND_ORIGINAL,       WRAP,  update_value_inc1,            CTRL_TRANSPOSE_ALL),
 
-    MC(ARPEGGIATOR_DIVISION,           WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_PAGE_1),
-    MC(ARPEGGIATOR_GATE,               WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_PAGE_1),
-    MC(ARPEGGIATOR_OCTAVES,            WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_PAGE_1),
-    MC(ARPEGGIATOR_PATTERN,            WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_PAGE_1),
+    MC(ARPEGGIATOR_DIVISION,           WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
+    MC(ARPEGGIATOR_GATE,               WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
+    MC(ARPEGGIATOR_OCTAVES,            WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
+    MC(ARPEGGIATOR_PATTERN,            WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
 
-    MC(ARPEGGIATOR_HOLD,               WRAP,  update_value,              1,        CTRL_ARPEGGIATOR_PAGE_2),
+    MC(ARPEGGIATOR_HOLD,               WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_2),
 
-    MC(SETTINGS_START_MENU,            WRAP,  update_value,              1,        CTRL_SETTINGS_GLOBAL1),
-    MC(SETTINGS_SEND_USB,              WRAP,  update_value,              1,        CTRL_SETTINGS_GLOBAL1),
-    MC(SETTINGS_BRIGHTNESS,          NO_WRAP, update_contrast,           1,        CTRL_SETTINGS_GLOBAL1),
+    MC(SETTINGS_START_MENU,            WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL1),
+    MC(SETTINGS_SEND_USB,              WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL1),
+    MC(SETTINGS_BRIGHTNESS,          NO_WRAP, update_contrast,              CTRL_SETTINGS_GLOBAL1),
 
-    MC(SETTINGS_MIDI_THRU,             WRAP,  update_value,              1,        CTRL_SETTINGS_GLOBAL2),
-    MC(SETTINGS_USB_THRU,              WRAP,  update_value,              1,        CTRL_SETTINGS_GLOBAL2),
-    MC(SETTINGS_CHANNEL_FILTER,        WRAP,  update_value,              1,        CTRL_SETTINGS_GLOBAL2),
+    MC(SETTINGS_MIDI_THRU,             WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL2),
+    MC(SETTINGS_USB_THRU,              WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL2),
+    MC(SETTINGS_CHANNEL_FILTER,        WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL2),
 
-    MC(SETTINGS_FILTERED_CH,           WRAP,  update_channel_filter,     1,        CTRL_SETTINGS_FILTER),
+    MC(SETTINGS_FILTERED_CH,           WRAP,  update_channel_filter,        CTRL_SETTINGS_FILTER),
 
-    MC(SETTINGS_ABOUT,               NO_WRAP, shadow_select,             0,        CTRL_SETTINGS_ABOUT),
+    MC(SETTINGS_ABOUT,               NO_WRAP, shadow_select,                CTRL_SETTINGS_ABOUT),
 };
+
 
 #undef MC
 #undef MC_BASE
@@ -326,7 +332,7 @@ static inline void nav_apply_selection(const NavSel *s)
     if (s->field == SAVE_FIELD_INVALID) return;
     if (s->is_bits) { update_channel_filter(s->field, s->bit); return; }
     const menu_controls_t mt = menu_controls[s->field];
-    if (mt.handler) mt.handler(s->field, mt.handler_arg);
+    if (mt.handler) mt.handler(s->field);
 }
 
 static inline void toggle_selected_row(menu_list_t page)

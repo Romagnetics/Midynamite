@@ -71,11 +71,10 @@ extern uint32_t s_field_change_bits[CHANGE_BITS_WORDS];
 typedef void (*save_handler_t)(save_field_t field, uint8_t arg);
 
 typedef struct {
-    uint8_t        wrap;
-    void         (*handler)(save_field_t field, uint8_t arg);
-    uint8_t        handler_arg;
-    uint32_t       groups;
-    uint16_t       ui_order;
+    uint8_t wrap;
+    void (*handler)(save_field_t);
+    uint8_t groups;
+    uint16_t ui_order;
 } menu_controls_t;
 
 extern const menu_controls_t menu_controls[SAVE_FIELD_COUNT];
