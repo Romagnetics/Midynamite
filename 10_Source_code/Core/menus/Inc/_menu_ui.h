@@ -37,6 +37,7 @@ typedef enum {
 	ELEM_ITEM,
 	ELEM_16CH,
     ELEM_8STEPS,
+	ELEM_SWINGPCT,
 } ui_elem_type_t;
 
 #define UI_CHOICE(tbl) ((const char*)(tbl))

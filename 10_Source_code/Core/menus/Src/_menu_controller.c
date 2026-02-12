@@ -29,7 +29,6 @@ static int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
     return 0; // no step
 }
 
-
 static void update_value(save_field_t field, uint8_t multiplier)
 {
     TIM_HandleTypeDef *timer = &htim4;
@@ -52,41 +51,99 @@ static void update_value(save_field_t field, uint8_t multiplier)
     s_ui_reload = 1;
 }
 
- void update_value_inc1(save_field_t f)  { update_value(f, 1);  }
- void update_value_inc10(save_field_t f) { update_value(f, 10); }
- void update_value_inc12(save_field_t f) { update_value(f, 12); }
+void update_value_inc1(save_field_t f)  { update_value(f, 1);  }
+void update_value_inc10(save_field_t f) { update_value(f, 10); }
+void update_value_inc12(save_field_t f) { update_value(f, 12); }
 
- void shadow_select(save_field_t field) { (void)field; }
+void shadow_select(save_field_t field) { (void)field; }
 
-
-
- void update_contrast(save_field_t f) {
+void update_contrast(save_field_t f) {
     update_value(f, 1);
     screen_driver_UpdateContrast();
 }
 
+// -------------------------
+// Arpeggiator: division -> ticks & swing mapping
+// -------------------------
+// 48 PPQ grid. Divisions: 1/4 1/6 1/8 1/12 1/16 1/24 1/32
+// step ticks:            48   32  24   16    12    8     6
+static inline uint8_t arp_step_ticks(uint8_t div_idx)
+{
+    static const uint8_t t[7] = { 48u, 32u, 24u, 16u, 12u, 8u, 6u };
+    if (div_idx > 6u) div_idx = 6u;
+    return t[div_idx];
+}
 
+static inline uint8_t arp_swing_max(uint8_t div_idx)
+{
+    const uint8_t ticks = arp_step_ticks(div_idx);
+    // Max “delay” in ticks is ticks-1 (e.g. 48 -> 47)
+    return (ticks > 0u) ? (uint8_t)(ticks - 1u) : 0u;
+}
 
- void update_bits_field(save_field_t field, uint8_t bit_index, uint8_t bits_count)
- {
-     if (bits_count == 0u) return;
-     if (bit_index >= bits_count) return;
-     if (bit_index >= 32u) return; // avoid UB
+// Swing editing: 1..max (never allow 0)
+void update_arp_swing(save_field_t field)
+{
+    int8_t step = encoder_read_step(&htim4);
+    if (step == 0) return;
 
-     int8_t step = encoder_read_step(&htim4);
-     if (step == 0) return;
+    uint8_t div_idx = (uint8_t)save_get(ARPEGGIATOR_DIVISION);
+    uint8_t maxv    = arp_swing_max(div_idx);
 
-     uint32_t mask = (uint32_t)save_get(field);
-     const uint32_t bit = (1UL << bit_index);
+    int16_t cur  = (int16_t)(uint8_t)save_get(field);
+    int16_t next = cur + (int16_t)step;
 
-     // Direction-agnostic: any step toggles
-     mask ^= bit;
+    if (next < 1) next = 1;
+    if (next > (int16_t)maxv) next = (int16_t)maxv;
 
-     (void)save_modify_u32(field, SAVE_MODIFY_SET, mask);
-     s_ui_reload = 1;
- }
+    (void)save_modify_u8(field, SAVE_MODIFY_SET, (uint8_t)next);
+    s_ui_reload = 1;
+}
 
+// Division editing: wraps 0..6 and resets swing to 50% of the NEW division
+void update_arp_division(save_field_t field)
+{
+    int8_t step = encoder_read_step(&htim4);
+    if (step == 0) return;
 
+    int16_t cur  = (int16_t)(uint8_t)save_get(field);
+    int16_t next = cur + (int16_t)step;
+
+    while (next < 0)  next += 7;
+    while (next >= 7) next -= 7;
+
+    (void)save_modify_u8(field, SAVE_MODIFY_SET, (uint8_t)next);
+
+    // Reset swing to 50% (in ticks): ticks/2 (48->24, 32->16, 6->3, etc.)
+    const uint8_t ticks = arp_step_ticks((uint8_t)next);
+    uint8_t swing50 = (uint8_t)(ticks / 2u);
+    if (swing50 < 1u) swing50 = 1u; // safety; also enforces “no 0”
+    (void)save_modify_u8(ARPEGGIATOR_SWING, SAVE_MODIFY_SET, swing50);
+
+    s_ui_reload = 1;
+}
+
+// -------------------------
+// Bits fields
+// -------------------------
+void update_bits_field(save_field_t field, uint8_t bit_index, uint8_t bits_count)
+{
+    if (bits_count == 0u) return;
+    if (bit_index >= bits_count) return;
+    if (bit_index >= 32u) return; // avoid UB
+
+    int8_t step = encoder_read_step(&htim4);
+    if (step == 0) return;
+
+    uint32_t mask = (uint32_t)save_get(field);
+    const uint32_t bit = (1UL << bit_index);
+
+    // Direction-agnostic: any step toggles
+    mask ^= bit;
+
+    (void)save_modify_u32(field, SAVE_MODIFY_SET, mask);
+    s_ui_reload = 1;
+}
 
 void update_bits_16_fields(save_field_t field)
 {
@@ -111,13 +168,9 @@ void update_bits_8_steps(save_field_t field)
     update_bits_field(field, (uint8_t)bit, len);
 }
 
-
-
 // -------------------------
 // Controller table (DATA)
 // -------------------------
-
-// Put these macros just above the table (or in a shared header if you prefer)
 #define MC_BASE (__COUNTER__)
 #define MC(field, wrap, handler, group) \
     [field] = { (wrap), (handler), (group), (uint16_t)(__COUNTER__ - MC_BASE) }
@@ -147,35 +200,34 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
 
     MC(TRANSPOSE_SEND_ORIGINAL,       WRAP,  update_value_inc1,            CTRL_TRANSPOSE_ALL),
 
+    // Arp
+    MC(ARPEGGIATOR_DIVISION,           WRAP,  update_arp_division,         CTRL_ARPEGGIATOR_PAGE_1),
+    MC(ARPEGGIATOR_GATE,               WRAP,  update_value_inc1,           CTRL_ARPEGGIATOR_PAGE_1),
+    MC(ARPEGGIATOR_OCTAVES,            WRAP,  update_value_inc1,           CTRL_ARPEGGIATOR_PAGE_1),
+    MC(ARPEGGIATOR_PATTERN,            WRAP,  update_value_inc1,           CTRL_ARPEGGIATOR_PAGE_1),
 
-	MC(ARPEGGIATOR_DIVISION,           WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
-    MC(ARPEGGIATOR_GATE,               WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
-    MC(ARPEGGIATOR_OCTAVES,            WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
-    MC(ARPEGGIATOR_PATTERN,            WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
+    MC(ARPEGGIATOR_SWING,              WRAP,  update_arp_swing,            CTRL_ARPEGGIATOR_PAGE_2),
+    MC(ARPEGGIATOR_LENGTH,           NO_WRAP, update_value_inc10,          CTRL_ARPEGGIATOR_PAGE_2),
+    MC(ARPEGGIATOR_NOTES,              WRAP,  update_bits_8_steps,         CTRL_ARPEGGIATOR_PAGE_2),
+    MC(ARPEGGIATOR_HOLD,               WRAP,  update_value_inc1,           CTRL_ARPEGGIATOR_PAGE_2),
+    MC(ARPEGGIATOR_KEY_SYNC,           WRAP,  update_value_inc1,           CTRL_ARPEGGIATOR_PAGE_2),
 
-    MC(ARPEGGIATOR_LENGTH,          NO_WRAP,  update_value_inc10,            CTRL_ARPEGGIATOR_PAGE_2),
-    MC(ARPEGGIATOR_NOTES,              WRAP, update_bits_8_steps,           CTRL_ARPEGGIATOR_PAGE_2),
-	MC(ARPEGGIATOR_HOLD,               WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_2),
-	MC(ARPEGGIATOR_KEY_SYNC,           WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_2),
+    // Settings
+    MC(SETTINGS_START_MENU,            WRAP,  update_value_inc1,           CTRL_SETTINGS_GLOBAL1),
+    MC(SETTINGS_SEND_USB,              WRAP,  update_value_inc1,           CTRL_SETTINGS_GLOBAL1),
+    MC(SETTINGS_BRIGHTNESS,          NO_WRAP, update_contrast,             CTRL_SETTINGS_GLOBAL1),
 
+    MC(SETTINGS_MIDI_THRU,             WRAP,  update_value_inc1,           CTRL_SETTINGS_GLOBAL2),
+    MC(SETTINGS_USB_THRU,              WRAP,  update_value_inc1,           CTRL_SETTINGS_GLOBAL2),
+    MC(SETTINGS_CHANNEL_FILTER,        WRAP,  update_value_inc1,           CTRL_SETTINGS_GLOBAL2),
 
-    MC(SETTINGS_START_MENU,            WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL1),
-    MC(SETTINGS_SEND_USB,              WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL1),
-    MC(SETTINGS_BRIGHTNESS,          NO_WRAP, update_contrast,              CTRL_SETTINGS_GLOBAL1),
+    MC(SETTINGS_FILTERED_CH,           WRAP,  update_bits_16_fields,       CTRL_SETTINGS_FILTER),
 
-    MC(SETTINGS_MIDI_THRU,             WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL2),
-    MC(SETTINGS_USB_THRU,              WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL2),
-    MC(SETTINGS_CHANNEL_FILTER,        WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL2),
-
-    MC(SETTINGS_FILTERED_CH,           WRAP,  update_bits_16_fields,        CTRL_SETTINGS_FILTER),
-
-    MC(SETTINGS_ABOUT,               NO_WRAP, shadow_select,                CTRL_SETTINGS_ABOUT),
+    MC(SETTINGS_ABOUT,               NO_WRAP, shadow_select,               CTRL_SETTINGS_ABOUT),
 };
-
 
 #undef MC
 #undef MC_BASE
-
 
 // -------------------------
 // Utility (pure logic, data-agnostic)
@@ -199,7 +251,6 @@ uint8_t menu_row_hit(const CtrlActiveList *list, uint8_t row, save_field_t *out_
     return 0;
 }
 
-
 static uint8_t rows_for_list(const CtrlActiveList *list) {
     uint8_t rows = 0;
     for (uint8_t i = 0; i < list->count; ++i) {
@@ -212,10 +263,6 @@ static uint8_t rows_for_list(const CtrlActiveList *list) {
 // -------------------------
 // Build active list (pure logic)
 // -------------------------
-// -------------------------
-// Build active list (pure logic)
-// -------------------------
-// Exposed so menus.c can reuse it (avoids duplicated plumbing).
 void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out)
 {
     uint8_t count = 0;
@@ -242,7 +289,6 @@ void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out)
 
     out->count = count;
 }
-
 
 static const CtrlActiveList* get_list_for_page(menu_list_t page)
 {
@@ -356,7 +402,6 @@ static inline NavSel nav_selection(menu_list_t page)
     return s;
 }
 
-
 // -------------------------
 // Press-to-cycle (menus decides if/what cycles)
 // -------------------------
@@ -388,7 +433,6 @@ static inline void toggle_selected_row(menu_list_t page)
 int8_t ui_selected_bit(save_field_t f) {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return -1;
 
-    // Selection is a UI concept → always use the CURRENT menu page.
     menu_list_t page = (menu_list_t)get_current_menu(CURRENT_MENU);
     const NavSel s = nav_selection(page);
 
@@ -399,12 +443,12 @@ uint8_t ui_is_field_selected(save_field_t f)
 {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
 
-    // Selection is a UI concept → always use the CURRENT menu page.
     menu_list_t page = (menu_list_t)get_current_menu(CURRENT_MENU);
     const NavSel s = nav_selection(page);
 
     return (s.field == f) ? 1u : 0u;
 }
+
 // -------------------------
 // Change-bit tracking (unchanged)
 // -------------------------
