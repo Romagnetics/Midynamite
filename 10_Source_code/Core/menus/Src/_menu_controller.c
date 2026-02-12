@@ -63,6 +63,8 @@ STATIC_PRODUCTION void update_contrast(save_field_t f) {
     screen_driver_UpdateContrast();
 }
 
+
+
 STATIC_PRODUCTION void update_channel_filter(save_field_t field, uint8_t bit_index)
 {
     if (bit_index > 15) return;
@@ -79,6 +81,14 @@ STATIC_PRODUCTION void update_channel_filter(save_field_t field, uint8_t bit_ind
     (void)save_modify_u32(field, SAVE_MODIFY_SET, mask);
     s_ui_reload = 1;
 }
+
+STATIC_PRODUCTION void update_channel_filter_selected(save_field_t field)
+{
+    const int8_t bit = ui_selected_bit(field);
+    if (bit < 0) return;                 // not on this field / not a bit row
+    update_channel_filter(field, (uint8_t)bit);
+}
+
 
 // -------------------------
 // Controller table (DATA)
@@ -129,7 +139,7 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     MC(SETTINGS_USB_THRU,              WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL2),
     MC(SETTINGS_CHANNEL_FILTER,        WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL2),
 
-    MC(SETTINGS_FILTERED_CH,           WRAP,  update_channel_filter,        CTRL_SETTINGS_FILTER),
+    MC(SETTINGS_FILTERED_CH,           WRAP,  update_channel_filter_selected,CTRL_SETTINGS_FILTER),
 
     MC(SETTINGS_ABOUT,               NO_WRAP, shadow_select,                CTRL_SETTINGS_ABOUT),
 };
@@ -330,7 +340,6 @@ void select_press_menu_change(menu_list_t page) {
 static inline void nav_apply_selection(const NavSel *s)
 {
     if (s->field == SAVE_FIELD_INVALID) return;
-    if (s->is_bits) { update_channel_filter(s->field, s->bit); return; }
     const menu_controls_t mt = menu_controls[s->field];
     if (mt.handler) mt.handler(s->field);
 }
