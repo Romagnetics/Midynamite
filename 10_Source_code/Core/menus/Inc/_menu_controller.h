@@ -11,7 +11,15 @@
 #include "memory_main.h"   // for save_field_t, SAVE_FIELD_COUNT, etc.
 #include "menus.h" // for menu_list_t, CtrlActiveList, list_for_page
 
+#define ARP_STEP_BITS_COUNT 8u
 
+static inline uint8_t arp_length_clamped(void)
+{
+    uint8_t len = (uint8_t)save_get(ARPEGGIATOR_LENGTH);
+    if (len < 1u) len = 1u;
+    if (len > ARP_STEP_BITS_COUNT) len = ARP_STEP_BITS_COUNT;
+    return len;
+}
 
 // ---------------------
 // UI submenu id
@@ -110,12 +118,8 @@ static inline uint8_t menu_field_row_span(save_field_t f)
         case SETTINGS_FILTERED_CH:
             return 16u;
 
-        case ARPEGGIATOR_NOTES: {
-            uint8_t len = (uint8_t)save_get(ARPEGGIATOR_LENGTH);
-            if (len < 1u) len = 1u;
-            if (len > 8u) len = 8u;
-            return len;
-        }
+        case ARPEGGIATOR_NOTES:
+            return arp_length_clamped();
 
         default:
             return 1u;

@@ -119,9 +119,7 @@ static void menu_ui_draw_8_steps(const ui_element *e)
     const uint32_t     mask = (uint32_t)save_get(f);
     const int8_t       selb = ui_selected_bit(f);
 
-    uint8_t len = (uint8_t)save_get(ARPEGGIATOR_LENGTH);
-    if (len < 1u) len = 1u;
-    if (len > 8u) len = 8u;
+    const uint8_t len = arp_length_clamped();
 
     const int16_t base_x = (int16_t)e->x;
     const int16_t y      = (int16_t)e->y;
