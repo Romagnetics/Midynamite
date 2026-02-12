@@ -2,7 +2,7 @@
  * memory_main.h
  *
  *  Created on: Aug 23, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 
 #ifndef MEMORY_SAVE_H_

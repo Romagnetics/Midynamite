@@ -55,7 +55,7 @@ void ui_update_arpeggiator(void)
 
 
 
-        { ELEM_TEXT , 0,                      TEXT_(hold_),                  UI_6x8, TXT_LEFT,     LINE_4,  CTRL_ARPEGGIATOR_PAGE_2 },
+        { ELEM_TEXT , 0,                      TEXT_(hold_),                 UI_6x8, TXT_LEFT,     LINE_4,  CTRL_ARPEGGIATOR_PAGE_2 },
         { ELEM_ITEM , ARPEGGIATOR_HOLD,       TEXT_(off_on),                UI_6x8, 35,           LINE_4,  CTRL_ARPEGGIATOR_PAGE_2 },
         { ELEM_TEXT , 0,                      TEXT_(key_sync_),             UI_6x8, 60,           LINE_4,  CTRL_ARPEGGIATOR_PAGE_2 },
         { ELEM_ITEM , ARPEGGIATOR_KEY_SYNC,   TEXT_(off_on),                UI_6x8, 110,         LINE_4,  CTRL_ARPEGGIATOR_PAGE_2 },
