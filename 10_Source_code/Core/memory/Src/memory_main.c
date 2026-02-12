@@ -46,11 +46,11 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
 	[ARPEGGIATOR_OCTAVES]        = {      1,       4,          1 },
 	[ARPEGGIATOR_PATTERN]        = {      0,       7,          0 },
 
-	[ARPEGGIATOR_LENGTH]   = {      1,       8,          8 },
-	[ARPEGGIATOR_NOTES]  = {      1,       0b11111111,    0b11111111 },
-	[ARPEGGIATOR_HOLD]        = {      0,       1,          0 },
 	[ARPEGGIATOR_SWING]        = {      0,       100,          50 },
-	[ARPEGGIATOR_RETRIGGER]        = {      0,       1,          0 },
+	[ARPEGGIATOR_LENGTH]   = {      1,       8,          8 },
+	[ARPEGGIATOR_NOTES]  = {      0,       0b11111111,    0b11111111 },
+	[ARPEGGIATOR_HOLD]        = {      0,       1,          0 },
+	[ARPEGGIATOR_KEY_SYNC]        = {      0,       1,          0 },
 
 
     [SETTINGS_START_MENU]        = {      0,          AMOUNT_OF_MENUS-1,          0 },

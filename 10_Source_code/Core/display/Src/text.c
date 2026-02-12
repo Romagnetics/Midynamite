@@ -21,11 +21,11 @@ static const Message _message = {
     .midi_transpose = "MIDI Transpose",
 	.output_sem = "Output:",
 
-	.MIDI_Thru = "MIDI Thru",
-	.USB_Thru = "USB Thru",
-	.MIDI_Filter = "MIDI Filter",
+	.MIDI_Thru_ = "MIDI Thru:",
+	.USB_Thru_ = "USB Thru:",
+	.MIDI_Filter_ = "MIDI Filter:",
 
-	.X_equals_ignore_channel = "X = Ignore Channel",
+	.equals_ignore_channel = "O = Ignore Channel",
 
     // Channel Modify
     .midi_modify_select = "Ch. Modify",
@@ -85,11 +85,11 @@ static const Message _message = {
 
 
     // Start Menu
-    .start_menu = "Start Menu",
+    .start_menu_= "Start Menu:",
 
 
     // Contrast
-    .contrast = "Contrast",
+    .contrast_ = "Contrast:",
     .ten_hundred_ten_percent = { " 0%",
         "10%", "20%", "30%", "40%", "50%",
         "60%", "70%", "80%", "90%", "100%"
@@ -116,7 +116,7 @@ static const Message _message = {
     .tempo = "Tempo",
 
     //USB Midi
-	.usb_midi = "USB Midi",
+	.usb_midi_ = "USB Midi:",
 
 
     //USB Midi
@@ -125,11 +125,14 @@ static const Message _message = {
 	//Arpeggio
     .arpeggiator_1 = "Arpeggiator 1/2",
     .arpeggiator_2 = "Arpeggiator 2/2",
-	.division = "Division",
-	.pattern = "Pattern",
-	.gate = "Gate",
-	.hold = "Hold",
-
+	.division_ = "Division:",
+	.pattern_ = "Pattern:",
+	.gate_ = "Gate:",
+	.hold_ = "Hold:",
+    .steps_ = "Steps:",
+	.swing_ = "Swing:",
+	.length_ = "Length:",
+	.key_sync_ = "Key Sync:",
 
     // MIDI Note Names (C-1 to G9)
     .midi_note_names = {

@@ -67,24 +67,24 @@ static void update_value(save_field_t field, uint8_t multiplier)
 
 
 
-void update_bits_field(save_field_t field, uint8_t bit_index, uint8_t bits_count)
-{
-    if (bits_count == 0u) return;
-    if (bit_index >= bits_count) return;
-    if (bit_index >= 32u) return; // avoid UB if misconfigured
+ void update_bits_field(save_field_t field, uint8_t bit_index, uint8_t bits_count)
+ {
+     if (bits_count == 0u) return;
+     if (bit_index >= bits_count) return;
+     if (bit_index >= 32u) return; // avoid UB
 
-    int8_t step = encoder_read_step(&htim4);
-    if (step == 0) return;
+     int8_t step = encoder_read_step(&htim4);
+     if (step == 0) return;
 
-    uint32_t mask = (uint32_t)save_get(field);
-    const uint32_t bit = (1UL << bit_index);
+     uint32_t mask = (uint32_t)save_get(field);
+     const uint32_t bit = (1UL << bit_index);
 
-    if (step > 0)  mask |= bit;
-    else           mask &= ~bit;
+     // Direction-agnostic: any step toggles
+     mask ^= bit;
 
-    (void)save_modify_u32(field, SAVE_MODIFY_SET, mask);
-    s_ui_reload = 1;
-}
+     (void)save_modify_u32(field, SAVE_MODIFY_SET, mask);
+     s_ui_reload = 1;
+ }
 
 
 
@@ -95,6 +95,22 @@ void update_bits_16_fields(save_field_t field)
 
     update_bits_field(field, (uint8_t)bit, 16u);
 }
+
+void update_bits_8_steps(save_field_t field)
+{
+    const int8_t bit = ui_selected_bit(field);
+    if (bit < 0) return;
+
+    uint8_t len = (uint8_t)save_get(ARPEGGIATOR_LENGTH);
+    if (len < 1u) len = 1u;
+    if (len > 8u) len = 8u;
+
+    // Don’t allow edits beyond length
+    if ((uint8_t)bit >= len) return;
+
+    update_bits_field(field, (uint8_t)bit, len);
+}
+
 
 
 // -------------------------
@@ -131,13 +147,16 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
 
     MC(TRANSPOSE_SEND_ORIGINAL,       WRAP,  update_value_inc1,            CTRL_TRANSPOSE_ALL),
 
-    MC(ARPEGGIATOR_DIVISION,           WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
+
+	MC(ARPEGGIATOR_DIVISION,           WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
     MC(ARPEGGIATOR_GATE,               WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
     MC(ARPEGGIATOR_OCTAVES,            WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
     MC(ARPEGGIATOR_PATTERN,            WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_1),
 
-    MC(ARPEGGIATOR_NOTES,              WRAP, update_bits_16_fields,        CTRL_ARPEGGIATOR_PAGE_2),
+    MC(ARPEGGIATOR_LENGTH,          NO_WRAP,  update_value_inc10,            CTRL_ARPEGGIATOR_PAGE_2),
+    MC(ARPEGGIATOR_NOTES,              WRAP, update_bits_8_steps,           CTRL_ARPEGGIATOR_PAGE_2),
 	MC(ARPEGGIATOR_HOLD,               WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_2),
+	MC(ARPEGGIATOR_KEY_SYNC,           WRAP,  update_value_inc1,            CTRL_ARPEGGIATOR_PAGE_2),
 
 
     MC(SETTINGS_START_MENU,            WRAP,  update_value_inc1,            CTRL_SETTINGS_GLOBAL1),

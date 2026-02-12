@@ -26,11 +26,11 @@ typedef struct {
     const char *output_sem;
 
     // Settings
-    const char *MIDI_Thru;
-    const char *USB_Thru;
-    const char *MIDI_Filter;
+    const char *MIDI_Thru_;
+    const char *USB_Thru_;
+    const char *MIDI_Filter_;
 
-    const char *X_equals_ignore_channel;
+    const char *equals_ignore_channel;
 
 
     // Channel Modify
@@ -90,11 +90,11 @@ typedef struct {
 
 
     // Start Menu
-    const char *start_menu;
+    const char *start_menu_;
 
 
     // Contrast
-    const char *contrast;
+    const char *contrast_;
     const char *ten_hundred_ten_percent[11];
     const char *zero_hundred_ten[11];
 
@@ -120,7 +120,7 @@ typedef struct {
     const char *tempo;
 
     //USB Midi
-    const char *usb_midi;
+    const char *usb_midi_;
 
 
     //Upgrade mode
@@ -129,10 +129,14 @@ typedef struct {
     // Arpeggiator
     const char *arpeggiator_1;
     const char *arpeggiator_2;
-    const char *pattern;
-    const char *division;
-    const char *gate;
-    const char *hold;
+    const char *pattern_;
+    const char *division_;
+    const char *gate_;
+    const char *hold_;
+    const char *steps_;
+    const char *swing_;
+    const char *length_;
+    const char *key_sync_;
 
 
     //Error handlers

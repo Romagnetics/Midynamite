@@ -148,7 +148,7 @@ static void bind_field_pointers(save_struct* s, int32_t** u32tab, uint8_t** u8ta
     u8tab[ARPEGGIATOR_OCTAVES] = &s->u8_vals[IDX_U8_ARPEGGIATOR_OCTAVES];
     u8tab[ARPEGGIATOR_HOLD] = &s->u8_vals[IDX_U8_ARPEGGIATOR_LATCH];
     u8tab[ARPEGGIATOR_SWING] = &s->u8_vals[IDX_U8_ARPEGGIATOR_SWING];
-    u8tab[ARPEGGIATOR_RETRIGGER] = &s->u8_vals[IDX_U8_ARPEGGIATOR_RETRIGGER];
+    u8tab[ARPEGGIATOR_KEY_SYNC] = &s->u8_vals[IDX_U8_ARPEGGIATOR_RETRIGGER];
     u8tab[ARPEGGIATOR_LENGTH] = &s->u8_vals[IDX_U8_ARPEGGIATOR_LENGTH];
 
 

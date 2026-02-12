@@ -111,6 +111,36 @@ static inline uint8_t elem_is_visible(const ui_element *e, uint32_t active_group
 }
 
 // -------------------------
+// 8-step (one-line) drawing
+// -------------------------
+static void menu_ui_draw_8_steps(const ui_element *e)
+{
+    const save_field_t f    = (save_field_t)e->save_item;
+    const uint32_t     mask = (uint32_t)save_get(f);
+    const int8_t       selb = ui_selected_bit(f);
+
+    uint8_t len = (uint8_t)save_get(ARPEGGIATOR_LENGTH);
+    if (len < 1u) len = 1u;
+    if (len > 8u) len = 8u;
+
+    const int16_t base_x = (int16_t)e->x;
+    const int16_t y      = (int16_t)e->y;
+
+    // draw ONLY visible steps
+    for (uint8_t i = 0; i < len; ++i) {
+
+        const char *label = (mask & (1u << i)) ? "X" : "0";
+        const uint8_t ul  = (selb == (int8_t)i) ? 1u : 0u;
+
+        draw_text_ul(label, (int16_t)(base_x + 10 * i), y, e->font, ul);
+    }
+}
+
+
+
+
+
+// -------------------------
 // Individual menu drawing
 // -------------------------
 
@@ -119,8 +149,8 @@ static void menu_ui_draw_16ch(const ui_element *e) {
     const uint32_t     mask = (uint32_t)save_get(f);
     const int8_t       selb = ui_selected_bit(f);   // -1 if not selected
 
-    // Use the element's text as the "on" glyph, defaulting to "X"
-    const char *on_label = e->text ? e->text : "X";
+    // Use the element's text as the "on" glyph, defaulting to "O"
+    const char *on_label = e->text ? e->text : "O";
 
     const int16_t base_x = (int16_t)e->x;
     const int16_t y1     = (int16_t)e->y;          // first row at LINE_*
@@ -156,6 +186,7 @@ void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count) {
             case ELEM_TEXT: draw_text(e->text, e->x, e->y, e->font); break;
             case ELEM_ITEM: draw_item_row(e);                        break;
             case ELEM_16CH: menu_ui_draw_16ch(e);                    break;
+            case ELEM_8STEPS: menu_ui_draw_8_steps(e); break;
             default: break;
         }
     }

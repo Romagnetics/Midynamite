@@ -40,8 +40,6 @@ typedef enum {
     CTRL_SETTINGS_ABOUT,
     CTRL_SETTINGS_ALWAYS,
 
-
-
 } ctrl_group_id_t;
 
 
@@ -93,12 +91,12 @@ static inline uint32_t flag_for_menu(menu_list_t m) {
 // Menu → "sending" save_field_t lookup
 static inline save_field_t sending_field_for_menu(menu_list_t m) {
     switch (m) {
-        case MENU_TEMPO:     return TEMPO_CURRENTLY_SENDING;
-        case MENU_MODIFY:    return MODIFY_CURRENTLY_SENDING;
-        case MENU_TRANSPOSE: return TRANSPOSE_CURRENTLY_SENDING;
-        case MENU_SETTINGS:  return SAVE_FIELD_INVALID;
+        case MENU_TEMPO:       return TEMPO_CURRENTLY_SENDING;
+        case MENU_MODIFY:      return MODIFY_CURRENTLY_SENDING;
+        case MENU_TRANSPOSE:   return TRANSPOSE_CURRENTLY_SENDING;
+        case MENU_SETTINGS:    return SAVE_FIELD_INVALID;
         case MENU_ARPEGGIATOR: return ARPEGGIATOR_CURRENTLY_SENDING;
-        default:             return SAVE_FIELD_INVALID;
+        default:               return SAVE_FIELD_INVALID;
     }
 }
 
@@ -108,9 +106,17 @@ static inline save_field_t sending_field_for_menu(menu_list_t m) {
 static inline uint8_t menu_field_row_span(save_field_t f)
 {
     switch (f) {
+
         case SETTINGS_FILTERED_CH:
-        case ARPEGGIATOR_NOTES:
             return 16u;
+
+        case ARPEGGIATOR_NOTES: {
+            uint8_t len = (uint8_t)save_get(ARPEGGIATOR_LENGTH);
+            if (len < 1u) len = 1u;
+            if (len > 8u) len = 8u;
+            return len;
+        }
+
         default:
             return 1u;
     }
