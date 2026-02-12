@@ -72,7 +72,7 @@ typedef void (*save_handler_t)(save_field_t field);
 
 typedef struct {
     uint8_t wrap;
-    void (*handler)(save_field_t);
+    save_handler_t handler;
     uint8_t groups;
     uint16_t ui_order;
 } menu_controls_t;
