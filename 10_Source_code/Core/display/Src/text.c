@@ -132,7 +132,7 @@ static const Message _message = {
     .steps_ = "Steps:",
 	.swing_ = "Swing:",
 	.length_ = "Length:",
-	.key_sync_ = "Key Sync:",
+	.key_sync_ = "KeySync:",
 
     // MIDI Note Names (C-1 to G9)
     .midi_note_names = {
