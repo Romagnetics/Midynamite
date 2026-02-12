@@ -162,7 +162,7 @@ STATIC_PRODUCTION int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max,
 {
     if (min > max) { int32_t t = min; min = max; max = t; }
 
-    if (!wrap) {
+    if (wrap == NO_WRAP) {
         if (v < min) return min;
         if (v > max) return max;
         return v;
@@ -220,7 +220,7 @@ uint8_t save_modify_u8(save_field_t field, save_modify_op_t op, uint8_t value_if
         case SAVE_MODIFY_SET: {
             int32_t desired = (int32_t)value_if_set;
             if (desired > 230) {//For warps, 255 + 25 buffer for button presses
-                v = mt.wrap ? lim.max : lim.min;
+                v = (mt.wrap == WRAP) ? lim.max : lim.min;
             } else {
                 v = desired;
             }

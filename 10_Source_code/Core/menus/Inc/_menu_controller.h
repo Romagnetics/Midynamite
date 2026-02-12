@@ -62,8 +62,8 @@ extern uint32_t s_field_change_bits[CHANGE_BITS_WORDS];
 // ---------------------
 // Wrapping options
 // ---------------------
-#define NO_WRAP  0
-#define WRAP     1
+#define WRAP        0
+#define NO_WRAP     1
 
 // ---------------------
 // Menu controls
