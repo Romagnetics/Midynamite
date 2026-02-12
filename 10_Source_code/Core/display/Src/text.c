@@ -25,7 +25,7 @@ static const Message _message = {
 	.USB_Thru_ = "USB Thru:",
 	.MIDI_Filter_ = "MIDI Filter:",
 
-	.equals_ignore_channel = "O = Ignore Channel",
+	.equals_ignore_channel = "0 = Ignore Channel",
 
     // Channel Modify
     .midi_modify_select = "Ch. Modify",

@@ -64,7 +64,7 @@ void ui_update_settings(void)
         // -------- Filters --------
         { ELEM_TEXT , 0,                       TEXT_(MIDI_Filter_),             UI_6x8, TXT_LEFT, LINE_0, CTRL_SETTINGS_FILTER },
         { ELEM_TEXT , 0,                       TEXT_(equals_ignore_channel), UI_6x8, TXT_LEFT, LINE_1, CTRL_SETTINGS_FILTER },
-        { ELEM_16CH , SETTINGS_FILTERED_CH,    "X",                        UI_6x8_2,TXT_LEFT, LINE_2, CTRL_SETTINGS_FILTER },
+        { ELEM_16CH , SETTINGS_FILTERED_CH,    "0",                        UI_6x8_2,TXT_LEFT, LINE_2, CTRL_SETTINGS_FILTER },
         // -------- ABOUT--------
         { ELEM_TEXT , 0,                       TEXT_(about),               UI_6x8,  TXT_LEFT, LINE_0, CTRL_SETTINGS_ABOUT },
         { ELEM_TEXT , 0,                       TEXT_(about_brand),         UI_6x8,  TXT_LEFT, LINE_1, CTRL_SETTINGS_ABOUT },
