@@ -36,7 +36,7 @@ static inline menu_list_t current_menu(void) {
 }
 
 static const MenuVTable kMenuVT[AMOUNT_OF_MENUS] = {
-    [MENU_TEMPO]       = { ui_update_tempo,       ui_code_tempo,       (cont_fn1_t)cont_update_tempo },
+    [MENU_TEMPO]       = { ui_update_tempo,       ui_code_tempo,       NULL },
     [MENU_MODIFY]      = { ui_update_modify,      ui_code_modify,      cont_update_modify },
     [MENU_TRANSPOSE]   = { ui_update_transpose,   ui_code_transpose,   cont_update_transpose },
     [MENU_ARPEGGIATOR] = { ui_update_arpeggiator, ui_code_arpeggiator, cont_update_arpeggiator },
@@ -55,7 +55,9 @@ void ui_code_menu(void){
 
 void cont_update_menu(menu_list_t field){
     const menu_list_t m = current_menu();
-    kMenuVT[m].cont_update(field);
+    if (kMenuVT[m].cont_update) {
+        kMenuVT[m].cont_update(field);
+    }
 }
 
 // ==============================
