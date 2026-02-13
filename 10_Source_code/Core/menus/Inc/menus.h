@@ -46,7 +46,6 @@ typedef uint8_t (*selector_compute_fn_t)();
 CtrlActiveList* list_for_page(menu_list_t page);
 
 // -------- Individual menu updates --------
-void cont_update_tempo();
 void ui_code_tempo();
 void ui_update_tempo();
 

@@ -44,7 +44,6 @@ typedef enum {
 typedef enum {
     // midi_tempo_data
     TEMPO_CURRENT_TEMPO,
-    TEMPO_TEMPO_CLICK_RATE,
     TEMPO_CURRENTLY_SENDING,
     TEMPO_SEND_TO_MIDI_OUT,
 

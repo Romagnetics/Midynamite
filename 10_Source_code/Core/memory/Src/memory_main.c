@@ -11,7 +11,6 @@
 const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     //                                   min         max         default
     [TEMPO_CURRENT_TEMPO]        = {     20,        300,        120 },
-    [TEMPO_TEMPO_CLICK_RATE]     = {      1,      50000,         24 },
     [TEMPO_CURRENTLY_SENDING]    = {      0,          1,          0 },
     [TEMPO_SEND_TO_MIDI_OUT]     = {      0,          2,          0 },
 

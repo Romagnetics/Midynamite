@@ -19,8 +19,6 @@ enum {
     /* u32 fields */
     IDX_U32_TEMPO_CURRENT_TEMPO = 0,
 
-	IDX_U32_TEMPO_CLICK_RATE,
-
 	IDX_U32_MODIFY_VEL_PM,
 
 	IDX_U32_TRANSPOSE_SHIFT,
@@ -106,7 +104,6 @@ static void bind_field_pointers(save_struct* s, int32_t** u32tab, uint8_t** u8ta
 
     /* ---- u32 mappings ---- */
     u32tab[TEMPO_CURRENT_TEMPO]        = &s->u32_vals[IDX_U32_TEMPO_CURRENT_TEMPO];
-    u32tab[TEMPO_TEMPO_CLICK_RATE]     = &s->u32_vals[IDX_U32_TEMPO_CLICK_RATE];
 
     u32tab[MODIFY_VEL_PLUS_MINUS] = &s->u32_vals[IDX_U32_MODIFY_VEL_PM];
 
