@@ -1,5 +1,5 @@
 /*
- * menu_artpeggiator.c
+ * menu_arpeggiator.c
  *
  *  Created on: Jan 10, 2026
  *      Author: Romain Dereu
