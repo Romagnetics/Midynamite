@@ -2,8 +2,7 @@ name: Sync Midynamite (v2.0) into Midynamite_Private
 
 on:
   push:
-    branches:
-      - v2.0
+    branches: [v2.0]
   workflow_dispatch:
 
 permissions:
@@ -12,51 +11,50 @@ permissions:
 jobs:
   sync:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout private repo
+      # 1️⃣ Checkout the source repo (Midynamite)
+      - name: Checkout Midynamite
         uses: actions/checkout@v4
         with:
-          repository: RomainDereu/Midynamite_Private
-          token: ${{ secrets.PRIVATE_REPO_TOKEN }}
-          fetch-depth: 0
+          fetch-depth: 1
 
-      - name: Configure git identity
+      # 2️⃣ Clone the private repo
+      - name: Clone Midynamite_Private
+        run: |
+          git clone "https://x-access-token:${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/RomainDereu/Midynamite_Private.git" private
+          cd private
+          git checkout main
+
+      # 3️⃣ Configure git
+      - name: Configure Git
+        working-directory: private
         run: |
           git config user.name "midynamite-sync-bot"
           git config user.email "midynamite-sync-bot@users.noreply.github.com"
 
-      - name: Add/fetch Midynamite remote
+      # 4️⃣ Sync files (overwrite Midynamite folder only)
+      - name: Sync files into Midynamite/
         run: |
-          git remote remove Midynamite 2>/dev/null || true
-          git remote add Midynamite https://github.com/Romagnetics/Midynamite
-          git fetch Midynamite --prune
+          mkdir -p private/Midynamite
+          rsync -a --delete \
+            --exclude ".git/" \
+            --exclude ".github/workflows/" \
+            ./ private/Midynamite/
 
-      - name: Create sync branch
+      # 5️⃣ Commit if changes exist
+      - name: Commit changes
+        working-directory: private
         run: |
-          BRANCH="sync-midynamite-v2.0-${GITHUB_SHA::7}"
-          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
-          git checkout -b "$BRANCH"
-
-      - name: Sync subtree into Midynamite/
-        run: |
-          if [ -d "Midynamite" ]; then
-            git subtree pull --prefix=Midynamite Midynamite v2.0 --squash
-          else
-            git subtree add  --prefix=Midynamite Midynamite v2.0 --squash
+          git add -A Midynamite
+          if git diff --cached --quiet; then
+            echo "No changes detected."
+            exit 0
           fi
+          git commit -m "Auto-sync Midynamite v2.0 @ ${GITHUB_SHA::7}"
 
-      - name: Push sync branch
+      # 6️⃣ Push directly to main
+      - name: Push to main
+        working-directory: private
         run: |
-          git push -u origin "$BRANCH"
-
-      - name: Open PR into main
-        env:
-          GH_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
-        run: |
-          gh pr create \
-            --repo "RomainDereu/Midynamite_Private" \
-            --title "Sync Midynamite (v2.0) @ ${GITHUB_SHA::7}" \
-            --body "Automated subtree sync from Romagnetics/Midynamite branch v2.0. Source SHA: ${GITHUB_SHA}." \
-            --base main \
-            --head "$BRANCH" \
-          || true
+          git push origin main
