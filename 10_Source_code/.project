@@ -31,11 +31,6 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Drivers/Src</name>
-			<type>2</type>
-			<locationURI>PROJECT_LOC/Drivers/STM32F4xx_HAL_Driver/Src</locationURI>
-		</link>
-		<link>
 			<name>Middlewares/FreeRTOS/cmsis_os2.c</name>
 			<type>1</type>
 			<location>C:/Users/Astaa/STM32Cube/Repository/STM32Cube_FW_F4_V1.28.1/Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.c</location>
