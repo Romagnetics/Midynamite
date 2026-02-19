@@ -1,4 +1,4 @@
-name: Sync public Midynamite (v2.0) -> Midynamite_Private
+name: Sync public Midynamite (v2.0) -> Midynamite_Private/Midynamite
 
 on:
   push:
@@ -11,41 +11,39 @@ permissions:
 jobs:
   sync_public_to_private:
     runs-on: ubuntu-latest
-
     steps:
-      # 1️⃣ Checkout SOURCE (public repo)
+      # SOURCE (public): checkout into ./src
       - name: Checkout SOURCE (public Midynamite)
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+          path: src
 
-      # 2️⃣ Clone TARGET (private repo) into a folder called "target"
+      # TARGET (private): clone into ./dst
       - name: Clone TARGET (Midynamite_Private)
         run: |
-          git clone "https://x-access-token:${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/RomainDereu/Midynamite_Private.git" target
-          cd target
+          git clone "https://x-access-token:${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/RomainDereu/Midynamite_Private.git" dst
+          cd dst
           git checkout main
 
-      # 3️⃣ Configure Git in TARGET
-      - name: Configure Git
-        working-directory: target
+      - name: Configure Git in TARGET
+        working-directory: dst
         run: |
           git config user.name "midynamite-sync-bot"
           git config user.email "midynamite-sync-bot@users.noreply.github.com"
 
-      # 4️⃣ Replace target/Midynamite with full SOURCE repo
-      - name: Sync SOURCE -> TARGET/Midynamite
+      # Copy ENTIRE SOURCE repo into TARGET/Midynamite/
+      - name: Sync SOURCE -> TARGET/Midynamite/
         run: |
-          rm -rf target/Midynamite
-          mkdir -p target/Midynamite
-          rsync -a \
+          rm -rf dst/Midynamite
+          mkdir -p dst/Midynamite
+          rsync -a --delete \
             --exclude ".git/" \
             --exclude ".github/workflows/" \
-            ./ target/Midynamite/
+            src/ dst/Midynamite/
 
-      # 5️⃣ Commit if changes exist
-      - name: Commit changes
-        working-directory: target
+      - name: Commit changes (if any)
+        working-directory: dst
         run: |
           git add -A Midynamite
           if git diff --cached --quiet; then
@@ -54,8 +52,7 @@ jobs:
           fi
           git commit -m "Auto-sync public Midynamite v2.0 @ ${GITHUB_SHA::7}"
 
-      # 6️⃣ Push directly to main
       - name: Push to main
-        working-directory: target
+        working-directory: dst
         run: |
           git push origin main
