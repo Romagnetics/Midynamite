@@ -1,4 +1,4 @@
-name: Sync Midynamite (v2.0) into Midynamite_Private
+name: Sync public Midynamite (v2.0) -> Midynamite_Private
 
 on:
   push:
@@ -9,32 +9,32 @@ permissions:
   contents: read
 
 jobs:
-  sync:
+  sync_public_to_private:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout the source repo (Midynamite)
-      - name: Checkout Midynamite
+      # 1️⃣ SOURCE: checkout public repo (this repo)
+      - name: Checkout SOURCE (public Midynamite)
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
-      # 2️⃣ Clone the private repo
-      - name: Clone Midynamite_Private
+      # 2️⃣ TARGET: clone private repo
+      - name: Clone TARGET (Midynamite_Private)
         run: |
           git clone "https://x-access-token:${{ secrets.PRIVATE_REPO_TOKEN }}@github.com/RomainDereu/Midynamite_Private.git" private
           cd private
           git checkout main
 
-      # 3️⃣ Configure git
-      - name: Configure Git
+      # 3️⃣ Configure git identity for commits in TARGET
+      - name: Configure Git in TARGET
         working-directory: private
         run: |
           git config user.name "midynamite-sync-bot"
           git config user.email "midynamite-sync-bot@users.noreply.github.com"
 
-      # 4️⃣ Sync files (overwrite Midynamite folder only)
-      - name: Sync files into Midynamite/
+      # 4️⃣ Copy ENTIRE source repo into TARGET/Midynamite/
+      - name: Sync SOURCE -> TARGET/Midynamite/
         run: |
           mkdir -p private/Midynamite
           rsync -a --delete \
@@ -42,8 +42,8 @@ jobs:
             --exclude ".github/workflows/" \
             ./ private/Midynamite/
 
-      # 5️⃣ Commit if changes exist
-      - name: Commit changes
+      # 5️⃣ Commit only if changes exist
+      - name: Commit changes (if any)
         working-directory: private
         run: |
           git add -A Midynamite
@@ -51,10 +51,10 @@ jobs:
             echo "No changes detected."
             exit 0
           fi
-          git commit -m "Auto-sync Midynamite v2.0 @ ${GITHUB_SHA::7}"
+          git commit -m "Auto-sync public Midynamite v2.0 @ ${GITHUB_SHA::7}"
 
-      # 6️⃣ Push directly to main
-      - name: Push to main
+      # 6️⃣ Push directly to main in private repo
+      - name: Push to TARGET main
         working-directory: private
         run: |
           git push origin main
