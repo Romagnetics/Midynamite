@@ -1,7 +1,7 @@
 #ifndef THREADS_H_
 #define THREADS_H_
 
-#include "cmsis_os.h"
+#include "cmsis_os2.h"
 
 
 typedef struct {

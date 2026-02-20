@@ -5,7 +5,7 @@
  *      Author: Astaa
  */
 #include <stddef.h>
-#include "cmsis_os.h" //For osDelay
+#include "cmsis_os2.h" //For osDelay
 #include "main.h" // Timer
 #include "menus.h"
 #include "_menu_ui.h" // menu change functions

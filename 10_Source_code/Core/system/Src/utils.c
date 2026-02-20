@@ -5,7 +5,7 @@
  *      Author: Romain Dereu
  */
 #include <string.h>
-#include "cmsis_os.h" //osDelay
+#include "cmsis_os2.h" //osDelay
 #include "memory_main.h"
 #include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
 #include "text.h"
