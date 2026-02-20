@@ -3,7 +3,7 @@
  *
  *      Author: Romain Dereu
  */
-#include "cmsis_os.h" //osKernel
+#include "cmsis_os2.h" //osKernel
 #include "main.h"
 #include "_menu_ui.h" //For the screen init
 #include "midi_transform.h" //midi_buffer_push

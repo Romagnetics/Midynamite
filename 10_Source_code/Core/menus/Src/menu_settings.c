@@ -9,7 +9,7 @@
 #include "menus.h"
 #include "screen_driver.h"
 #include "text.h"
-#include "cmsis_os.h" //osDelay
+#include "cmsis_os2.h" //osDelay
 #include "utils.h" // Debounce
 
 
