@@ -5,13 +5,12 @@
  *      Author: Romain Dereu
  */
 #include "memory_main.h"
-#include "_menu_controller.h" //For STATIC_PRODUCTION
+#include "_menu_controller.h" // for menu_controls[], s_field_change_bits (mark_field_changed)
 
 // Expose for tests
 const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     //                                   min         max         default
     [TEMPO_CURRENT_TEMPO]        = {     20,        300,        120 },
-    [TEMPO_TEMPO_CLICK_RATE]     = {      1,      50000,         24 },
     [TEMPO_CURRENTLY_SENDING]    = {      0,          1,          0 },
     [TEMPO_SEND_TO_MIDI_OUT]     = {      0,          2,          0 },
 
@@ -30,7 +29,7 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [MODIFY_VEL_PLUS_MINUS]      = {    -80,         80,          0 },
     [MODIFY_VEL_ABSOLUTE]        = {      0,        127,         64 },
 
-    [MODIFY_SENDING]             = {      0,          1,          0 },
+    [MODIFY_CURRENTLY_SENDING]             = {      0,          1,          0 },
 
     [TRANSPOSE_TRANSPOSE_TYPE]   = {      0,          1,          0 },
     [TRANSPOSE_MIDI_SHIFT_VALUE] = {    -36,         36,          0 },
@@ -38,11 +37,24 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [TRANSPOSE_INTERVAL]         = {      0,          9,          0 },
     [TRANSPOSE_TRANSPOSE_SCALE]  = {      0,          6,          0 },
     [TRANSPOSE_SEND_ORIGINAL]    = {      0,          1,          0 },
-    [TRANSPOSE_SENDING]          = {      0,          1,          0 },
+    [TRANSPOSE_CURRENTLY_SENDING]          = {      0,          1,          0 },
 
-    [SETTINGS_START_MENU]        = {      0,          3,          0 },
+	[ARPEGGIATOR_CURRENTLY_SENDING]        = {      0,       1,          0 },
+	[ARPEGGIATOR_DIVISION]       = {      0,       6,          0 },
+	[ARPEGGIATOR_GATE]        = {      1,       10,          10 },
+	[ARPEGGIATOR_OCTAVES]        = {      1,       4,          1 },
+	[ARPEGGIATOR_PATTERN]        = {      0,       7,          0 },
+
+	[ARPEGGIATOR_SWING]        = {      1,       100,          50 },
+	[ARPEGGIATOR_LENGTH]   = {      1,       8,          8 },
+	[ARPEGGIATOR_NOTES]  = {      0,       0b11111111,    0b11111111 },
+	[ARPEGGIATOR_HOLD]        = {      0,       1,          0 },
+	[ARPEGGIATOR_KEY_SYNC]        = {      0,       1,          0 },
+
+
+    [SETTINGS_START_MENU]        = {      0,          AMOUNT_OF_MENUS-1,          0 },
     [SETTINGS_SEND_USB]          = {      0,          1,          0 },
-    [SETTINGS_BRIGHTNESS]        = {      0,          9,          6 },
+    [SETTINGS_BRIGHTNESS]        = {      1,          10,          7 },
     [SETTINGS_MIDI_THRU]         = {      0,          1,          0 },
     [SETTINGS_USB_THRU]          = {      0,          1,          0 },
     [SETTINGS_CHANNEL_FILTER]    = {      0,          1,          0 },
@@ -147,11 +159,11 @@ static void mark_field_changed(save_field_t f) {
 }
 
 // Utils: wrap/clamp a value into [min, max] with optional wrap
-STATIC_PRODUCTION int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap)
+int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap)
 {
     if (min > max) { int32_t t = min; min = max; max = t; }
 
-    if (!wrap) {
+    if (wrap == NO_WRAP) {
         if (v < min) return min;
         if (v > max) return max;
         return v;
@@ -209,7 +221,7 @@ uint8_t save_modify_u8(save_field_t field, save_modify_op_t op, uint8_t value_if
         case SAVE_MODIFY_SET: {
             int32_t desired = (int32_t)value_if_set;
             if (desired > 230) {//For warps, 255 + 25 buffer for button presses
-                v = mt.wrap ? lim.max : lim.min;
+                v = (mt.wrap == WRAP) ? lim.max : lim.min;
             } else {
                 v = desired;
             }

@@ -8,6 +8,8 @@
 #ifndef TEXT_H_
 #define TEXT_H_
 
+#include "menus.h"
+
 // Central struct for all UI strings and selectable options
 typedef struct {
     // Menu Titles
@@ -24,11 +26,11 @@ typedef struct {
     const char *output_sem;
 
     // Settings
-    const char *MIDI_Thru;
-    const char *USB_Thru;
-    const char *MIDI_Filter;
+    const char *MIDI_Thru_;
+    const char *USB_Thru_;
+    const char *MIDI_Filter_;
 
-    const char *X_equals_ignore_channel;
+    const char *equals_ignore_channel;
 
 
     // Channel Modify
@@ -46,6 +48,7 @@ typedef struct {
     const char *fixed;
     const char *change_velocity;
     const char *fixed_velocity;
+
 
     // Transpose
     const char *type;
@@ -87,12 +90,14 @@ typedef struct {
 
 
     // Start Menu
-    const char *start_menu;
+    const char *start_menu_;
 
 
     // Contrast
-    const char *contrast;
-    const char *contrast_levels[10];
+    const char *contrast_;
+    const char *ten_hundred_ten_percent[11];
+    const char *zero_hundred_ten[11];
+
 
     // About
     const char *about_brand;
@@ -112,16 +117,31 @@ typedef struct {
 
     // MIDI Tempo
     const char *bpm;
+    const char *tempo;
 
     //USB Midi
-    const char *usb_midi;
+    const char *usb_midi_;
 
 
     //Upgrade mode
     const char *upgrade_mode;
 
+    // Arpeggiator
+    const char *arpeggiator_1;
+    const char *arpeggiator_2;
+    const char *pattern_;
+    const char *division_;
+    const char *gate_;
+    const char *hold_;
+    const char *steps_;
+    const char *swing_;
+    const char *length_;
+    const char *key_sync_;
+
+
     //Error handlers
     const char *error;
+
 
     // Note names
     const char *midi_note_names[128];
@@ -143,10 +163,14 @@ typedef struct {
     const char *off_on[2];
     const char *usb_receive_send[2];
     const char *midi_channels[17];
-    const char *menu_list[4];
+    const char *menu_list[5];
+
+    const char *division_list[7];
+    const char *arp_patterns[8];
+    const char *octave_count[5];
+
 
 } Message;
-
 // Global access to UI strings and options
 extern const Message *message;
 

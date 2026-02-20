@@ -326,8 +326,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   // Romagnetics code
   if (htim->Instance == TIM2) {
-    uint8_t send_to_out        = save_get(TEMPO_SEND_TO_MIDI_OUT);
-    uint32_t tempo_click_rate  = save_get(TEMPO_TEMPO_CLICK_RATE);
+    const uint8_t send_to_out = save_get(TEMPO_SEND_TO_MIDI_OUT);
+    const uint32_t bpm = save_get(TEMPO_CURRENT_TEMPO);
+    const uint32_t tempo_click_rate = (bpm > 0u) ? (6000000u / (bpm * 48u)) : 0u;
     send_midi_tempo_out(tempo_click_rate, send_to_out);
   }
 }

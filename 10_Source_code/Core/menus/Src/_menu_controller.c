@@ -17,6 +17,8 @@ static uint8_t s_prev_selects[AMOUNT_OF_MENUS] = {0};
 
 uint32_t s_field_change_bits[CHANGE_BITS_WORDS] = {0};
 
+static volatile uint8_t s_ui_reload = 0;
+
 // -------------------------
 // Encoder & value helpers (logic-agnostic)
 // -------------------------
@@ -27,10 +29,7 @@ static int8_t encoder_read_step(TIM_HandleTypeDef *timer) {
     return 0; // no step
 }
 
-STATIC_PRODUCTION void no_update(save_field_t field, uint8_t arg) { (void)field; (void)arg; }
-STATIC_PRODUCTION void shadow_select(save_field_t field, uint8_t arg) { (void)field; (void)arg; }
-
-STATIC_PRODUCTION void update_value(save_field_t field, uint8_t multiplier)
+static void update_value(save_field_t field, uint8_t multiplier)
 {
     TIM_HandleTypeDef *timer = &htim4;
     uint8_t active_mult = 1;
@@ -49,87 +48,214 @@ STATIC_PRODUCTION void update_value(save_field_t field, uint8_t multiplier)
 
     if (u32_fields[field]) { (void)save_modify_u32(field, SAVE_MODIFY_SET, (uint32_t)next); }
     else                  { (void)save_modify_u8 (field, SAVE_MODIFY_SET, (uint8_t) next); }
+    s_ui_reload = 1;
 }
 
-STATIC_PRODUCTION void update_contrast(save_field_t f, uint8_t step) {
-    update_value(f, step);
+void update_value_inc1(save_field_t f)  { update_value(f, 1);  }
+void update_value_inc10(save_field_t f) { update_value(f, 10); }
+void update_value_inc12(save_field_t f) { update_value(f, 12); }
+
+void shadow_select(save_field_t field) { (void)field; }
+
+void update_contrast(save_field_t f) {
+    update_value(f, 1);
     screen_driver_UpdateContrast();
 }
 
-STATIC_PRODUCTION void update_channel_filter(save_field_t field, uint8_t bit_index)
+// -------------------------
+// Arpeggiator: division -> ticks & swing mapping
+// -------------------------
+// 48 PPQ grid. Divisions: 1/4 1/6 1/8 1/12 1/16 1/24 1/32
+// step ticks:            48   32  24   16    12    8     6
+static inline uint8_t arp_step_ticks(uint8_t div_idx)
 {
-    if (bit_index > 15) return;
+    static const uint8_t t[7] = { 48u, 32u, 24u, 16u, 12u, 8u, 6u };
+    if (div_idx > 6u) div_idx = 6u;
+    return t[div_idx];
+}
+
+static inline uint8_t arp_swing_max(uint8_t div_idx)
+{
+    const uint8_t ticks = arp_step_ticks(div_idx);
+    // Max “delay” in ticks is ticks-1 (e.g. 48 -> 47)
+    return (ticks > 0u) ? (uint8_t)(ticks - 1u) : 0u;
+}
+
+// Swing editing: 1..max (never allow 0)
+void update_arp_swing(save_field_t field)
+{
     int8_t step = encoder_read_step(&htim4);
     if (step == 0) return;
+
+    uint8_t div_idx = (uint8_t)save_get(ARPEGGIATOR_DIVISION);
+    uint8_t maxv    = arp_swing_max(div_idx);
+
+    int16_t cur  = (int16_t)(uint8_t)save_get(field);
+    int16_t next = cur + (int16_t)step;
+
+    if (next < 1) next = 1;
+    if (next > (int16_t)maxv) next = (int16_t)maxv;
+
+    (void)save_modify_u8(field, SAVE_MODIFY_SET, (uint8_t)next);
+    s_ui_reload = 1;
+}
+
+// Division editing: wraps 0..6 and resets swing to 50% of the NEW division
+void update_arp_division(save_field_t field)
+{
+    int8_t step = encoder_read_step(&htim4);
+    if (step == 0) return;
+
+    int16_t cur  = (int16_t)(uint8_t)save_get(field);
+    int16_t next = cur + (int16_t)step;
+
+    while (next < 0)  next += 7;
+    while (next >= 7) next -= 7;
+
+    (void)save_modify_u8(field, SAVE_MODIFY_SET, (uint8_t)next);
+
+    // Reset swing to 50% (in ticks): ticks/2 (48->24, 32->16, 6->3, etc.)
+    const uint8_t ticks = arp_step_ticks((uint8_t)next);
+    uint8_t swing50 = (uint8_t)(ticks / 2u);
+    if (swing50 < 1u) swing50 = 1u; // safety; also enforces “no 0”
+    (void)save_modify_u8(ARPEGGIATOR_SWING, SAVE_MODIFY_SET, swing50);
+
+    s_ui_reload = 1;
+}
+
+// -------------------------
+// Bits fields
+// -------------------------
+void update_bits_field(save_field_t field, uint8_t bit_index, uint8_t bits_count)
+{
+    if (bits_count == 0u) return;
+    if (bit_index >= bits_count) return;
+    if (bit_index >= 32u) return; // avoid UB
+
+    int8_t step = encoder_read_step(&htim4);
+    if (step == 0) return;
+
     uint32_t mask = (uint32_t)save_get(field);
-    mask ^= (1UL << bit_index);
+    const uint32_t bit = (1UL << bit_index);
+
+    // Direction-agnostic: any step toggles
+    mask ^= bit;
+
     (void)save_modify_u32(field, SAVE_MODIFY_SET, mask);
+    s_ui_reload = 1;
+}
+
+void update_bits_16_fields(save_field_t field)
+{
+    const int8_t bit = ui_selected_bit(field);
+    if (bit < 0) return;
+
+    update_bits_field(field, (uint8_t)bit, 16u);
+}
+
+void update_bits_8_steps(save_field_t field)
+{
+    const int8_t bit = ui_selected_bit(field);
+    if (bit < 0) return;
+
+    uint8_t len = (uint8_t)save_get(ARPEGGIATOR_LENGTH);
+    if (len < 1u) len = 1u;
+    if (len > 8u) len = 8u;
+
+    // Don’t allow edits beyond length
+    if ((uint8_t)bit >= len) return;
+
+    update_bits_field(field, (uint8_t)bit, len);
 }
 
 // -------------------------
 // Controller table (DATA)
 // -------------------------
+#define MC_BASE (__COUNTER__)
+#define MC(field, wrap, handler, group) \
+    [field] = { (wrap), (handler), (group), (uint16_t)(__COUNTER__ - MC_BASE) }
+
 const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
-    //                                wrap     handler             handler_arg   group
-    [TEMPO_CURRENT_TEMPO]        = { NO_WRAP, update_value,            10,      CTRL_TEMPO_ALL },
-    [TEMPO_CURRENTLY_SENDING]    = {   WRAP,  no_update,                0,      CTRL_TEMPO_ALL },
-    [TEMPO_SEND_TO_MIDI_OUT]     = {   WRAP,  update_value,             1,      CTRL_TEMPO_ALL },
+    //                                  wrap     handler                   group
+    MC(TEMPO_CURRENT_TEMPO,          NO_WRAP, update_value_inc10,          CTRL_SHARED_TEMPO),
+    MC(TEMPO_SEND_TO_MIDI_OUT,         WRAP,  update_value_inc1,           CTRL_TEMPO_ALL),
 
-    [MODIFY_CHANGE_OR_SPLIT]     = {   WRAP,  no_update,                0,      0 },
-    [MODIFY_VELOCITY_TYPE]       = {   WRAP,  no_update,                0,      0 },
+    MC(MODIFY_SEND_TO_MIDI_CH1,      NO_WRAP, update_value_inc1,           CTRL_MODIFY_CHANGE),
+    MC(MODIFY_SEND_TO_MIDI_CH2,      NO_WRAP, update_value_inc1,           CTRL_MODIFY_CHANGE),
 
-    [MODIFY_SEND_TO_MIDI_CH1]    = { NO_WRAP, update_value,             1,      CTRL_MODIFY_CHANGE },
-    [MODIFY_SEND_TO_MIDI_CH2]    = { NO_WRAP, update_value,             1,      CTRL_MODIFY_CHANGE },
+    MC(MODIFY_SPLIT_MIDI_CH1,        NO_WRAP, update_value_inc1,           CTRL_MODIFY_SPLIT),
+    MC(MODIFY_SPLIT_MIDI_CH2,        NO_WRAP, update_value_inc1,           CTRL_MODIFY_SPLIT),
+    MC(MODIFY_SPLIT_NOTE,            NO_WRAP, update_value_inc12,          CTRL_MODIFY_SPLIT),
 
-    [MODIFY_SPLIT_MIDI_CH1]      = { NO_WRAP, update_value,             1,      CTRL_MODIFY_SPLIT },
-    [MODIFY_SPLIT_MIDI_CH2]      = { NO_WRAP, update_value,             1,      CTRL_MODIFY_SPLIT },
-    [MODIFY_SPLIT_NOTE]          = { NO_WRAP, update_value,            12,      CTRL_MODIFY_SPLIT },
+    MC(MODIFY_SEND_TO_MIDI_OUT,        WRAP,  update_value_inc1,           CTRL_MODIFY_ALL),
 
-    [MODIFY_SEND_TO_MIDI_OUT]    = {   WRAP,  update_value,             1,      CTRL_MODIFY_ALL },
+    MC(MODIFY_VEL_PLUS_MINUS,       NO_WRAP, update_value_inc10,           CTRL_MODIFY_VEL_CHANGED),
+    MC(MODIFY_VEL_ABSOLUTE,         NO_WRAP, update_value_inc10,           CTRL_MODIFY_VEL_FIXED),
 
-    [MODIFY_VEL_PLUS_MINUS]      = { NO_WRAP, update_value,            10,      CTRL_MODIFY_VEL_CHANGED },
-    [MODIFY_VEL_ABSOLUTE]        = { NO_WRAP, update_value,            10,      CTRL_MODIFY_VEL_FIXED },
+    MC(TRANSPOSE_MIDI_SHIFT_VALUE,   NO_WRAP, update_value_inc12,          CTRL_TRANSPOSE_SHIFT),
 
-    [MODIFY_SENDING]             = {   WRAP,  no_update,                0,      CTRL_MODIFY_ALL },
+    MC(TRANSPOSE_BASE_NOTE,         NO_WRAP, update_value_inc1,            CTRL_TRANSPOSE_SCALED),
+    MC(TRANSPOSE_INTERVAL,          NO_WRAP, update_value_inc1,            CTRL_TRANSPOSE_SCALED),
+    MC(TRANSPOSE_TRANSPOSE_SCALE,     WRAP,  update_value_inc1,            CTRL_TRANSPOSE_SCALED),
 
-    [TRANSPOSE_TRANSPOSE_TYPE]   = {   WRAP,  no_update,                0,      0 },
-    [TRANSPOSE_MIDI_SHIFT_VALUE] = { NO_WRAP, update_value,            12,      CTRL_TRANSPOSE_SHIFT },
+    MC(TRANSPOSE_SEND_ORIGINAL,       WRAP,  update_value_inc1,            CTRL_TRANSPOSE_ALL),
 
-    [TRANSPOSE_BASE_NOTE]        = { NO_WRAP, update_value,             1,      CTRL_TRANSPOSE_SCALED },
-    [TRANSPOSE_INTERVAL]         = { NO_WRAP, update_value,             1,      CTRL_TRANSPOSE_SCALED },
-    [TRANSPOSE_TRANSPOSE_SCALE]  = {   WRAP,  update_value,             1,      CTRL_TRANSPOSE_SCALED },
+    // Arp
+    MC(ARPEGGIATOR_DIVISION,           WRAP,  update_arp_division,         CTRL_ARPEGGIATOR_PAGE_1),
+    MC(ARPEGGIATOR_GATE,               WRAP,  update_value_inc1,           CTRL_ARPEGGIATOR_PAGE_1),
+    MC(ARPEGGIATOR_OCTAVES,            WRAP,  update_value_inc1,           CTRL_ARPEGGIATOR_PAGE_1),
+    MC(ARPEGGIATOR_PATTERN,            WRAP,  update_value_inc1,           CTRL_ARPEGGIATOR_PAGE_1),
 
-    [TRANSPOSE_SEND_ORIGINAL]    = {   WRAP,  update_value,             1,      CTRL_TRANSPOSE_ALL },
-    [TRANSPOSE_SENDING]          = {   WRAP,  no_update,                0,      0 },
+    MC(ARPEGGIATOR_SWING,              WRAP,  update_arp_swing,            CTRL_ARPEGGIATOR_PAGE_2),
+    MC(ARPEGGIATOR_LENGTH,           NO_WRAP, update_value_inc10,          CTRL_ARPEGGIATOR_PAGE_2),
+    MC(ARPEGGIATOR_NOTES,              WRAP,  update_bits_8_steps,         CTRL_ARPEGGIATOR_PAGE_2),
+    MC(ARPEGGIATOR_HOLD,               WRAP,  update_value_inc1,           CTRL_ARPEGGIATOR_PAGE_2),
+    MC(ARPEGGIATOR_KEY_SYNC,           WRAP,  update_value_inc1,           CTRL_ARPEGGIATOR_PAGE_2),
 
-    [SETTINGS_START_MENU]        = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL1 },
-    [SETTINGS_SEND_USB]          = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL1 },
-    [SETTINGS_BRIGHTNESS]        = { NO_WRAP, update_contrast,          1,      CTRL_SETTINGS_GLOBAL1 },
+    // Settings
+    MC(SETTINGS_START_MENU,            WRAP,  update_value_inc1,           CTRL_SETTINGS_GLOBAL1),
+    MC(SETTINGS_SEND_USB,              WRAP,  update_value_inc1,           CTRL_SETTINGS_GLOBAL1),
+    MC(SETTINGS_BRIGHTNESS,          NO_WRAP, update_contrast,             CTRL_SETTINGS_GLOBAL1),
 
-    [SETTINGS_MIDI_THRU]         = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL2 },
-    [SETTINGS_USB_THRU]          = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL2 },
-    [SETTINGS_CHANNEL_FILTER]    = {   WRAP,  update_value,             1,      CTRL_SETTINGS_GLOBAL2 },
+    MC(SETTINGS_MIDI_THRU,             WRAP,  update_value_inc1,           CTRL_SETTINGS_GLOBAL2),
+    MC(SETTINGS_USB_THRU,              WRAP,  update_value_inc1,           CTRL_SETTINGS_GLOBAL2),
+    MC(SETTINGS_CHANNEL_FILTER,        WRAP,  update_value_inc1,           CTRL_SETTINGS_GLOBAL2),
 
-    [SETTINGS_FILTERED_CH]       = {   WRAP,  update_channel_filter,    1,      CTRL_SETTINGS_FILTER },
+    MC(SETTINGS_FILTERED_CH,           WRAP,  update_bits_16_fields,       CTRL_SETTINGS_FILTER),
 
-    [SETTINGS_ABOUT]             = { NO_WRAP, shadow_select,            0,      CTRL_SETTINGS_ABOUT },
+    MC(SETTINGS_ABOUT,               NO_WRAP, shadow_select,               CTRL_SETTINGS_ABOUT),
 };
+
+#undef MC
+#undef MC_BASE
 
 // -------------------------
 // Utility (pure logic, data-agnostic)
 // -------------------------
-static inline uint32_t bit(ctrl_group_id_t id) { return (1u << (id - 1)); }
 static inline uint32_t flag_from_id(uint32_t id) { return (id >= 1 && id <= 31) ? (1u << (id - 1)) : 0u; }
 
-static inline uint8_t is_bits_item(save_field_t f) {
-    return menu_controls[f].handler == update_channel_filter;
+uint8_t menu_row_hit(const CtrlActiveList *list, uint8_t row, save_field_t *out_field, uint8_t *out_bit, uint32_t *out_gid)
+{
+    uint8_t cursor = 0;
+    for (uint8_t i = 0; i < list->count; ++i) {
+        save_field_t f = (save_field_t)list->fields_idx[i];
+        uint8_t span = menu_field_row_span(f);
+        if (row < (uint8_t)(cursor + span)) {
+            if (out_field) *out_field = f;
+            if (out_gid)   *out_gid   = (uint32_t)menu_controls[f].groups;
+            if (out_bit)   *out_bit   = (span > 1u) ? (uint8_t)(row - cursor) : 0xFF;
+            return 1;
+        }
+        cursor = (uint8_t)(cursor + span);
+    }
+    return 0;
 }
 
 static uint8_t rows_for_list(const CtrlActiveList *list) {
     uint8_t rows = 0;
     for (uint8_t i = 0; i < list->count; ++i) {
         save_field_t f = (save_field_t)list->fields_idx[i];
-        rows += is_bits_item(f) ? 16 : 1;
+        rows += menu_field_row_span(f);
     }
     return rows;
 }
@@ -137,16 +263,30 @@ static uint8_t rows_for_list(const CtrlActiveList *list) {
 // -------------------------
 // Build active list (pure logic)
 // -------------------------
-static void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out)
+void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out)
 {
     uint8_t count = 0;
-    for (uint16_t f = 0; f < SAVE_FIELD_COUNT && count < MENU_ACTIVE_LIST_CAP; ++f) {
+
+    for (uint16_t f = 0; f < SAVE_FIELD_COUNT; ++f) {
         const menu_controls_t mt = menu_controls[f];
         const uint32_t gm = flag_from_id(mt.groups);
+
         if ((gm & active_groups) == 0) continue;
-        if (mt.handler == no_update) continue;
-        out->fields_idx[count++] = f;
+        if (mt.handler == NULL) continue;
+
+        // Insert in ascending ui_order
+        uint8_t pos = count;
+        while (pos > 0) {
+            save_field_t prev_f = (save_field_t)out->fields_idx[pos - 1];
+            if (menu_controls[prev_f].ui_order <= mt.ui_order) break;
+            out->fields_idx[pos] = out->fields_idx[pos - 1];
+            --pos;
+        }
+        out->fields_idx[pos] = f;
+
+        if (++count >= MENU_ACTIVE_LIST_CAP) break;
     }
+
     out->count = count;
 }
 
@@ -237,40 +377,27 @@ static inline NavSel nav_selection(menu_list_t page)
     s.bit   = 0xFF;
     s.field = SAVE_FIELD_INVALID;
 
-    CtrlActiveList u = {0};
-    if (build_union_for_position_page(page, &u)) { // position-based page (from menus.c)
-        uint8_t cursor = 0;
-        for (uint8_t i = 0; i < u.count; ++i) {
-            const save_field_t f = (save_field_t)u.fields_idx[i];
-            const uint8_t span  = is_bits_item(f) ? 16u : 1u;
+    uint32_t gid = 0;
+    uint8_t  bit = 0xFF;
+    save_field_t f = SAVE_FIELD_INVALID;
 
-            if (s.row < (uint8_t)(cursor + span)) {
-                s.field   = f;
-                s.is_bits = (span == 16u);
-                s.bit     = s.is_bits ? (uint8_t)(s.row - cursor) : 0xFF;
-                s.gid     = menu_controls[f].groups;
-                return s;
-            }
-            cursor = (uint8_t)(cursor + span);
+    CtrlActiveList u = {0};
+    if (build_union_for_position_page(page, &u)) {
+        if (menu_row_hit(&u, s.row, &f, &bit, &gid)) {
+            s.field   = f;
+            s.is_bits = (bit != 0xFF);
+            s.bit     = bit;
+            s.gid     = gid;
         }
         return s;
     }
 
-    // save-based only page: use active list
     const CtrlActiveList *list = get_list_for_page(page);
-    uint8_t row_cursor = 0;
-
-    for (uint8_t i = 0; i < list->count; ++i) {
-        const save_field_t f = (save_field_t)list->fields_idx[i];
-        const uint8_t span  = is_bits_item(f) ? 16u : 1u;
-        if (s.row < (uint8_t)(row_cursor + span)) {
-            s.field   = f;
-            s.is_bits = (span == 16u);
-            s.bit     = s.is_bits ? (uint8_t)(s.row - row_cursor) : 0xFF;
-            s.gid     = menu_controls[f].groups;
-            return s;
-        }
-        row_cursor = (uint8_t)(row_cursor + span);
+    if (menu_row_hit(list, s.row, &f, &bit, &gid)) {
+        s.field   = f;
+        s.is_bits = (bit != 0xFF);
+        s.bit     = bit;
+        s.gid     = gid;
     }
     return s;
 }
@@ -290,9 +417,8 @@ void select_press_menu_change(menu_list_t page) {
 static inline void nav_apply_selection(const NavSel *s)
 {
     if (s->field == SAVE_FIELD_INVALID) return;
-    if (s->is_bits) { update_channel_filter(s->field, s->bit); return; }
     const menu_controls_t mt = menu_controls[s->field];
-    if (mt.handler) mt.handler(s->field, mt.handler_arg);
+    if (mt.handler) mt.handler(s->field);
 }
 
 static inline void toggle_selected_row(menu_list_t page)
@@ -306,16 +432,20 @@ static inline void toggle_selected_row(menu_list_t page)
 // -------------------------
 int8_t ui_selected_bit(save_field_t f) {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return -1;
-    const menu_list_t page = page_for_ctrl_id(menu_controls[f].groups); // from menus.c
+
+    menu_list_t page = (menu_list_t)get_current_menu(CURRENT_MENU);
     const NavSel s = nav_selection(page);
+
     return (s.field == f && s.is_bits) ? (int8_t)s.bit : -1;
 }
 
 uint8_t ui_is_field_selected(save_field_t f)
 {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return 0;
-    const menu_list_t page = page_for_ctrl_id(menu_controls[f].groups); // from menus.c
+
+    menu_list_t page = (menu_list_t)get_current_menu(CURRENT_MENU);
     const NavSel s = nav_selection(page);
+
     return (s.field == f) ? 1u : 0u;
 }
 
@@ -342,10 +472,13 @@ static uint8_t has_menu_changed(menu_list_t page, uint8_t current_select)
 {
     const uint8_t old_select  = (page < AMOUNT_OF_MENUS) ? s_prev_selects[page] : 0;
     const uint8_t sel_changed = (page < AMOUNT_OF_MENUS) && (old_select != current_select);
-    const uint8_t data_changed = any_field_changed();
+    const uint8_t data_changed = (uint8_t)(any_field_changed() | s_ui_reload);
 
     if (page < AMOUNT_OF_MENUS) s_menu_selects[page] = current_select;
-    if (data_changed) clear_all_field_changed();
+    if (data_changed) {
+        clear_all_field_changed();
+        s_ui_reload = 0;
+    }
 
     return (uint8_t)(sel_changed | data_changed);
 }
@@ -362,14 +495,12 @@ static uint8_t menu_nav_end_auto(menu_list_t page)
     return changed;
 }
 
-void update_menu(menu_list_t menu_page)
+void update_menu()
 {
-    if (menu_page >= AMOUNT_OF_MENUS) menu_page = 0;
+    menu_list_t page = (menu_list_t)get_current_menu(CURRENT_MENU);
+    if (page >= AMOUNT_OF_MENUS) page = 0;
 
-    // Drive nav state from data (no menu-specific logic)
-    menu_nav_begin_and_update(menu_page);
-
-    cont_update_menu(menu_page);
-
-    (void)menu_nav_end_auto(menu_page);
+    menu_nav_begin_and_update(page);
+    cont_update_menu(page);
+    (void)menu_nav_end_auto(page);
 }

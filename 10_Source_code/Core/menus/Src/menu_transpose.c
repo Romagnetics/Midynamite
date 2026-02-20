@@ -40,5 +40,5 @@ void ui_update_transpose(void)
 }
 
 void ui_code_transpose() {
-	midi_display_on_off(save_get(TRANSPOSE_SENDING), 63);
+	midi_display_on_off(save_get(TRANSPOSE_CURRENTLY_SENDING), 63);
 }

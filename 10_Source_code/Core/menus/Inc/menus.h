@@ -25,6 +25,7 @@ typedef enum {
     MENU_TEMPO = 0,
     MENU_MODIFY,
     MENU_TRANSPOSE,
+	MENU_ARPEGGIATOR,
     MENU_SETTINGS,
     AMOUNT_OF_MENUS,   // number of menus
     CURRENT_MENU,      // UI state index
@@ -45,7 +46,6 @@ typedef uint8_t (*selector_compute_fn_t)();
 CtrlActiveList* list_for_page(menu_list_t page);
 
 // -------- Individual menu updates --------
-void cont_update_tempo();
 void ui_code_tempo();
 void ui_update_tempo();
 
@@ -56,6 +56,11 @@ void ui_update_modify();
 void cont_update_transpose(menu_list_t field);
 void ui_code_transpose();
 void ui_update_transpose();
+
+void cont_update_arpeggiator(menu_list_t field);
+void ui_code_arpeggiator();
+void ui_update_arpeggiator();
+
 
 void cont_update_settings();
 void ui_code_settings();

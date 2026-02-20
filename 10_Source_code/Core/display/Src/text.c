@@ -21,11 +21,11 @@ static const Message _message = {
     .midi_transpose = "MIDI Transpose",
 	.output_sem = "Output:",
 
-	.MIDI_Thru = "MIDI Thru",
-	.USB_Thru = "USB Thru",
-	.MIDI_Filter = "MIDI Filter",
+	.MIDI_Thru_ = "MIDI Thru:",
+	.USB_Thru_ = "USB Thru:",
+	.MIDI_Filter_ = "MIDI Filter:",
 
-	.X_equals_ignore_channel = "X = Ignore Channel",
+	.equals_ignore_channel = "0 = Ignore Channel",
 
     // Channel Modify
     .midi_modify_select = "Ch. Modify",
@@ -41,6 +41,8 @@ static const Message _message = {
     .fixed = "Fixed",
     .change_velocity = "Change Velocity",
     .fixed_velocity = "Fixed Velocity",
+
+
 
     // Transpose
     .type = "Type",
@@ -83,15 +85,17 @@ static const Message _message = {
 
 
     // Start Menu
-    .start_menu = "Start Menu",
+    .start_menu_= "Start Menu:",
 
 
     // Contrast
-    .contrast = "Contrast",
-    .contrast_levels = {
+    .contrast_ = "Contrast:",
+    .ten_hundred_ten_percent = { " 0%",
         "10%", "20%", "30%", "40%", "50%",
         "60%", "70%", "80%", "90%", "100%"
     },
+	.zero_hundred_ten = { " 0", " 10", " 20", " 30" , " 40", " 50", " 60", " 70", " 80" , " 90", "100"},
+
 
     // About
     .about_brand = "Romagnetics",
@@ -109,13 +113,26 @@ static const Message _message = {
 
     // MIDI Tempo
     .bpm = "BPM",
+    .tempo = "Tempo",
 
     //USB Midi
-	.usb_midi = "USB Midi",
+	.usb_midi_ = "USB Midi:",
 
 
     //USB Midi
 	.upgrade_mode = "Upgrade Mode",
+
+	//Arpeggio
+    .arpeggiator_1 = "Arpeggiator 1/2",
+    .arpeggiator_2 = "Arpeggiator 2/2",
+	.division_ = "Division:",
+	.pattern_ = "Pattern:",
+	.gate_ = "Gate:",
+	.hold_ = "Hold:",
+    .steps_ = "Steps:",
+	.swing_ = "Swing:",
+	.length_ = "Length:",
+	.key_sync_ = "KeySync:",
 
     // MIDI Note Names (C-1 to G9)
     .midi_note_names = {
@@ -226,7 +243,12 @@ static const Message _message = {
          "Ch. 9",  "Ch. 10", "Ch. 11", "Ch. 12",
          "Ch. 13", "Ch. 14", "Ch. 15", "Ch. 16"
      },
-    .menu_list = { "Tempo", "Modify", "Transpose", "Settings"},
+    .menu_list = { "Tempo", "Modify", "Transpose", "Arp." , "Settings"},
+
+	//Arpeggio
+	.division_list = { "1/4", "1/6", "1/8", "1/12", "1/16", "1/24", "1/32" },
+	.arp_patterns = { "Up", "Down", "Up/Down", "Up/Down 2", "Random", "Double Up", "Double Down", "Order"},
+	.octave_count = { "Error", "1 Octave", "2 Octaves", "3 Octaves", "4 Octaves"},
 };
 
 const Message *message = &_message;

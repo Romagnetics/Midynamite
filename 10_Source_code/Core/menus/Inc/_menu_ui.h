@@ -16,6 +16,10 @@
 #define LINE_3 35
 #define LINE_4 45
 #define B_LINE LINE_4 + 3
+#define SCREEN_BOTTOM 64
+
+#define ON_OFF_VERT_LINE 92
+
 
 #define TXT_LEFT 5
 
@@ -32,6 +36,8 @@ typedef enum {
     ELEM_TEXT,
 	ELEM_ITEM,
 	ELEM_16CH,
+    ELEM_8STEPS,
+	ELEM_SWINGPCT,
 } ui_elem_type_t;
 
 #define UI_CHOICE(tbl) ((const char*)(tbl))

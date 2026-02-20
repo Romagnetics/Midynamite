@@ -2,7 +2,7 @@
  * memory_main.h
  *
  *  Created on: Aug 23, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 
 #ifndef MEMORY_SAVE_H_
@@ -17,7 +17,7 @@
 #define SAVE_STATE_BUSY         ((int32_t)0x7FFFFFFF)
 #define SAVE_U8_BUSY    ((uint8_t)0xFF)
 
-#define DATA_VALIDITY_CHECKSUM  0xA5A5C6A4u
+#define DATA_VALIDITY_CHECKSUM  0xA545C6A5u
 #define FLASH_SECTOR7_ADDR      ((uint32_t)0x08060000)
 
 
@@ -44,7 +44,6 @@ typedef enum {
 typedef enum {
     // midi_tempo_data
     TEMPO_CURRENT_TEMPO,
-    TEMPO_TEMPO_CLICK_RATE,
     TEMPO_CURRENTLY_SENDING,
     TEMPO_SEND_TO_MIDI_OUT,
 
@@ -63,7 +62,7 @@ typedef enum {
 
     MODIFY_VEL_PLUS_MINUS,
     MODIFY_VEL_ABSOLUTE,
-    MODIFY_SENDING,
+    MODIFY_CURRENTLY_SENDING,
 
     // midi_transpose_data
     TRANSPOSE_TRANSPOSE_TYPE,
@@ -72,7 +71,20 @@ typedef enum {
     TRANSPOSE_INTERVAL,
     TRANSPOSE_TRANSPOSE_SCALE,
     TRANSPOSE_SEND_ORIGINAL,
-    TRANSPOSE_SENDING,
+    TRANSPOSE_CURRENTLY_SENDING,
+
+    // arpeggiator_data
+	ARPEGGIATOR_CURRENTLY_SENDING,
+	ARPEGGIATOR_DIVISION,
+	ARPEGGIATOR_GATE,
+	ARPEGGIATOR_OCTAVES,
+	ARPEGGIATOR_PATTERN,
+
+	ARPEGGIATOR_SWING,
+	ARPEGGIATOR_LENGTH,
+	ARPEGGIATOR_NOTES,
+	ARPEGGIATOR_HOLD,
+	ARPEGGIATOR_KEY_SYNC,
 
     // settings_data
     SETTINGS_START_MENU,
