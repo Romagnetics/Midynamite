@@ -2,7 +2,7 @@
  * midi_tempo.h
  *
  *  Created on: Sep 5, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 
 #ifndef INC_MIDI_TEMPO_H_
