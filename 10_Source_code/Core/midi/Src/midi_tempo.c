@@ -11,6 +11,10 @@
 void send_midi_tempo_out(int32_t tempo_click_rate, uint8_t send_to_midi_out){
 	TIM2->ARR = tempo_click_rate;
 
+	if (save_get(TEMPO_CURRENTLY_SENDING) == 0) {
+			return;
+		}
+
     static uint8_t div2 = 0;
     div2 ^= 1u;
     if (div2) {
@@ -44,8 +48,6 @@ void mt_start_stop(TIM_HandleTypeDef *timer) {
 
     // Stop clock
     if (clock_sending == 0) {
-        HAL_TIM_Base_Stop_IT(timer);
-
         for (int i = 0; i < 2; i++) {
             if (UART_list_tempo[i] != NULL) {
                 HAL_UART_Transmit(UART_list_tempo[i], &clock_stop, 1, 1000);
@@ -62,6 +64,5 @@ void mt_start_stop(TIM_HandleTypeDef *timer) {
         }
         send_usb_midi_message(&clock_start, 1);
 
-        HAL_TIM_Base_Start_IT(timer);
     }
 }
