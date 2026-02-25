@@ -14,6 +14,7 @@
 #include "menus.h"
 
 #include "midi_transform.h"
+#include "midi_arp.h"
 
 #include "main.h"
 #include "midi_usb.h"
@@ -24,6 +25,102 @@ extern UART_HandleTypeDef huart2;
 
 // Circular buffer instance declared externally
 extern midi_modify_circular_buffer midi_modify_buff;
+
+
+// ---------------------
+// Helpers
+// ---------------------
+static inline uint8_t midi_msg_len(uint8_t status)
+{
+    const uint8_t hi = (uint8_t)(status & 0xF0u);
+    return (hi == 0xC0u || hi == 0xD0u) ? 2u : 3u;
+}
+
+static inline uint8_t midi_is_channel_voice(uint8_t status)
+{
+    const uint8_t hi = (uint8_t)(status & 0xF0u);
+    return (hi >= 0x80u && hi <= 0xE0u) ? 1u : 0u;
+}
+
+
+uint8_t midi_is_note_message(const midi_note *msg, uint8_t *is_note_on)
+{
+    if ((msg == NULL) || (is_note_on == NULL)) {
+        return 0u;
+    }
+
+    const uint8_t status_nibble = (uint8_t)(msg->status & 0xF0u);
+
+    if (status_nibble == 0x90u) {
+        *is_note_on = (msg->velocity > 0u) ? 1u : 0u;
+        return 1u;
+    }
+
+    if (status_nibble == 0x80u) {
+        *is_note_on = 0u;
+        return 1u;
+    }
+
+    return 0u;
+}
+
+
+
+static void change_midi_channel(midi_note *midi_msg, uint8_t *send_to_midi_channel) {
+    uint8_t status = midi_msg->status;
+    uint8_t new_channel;
+
+    if (status >= 0x80 && status <= 0xEF) {
+        uint8_t status_nibble = status & 0xF0;
+
+        if (save_get(MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_CHANGE) {
+            new_channel = *send_to_midi_channel;
+        } else if (save_get(MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_SPLIT) {
+            new_channel = (midi_msg->note >= save_get(MODIFY_SPLIT_NOTE))
+                          ? save_get(MODIFY_SPLIT_MIDI_CH2)
+                          : save_get(MODIFY_SPLIT_MIDI_CH1);
+        } else {
+            new_channel = *send_to_midi_channel;
+        }
+
+        // UI uses 1..16; MIDI status stores 0..15
+        midi_msg->status = status_nibble | ((new_channel - 1) & 0x0F);
+    }
+}
+
+
+static void change_velocity(midi_note *midi_msg)
+{
+    uint8_t is_note_on = 0u;
+    const uint8_t is_note = midi_is_note_message(midi_msg, &is_note_on);
+
+    // Only change velocity for note messages.
+    if (!is_note) {
+        return;
+    }
+
+    // Protect note-off semantics:
+    // - 0x80 is note off
+    // - 0x90 with velocity 0 is also note off
+    if (is_note_on == 0u) {
+        return;
+    }
+
+    // int32 to avoid overflow
+    int32_t velocity = (int32_t)midi_msg->velocity;
+
+    if (save_get(MODIFY_VELOCITY_TYPE) == MIDI_MODIFY_CHANGED_VEL) {
+        velocity += (int32_t)save_get(MODIFY_VEL_PLUS_MINUS);
+    } else if (save_get(MODIFY_VELOCITY_TYPE) == MIDI_MODIFY_FIXED_VEL) {
+        velocity = (int32_t)save_get(MODIFY_VEL_ABSOLUTE);
+    }
+
+    if (velocity < 1)   velocity = 1;     // keep it a real Note On
+    if (velocity > 127) velocity = 127;
+
+    midi_msg->velocity = (uint8_t)velocity;
+}
+
 
 // ---------------------
 // Circular buffer logic
@@ -43,6 +140,8 @@ uint8_t midi_buffer_pop(uint8_t *byte) {
     midi_modify_buff.tail = (midi_modify_buff.tail + 1) % MIDI_MODIFY_BUFFER_SIZE;
     return 1;
 }
+
+
 
 // ---------------------
 // MIDI parse & dispatch
@@ -135,95 +234,40 @@ static uint8_t is_channel_blocked(uint8_t status_byte) {
     return 0;
 }
 
+
+
+
+
 // ---------------------
 // Pipeline entry
 // ---------------------
-void pipeline_start(midi_note *midi_msg) {
-    uint8_t status = midi_msg->status;
-    uint8_t length = ((status & 0xF0) == 0xC0 || (status & 0xF0) == 0xD0) ? 2 : 3;
+void pipeline_start(midi_note *midi_msg)
+{
+    const uint8_t status = midi_msg->status;
+    const uint8_t length = midi_msg_len(status);
 
     if (is_channel_blocked(status)) return;
 
-    // Nothing active: do only MIDI/USB thru
-    if (save_get(MODIFY_CURRENTLY_SENDING) == 0 &&
-        save_get(TRANSPOSE_CURRENTLY_SENDING)   == 0) {
-
-        if (save_get(SETTINGS_MIDI_THRU) == 1) {
-            send_midi_out(midi_msg, length);
-        }
-
-        if (save_get(SETTINGS_USB_THRU) == 1) {
-            send_usb_midi_out(midi_msg, length);
-        }
-
-        return;
-    }
-
-    // Send to appropriate pipeline
     if (save_get(MODIFY_CURRENTLY_SENDING) == 1) {
         pipeline_midi_modify(midi_msg);
         return;
-    } else if (save_get(TRANSPOSE_CURRENTLY_SENDING) == 1) {
+    }
+
+    if ((save_get(TRANSPOSE_CURRENTLY_SENDING) == 1) ||
+        (save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 1)) {
         pipeline_midi_transpose(midi_msg);
         return;
     }
-}
 
-// ---------------------
-// Modify helpers
-// ---------------------
-static void change_midi_channel(midi_note *midi_msg, uint8_t *send_to_midi_channel) {
-    uint8_t status = midi_msg->status;
-    uint8_t new_channel;
-
-    if (status >= 0x80 && status <= 0xEF) {
-        uint8_t status_nibble = status & 0xF0;
-
-        if (save_get(MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_CHANGE) {
-            new_channel = *send_to_midi_channel;
-        } else if (save_get(MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_SPLIT) {
-            new_channel = (midi_msg->note >= save_get(MODIFY_SPLIT_NOTE))
-                          ? save_get(MODIFY_SPLIT_MIDI_CH2)
-                          : save_get(MODIFY_SPLIT_MIDI_CH1);
-        } else {
-            new_channel = *send_to_midi_channel;
-        }
-
-        // UI uses 1..16; MIDI status stores 0..15
-        midi_msg->status = status_nibble | ((new_channel - 1) & 0x0F);
+    // direct thru (no processing)
+    if (save_get(SETTINGS_MIDI_THRU) == 1) {
+        send_midi_out(midi_msg, length);
+    }
+    if (save_get(SETTINGS_USB_THRU) == 1) {
+        send_usb_midi_out(midi_msg, length);
     }
 }
 
-static void change_velocity(midi_note *midi_msg) {
-
-	// If note off and 0, no need to change
-    uint8_t status_nibble = midi_msg->status & 0xF0;
-    if (status_nibble == 0x80 && midi_msg->velocity == 0) {
-        midi_msg->velocity = 0;
-        return;
-    }
-
-    //Protecting CC64 which is the sustain pedal and doesn't support
-    if (status_nibble == 0xB0 && midi_msg->note == 64) {
-        return;
-    }
-
-
-    // int16 in case of overflow
-    int32_t velocity = midi_msg->velocity;
-
-    if (save_get(MODIFY_VELOCITY_TYPE) == MIDI_MODIFY_CHANGED_VEL) {
-        velocity += save_get(MODIFY_VEL_PLUS_MINUS);
-    } else if (save_get(MODIFY_VELOCITY_TYPE) == MIDI_MODIFY_FIXED_VEL) {
-        velocity = save_get(MODIFY_VEL_ABSOLUTE);
-    }
-
-    // Clamp to 0-127 range
-    if (velocity < 0)   velocity = 0;
-    if (velocity > 127) velocity = 127;
-
-    midi_msg->velocity = (uint8_t)velocity;
-}
 
 // ---------------------
 // Modify pipeline
@@ -349,9 +393,9 @@ static uint8_t midi_transpose_notes(uint8_t note) {
 }
 
 static void midi_pitch_shift(midi_note *midi_msg) {
-    uint8_t status = midi_msg->status & 0xF0;
+    uint8_t is_note_on = 0;
 
-    if (status == 0x90 || status == 0x80) {
+    if (midi_is_note_message(midi_msg, &is_note_on)) {
         int16_t note = midi_msg->note;
 
         if (save_get(TRANSPOSE_TRANSPOSE_TYPE) == MIDI_TRANSPOSE_SCALED) {
@@ -371,9 +415,12 @@ static void midi_pitch_shift(midi_note *midi_msg) {
 // ---------------------
 // Transpose pipeline
 // ---------------------
-void pipeline_midi_transpose(midi_note *midi_msg) {
-    if (save_get(TRANSPOSE_CURRENTLY_SENDING) == 0){
-        pipeline_final(midi_msg, 3);
+void pipeline_midi_transpose(midi_note *midi_msg)
+{
+    const uint8_t length = midi_msg_len(midi_msg->status);
+
+    if (save_get(TRANSPOSE_CURRENTLY_SENDING) == 0) {
+        pipeline_arp(midi_msg, length);
         return;
     }
 
@@ -385,78 +432,116 @@ void pipeline_midi_transpose(midi_note *midi_msg) {
             uint8_t scale_intervals[7];
             get_mode_scale(mode, scale_intervals);
             pre_shift_msg.note = snap_note_to_scale(pre_shift_msg.note,
-                                                    scale_intervals,
-                                                    save_get(TRANSPOSE_BASE_NOTE));
+                                                   scale_intervals,
+                                                   save_get(TRANSPOSE_BASE_NOTE));
         }
 
-        pipeline_final(&pre_shift_msg, 3);
+        pipeline_arp(&pre_shift_msg, length);
 
         midi_note shifted_msg = pre_shift_msg;
         midi_pitch_shift(&shifted_msg);
-        pipeline_final(&shifted_msg, 3);
-    } else {
-        midi_pitch_shift(midi_msg);
-        pipeline_final(midi_msg, 3);
+        pipeline_arp(&shifted_msg, length);
+        return;
     }
+
+    midi_pitch_shift(midi_msg);
+    pipeline_arp(midi_msg, length);
 }
+
+// ---------------------
+// Pipeline Arp
+// --------------------
+void pipeline_arp(midi_note *midi_msg, uint8_t length)
+{
+    if (save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 1) {
+        uint8_t is_note_on = 0u;
+        if (midi_is_note_message(midi_msg, &is_note_on)) {
+            arp_handle_midi_note(midi_msg);
+            return;
+        }
+    }
+
+    pipeline_final(midi_msg, length);
+}
+
+
 
 // ---------------------
 // Final dispatch
 // ---------------------
-void pipeline_final(midi_note *midi_msg, uint8_t length){
-    send_midi_out(midi_msg, length);
-    send_usb_midi_out(midi_msg, length);
+void pipeline_final(midi_note *midi_msg, uint8_t length)
+{
+    // If you want processed output to ALWAYS go out regardless of thru,
+    // remove these two if() guards. This version matches your THRU settings.
+    if (save_get(SETTINGS_MIDI_THRU) == 1) {
+        send_midi_out(midi_msg, length);
+    }
+    if (save_get(SETTINGS_USB_THRU) == 1) {
+        send_usb_midi_out(midi_msg, length);
+    }
 }
 
-void send_midi_out(midi_note *midi_message_raw, uint8_t length) {
-    if (midi_message_raw->status < 0x80)
-        return;
+void send_midi_out(midi_note *midi_message_raw, uint8_t length)
+{
+    if (midi_message_raw->status < 0x80u) return;
+
+    length = midi_msg_len(midi_message_raw->status); // enforce correctness
 
     uint8_t midi_bytes[3] = {0};
-
     midi_bytes[0] = midi_message_raw->status;
-    if (length > 1) midi_bytes[1] = midi_message_raw->note;
-    if (length > 2) midi_bytes[2] = midi_message_raw->velocity;
+    if (length > 1u) midi_bytes[1] = midi_message_raw->note;
+    if (length > 2u) midi_bytes[2] = midi_message_raw->velocity;
 
-    uint8_t note = (length > 1) ? midi_bytes[1] : 0;
+    // Determine if message is a note message for split logic
+    uint8_t is_note_on = 0u;
+    const uint8_t is_note = midi_is_note_message(midi_message_raw, &is_note_on);
+    const uint8_t note = (uint8_t)midi_bytes[1];
 
-    // Send to UART(s)
     switch (save_get(MODIFY_SEND_TO_MIDI_OUT)) {
         case MIDI_OUT_1:
             HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
             break;
+
         case MIDI_OUT_2:
             HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
             break;
+
         case MIDI_OUT_1_2:
             HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
             HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
             break;
+
         case MIDI_OUT_SPLIT:
-            if (save_get(MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_SPLIT) {
-                if (note < save_get(MODIFY_SPLIT_NOTE))
+            if (save_get(MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_SPLIT && is_note) {
+                if (note < save_get(MODIFY_SPLIT_NOTE)) {
                     HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
-                else
+                } else {
                     HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
+                }
             } else {
+                // Non-note or not in split mode: mirror to both like your fallback did
                 HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
                 HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
             }
             break;
+
         default:
             break;
     }
 }
 
-void send_usb_midi_out(midi_note *msg, uint8_t length) {
-    if (save_get(SETTINGS_SEND_USB) == USB_MIDI_OFF){
+void send_usb_midi_out(midi_note *msg, uint8_t length)
+{
+    if (save_get(SETTINGS_SEND_USB) == USB_MIDI_OFF) {
         return;
     }
 
-    uint8_t bytes[3] = {
-        msg->status,
-        msg->note,
-        msg->velocity
-    };
+    length = midi_msg_len(msg->status);
+
+    uint8_t bytes[3] = {0};
+    bytes[0] = msg->status;
+    if (length > 1u) bytes[1] = msg->note;
+    if (length > 2u) bytes[2] = msg->velocity;
+
     send_usb_midi_message(bytes, length);
 }

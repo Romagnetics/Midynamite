@@ -410,7 +410,7 @@ void start_stop_pressed() {
     save_field_t field = sending_field_for_menu(menu);
     if (field != SAVE_FIELD_INVALID) {
         save_modify_u8(field, SAVE_MODIFY_INCREMENT, 0);
-        if (menu == MENU_TEMPO) { mt_start_stop(&htim2); }
+        if (menu == MENU_TEMPO) { mt_start_stop(); }
         refresh_screen();
     }
 }
