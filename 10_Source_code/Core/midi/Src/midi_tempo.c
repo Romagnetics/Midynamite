@@ -56,7 +56,7 @@ void send_midi_tempo_out(void){
     	}
     }
 
-void mt_start_stop(TIM_HandleTypeDef *timer) {
+void mt_start_stop(void) {
 	static uint8_t clock_start = 0xFA;
 	static uint8_t clock_stop  = 0xfC;
 

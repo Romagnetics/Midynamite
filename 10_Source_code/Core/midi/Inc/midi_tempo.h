@@ -17,6 +17,6 @@ void tempo_sync_from_save(void);
 void send_midi_tempo_out(void);
 
 
-void mt_start_stop(TIM_HandleTypeDef * timer);
+void mt_start_stop(void);
 
 #endif /* INC_MIDI_TEMPO_H_ */
