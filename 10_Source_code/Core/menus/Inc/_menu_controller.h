@@ -144,6 +144,8 @@ void shadow_select(save_field_t field);
 void update_contrast(save_field_t f);
 void update_value_inc1(save_field_t);
 void update_value_inc10(save_field_t);
+void update_tempo_bpm(save_field_t);
+void update_tempo_send_to_out(save_field_t);
 void update_value_inc12(save_field_t);
 void update_bits_field(save_field_t field, uint8_t bit_index, uint8_t bits_count);
 void update_bits_16_fields(save_field_t field);

@@ -8,8 +8,30 @@
 #include "utils.h" //For enums
 #include "midi_usb.h"
 
-void send_midi_tempo_out(int32_t tempo_click_rate, uint8_t send_to_midi_out){
-	TIM2->ARR = tempo_click_rate;
+static uint8_t *mt_send_to_midi_out_cache(void)
+{
+    static uint8_t sending_to_midi_out = 0;
+    return &sending_to_midi_out;
+}
+
+void set_tempo_bpm(uint32_t bpm)
+{
+    const uint32_t tempo_click_rate = (bpm > 0u) ? (6000000u / (bpm * 48u)) : 0u;
+    TIM2->ARR = tempo_click_rate;
+}
+
+void mt_set_send_to_midi_out(uint8_t send_to_midi_out)
+{
+    *mt_send_to_midi_out_cache() = send_to_midi_out;
+}
+
+void tempo_sync_from_save(void)
+{
+    set_tempo_bpm(save_get(TEMPO_CURRENT_TEMPO));
+    mt_set_send_to_midi_out((uint8_t)save_get(TEMPO_SEND_TO_MIDI_OUT));
+}
+
+void send_midi_tempo_out(void){
 
 	if (save_get(TEMPO_CURRENTLY_SENDING) == 0) {
 			return;
@@ -21,12 +43,10 @@ void send_midi_tempo_out(int32_t tempo_click_rate, uint8_t send_to_midi_out){
         return;
     }
 
-
-	uint8_t clock_tick = 0xF8;
+	static uint8_t clock_tick = 0xF8;
 
 	UART_HandleTypeDef *UART_list_tempo[2];
-	list_of_UART_to_send_to(send_to_midi_out, UART_list_tempo);
-
+	list_of_UART_to_send_to(*mt_send_to_midi_out_cache(), UART_list_tempo);
 
     send_usb_midi_message(&clock_tick, 1);
     for (int i = 0; i < 2; i++) {
@@ -37,12 +57,11 @@ void send_midi_tempo_out(int32_t tempo_click_rate, uint8_t send_to_midi_out){
     }
 
 void mt_start_stop(TIM_HandleTypeDef *timer) {
-	uint8_t clock_start = 0xFA;
-	uint8_t clock_stop  = 0xfC;
+	static uint8_t clock_start = 0xFA;
+	static uint8_t clock_stop  = 0xfC;
 
 	static UART_HandleTypeDef *UART_list_tempo[2];
-	uint8_t send_out_to = save_get(TEMPO_SEND_TO_MIDI_OUT);
-	list_of_UART_to_send_to(send_out_to, UART_list_tempo);
+	list_of_UART_to_send_to(*mt_send_to_midi_out_cache(), UART_list_tempo);
 
 	uint8_t clock_sending = save_get(TEMPO_CURRENTLY_SENDING);
 

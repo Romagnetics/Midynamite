@@ -60,6 +60,7 @@ int main(void)
   //Initializations
   save_load_from_flash();
   initialize_screen();
+  tempo_sync_from_save();
 
 
   HAL_TIM_Base_Start_IT(&htim2);
@@ -324,10 +325,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   // Romagnetics code
   if (htim->Instance == TIM2) {
-    const uint8_t send_to_out = save_get(TEMPO_SEND_TO_MIDI_OUT);
-    const uint32_t bpm = save_get(TEMPO_CURRENT_TEMPO);
-    const uint32_t tempo_click_rate = (bpm > 0u) ? (6000000u / (bpm * 48u)) : 0u;
-    send_midi_tempo_out(tempo_click_rate, send_to_out);
+    send_midi_tempo_out();
   }
 }
 
