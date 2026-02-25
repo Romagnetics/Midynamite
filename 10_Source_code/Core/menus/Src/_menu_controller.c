@@ -8,6 +8,7 @@
 #include "_menu_controller.h"
 #include "_menu_ui.h" //get_current_menu
 #include "screen_driver.h" //update_contrast
+#include "midi_tempo.h" //tempo_update done within
 
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
@@ -54,6 +55,19 @@ static void update_value(save_field_t field, uint8_t multiplier)
 void update_value_inc1(save_field_t f)  { update_value(f, 1);  }
 void update_value_inc10(save_field_t f) { update_value(f, 10); }
 void update_value_inc12(save_field_t f) { update_value(f, 12); }
+
+void update_tempo_bpm(save_field_t field)
+{
+    update_value(field, 10);
+    set_tempo_bpm(save_get(field));
+}
+
+void update_tempo_send_to_out(save_field_t field)
+{
+    update_value(field, 1);
+    mt_set_send_to_midi_out((uint8_t)save_get(field));
+}
+
 
 void shadow_select(save_field_t field) { (void)field; }
 
@@ -177,8 +191,8 @@ void update_bits_8_steps(save_field_t field)
 
 const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     //                                  wrap     handler                   group
-    MC(TEMPO_CURRENT_TEMPO,          NO_WRAP, update_value_inc10,          CTRL_SHARED_TEMPO),
-    MC(TEMPO_SEND_TO_MIDI_OUT,         WRAP,  update_value_inc1,           CTRL_TEMPO_ALL),
+    MC(TEMPO_CURRENT_TEMPO,          NO_WRAP, update_tempo_bpm,            CTRL_SHARED_TEMPO),
+    MC(TEMPO_SEND_TO_MIDI_OUT,         WRAP,  update_tempo_send_to_out,    CTRL_TEMPO_ALL),
 
     MC(MODIFY_SEND_TO_MIDI_CH1,      NO_WRAP, update_value_inc1,           CTRL_MODIFY_CHANGE),
     MC(MODIFY_SEND_TO_MIDI_CH2,      NO_WRAP, update_value_inc1,           CTRL_MODIFY_CHANGE),
