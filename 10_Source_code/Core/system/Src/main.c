@@ -62,9 +62,7 @@ int main(void)
   initialize_screen();
 
 
-  if (save_get(TEMPO_CURRENTLY_SENDING) == 1) {
-    mt_start_stop(&htim2);
-  }
+  HAL_TIM_Base_Start_IT(&htim2);
 
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
