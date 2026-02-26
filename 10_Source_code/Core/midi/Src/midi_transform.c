@@ -32,6 +32,19 @@ extern midi_modify_circular_buffer midi_modify_buff;
 // ---------------------
 static inline uint8_t midi_msg_len(uint8_t status)
 {
+    // Realtime (F8–FF) are 1 byte
+    if (status >= 0xF8u) return 1u;
+
+    switch (status) {
+        case 0xF1u: return 2u; // MTC Quarter Frame
+        case 0xF2u: return 3u; // Song Position
+        case 0xF3u: return 2u; // Song Select
+        case 0xF6u: return 1u; // Tune Request
+        case 0xF7u: return 1u; // EOX
+        default: break;
+    }
+
+    // Channel voice:
     const uint8_t hi = (uint8_t)(status & 0xF0u);
     return (hi == 0xC0u || hi == 0xD0u) ? 2u : 3u;
 }
@@ -91,20 +104,28 @@ static void change_midi_channel(midi_note *midi_msg, uint8_t *send_to_midi_chann
 
 static void change_velocity(midi_note *midi_msg)
 {
+    const uint8_t status_nibble = (uint8_t)(midi_msg->status & 0xF0u);
     uint8_t is_note_on = 0u;
     const uint8_t is_note = midi_is_note_message(midi_msg, &is_note_on);
 
-    // Only change velocity for note messages.
-    if (!is_note) {
+    const uint8_t is_cc = (status_nibble == 0xB0u) ? 1u : 0u;
+    const uint8_t is_cc64 = (is_cc && midi_msg->note == 64u) ? 1u : 0u;
+
+    // Velocity shaping applies to note messages and to CC values,
+    // except sustain pedal (CC64) which must remain untouched.
+    if (!is_note && !is_cc) {
+        return;
+    }
+    if (is_cc64) {
         return;
     }
 
-    // Protect note-off semantics:
-    // - 0x80 is note off
-    // - 0x90 with velocity 0 is also note off
-    if (is_note_on == 0u) {
+    // Keep explicit Note Off with velocity 0 unchanged,
+    // while allowing non-zero Note Off release velocity to be shaped.
+    if (is_note && is_note_on == 0u && midi_msg->velocity == 0u) {
         return;
     }
+
 
     // int32 to avoid overflow
     int32_t velocity = (int32_t)midi_msg->velocity;
@@ -115,7 +136,7 @@ static void change_velocity(midi_note *midi_msg)
         velocity = (int32_t)save_get(MODIFY_VEL_ABSOLUTE);
     }
 
-    if (velocity < 1)   velocity = 1;     // keep it a real Note On
+    if (velocity < 0)   velocity = 0;
     if (velocity > 127) velocity = 127;
 
     midi_msg->velocity = (uint8_t)velocity;
@@ -253,13 +274,16 @@ void pipeline_start(midi_note *midi_msg)
         return;
     }
 
-    if ((save_get(TRANSPOSE_CURRENTLY_SENDING) == 1) ||
-        (save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 1)) {
+    if (save_get(TRANSPOSE_CURRENTLY_SENDING) == 1) {
         pipeline_midi_transpose(midi_msg);
         return;
     }
 
-    // direct thru (no processing)
+    if (save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 1) {
+        pipeline_arp(midi_msg, length);
+        return;
+    }
+
     if (save_get(SETTINGS_MIDI_THRU) == 1) {
         send_midi_out(midi_msg, length);
     }
@@ -471,14 +495,8 @@ void pipeline_arp(midi_note *midi_msg, uint8_t length)
 // ---------------------
 void pipeline_final(midi_note *midi_msg, uint8_t length)
 {
-    // If you want processed output to ALWAYS go out regardless of thru,
-    // remove these two if() guards. This version matches your THRU settings.
-    if (save_get(SETTINGS_MIDI_THRU) == 1) {
-        send_midi_out(midi_msg, length);
-    }
-    if (save_get(SETTINGS_USB_THRU) == 1) {
-        send_usb_midi_out(midi_msg, length);
-    }
+    send_midi_out(midi_msg, length);
+    send_usb_midi_out(midi_msg, length);
 }
 
 void send_midi_out(midi_note *midi_message_raw, uint8_t length)
