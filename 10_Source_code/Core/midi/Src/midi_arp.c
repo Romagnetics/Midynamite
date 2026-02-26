@@ -13,8 +13,8 @@
 static uint8_t s_physical_notes[128];
 static uint8_t s_active_notes[128];
 
-static uint8_t s_last_status = 0x90u;
-static uint8_t s_last_note = 60u;
+static midi_note last_note_sent = {0x90u, 60u, 10u};
+
 static uint8_t s_note_on_playing = 0u;
 static uint8_t s_step_index = 0u;
 static uint16_t s_tick_counter = 0u;
@@ -41,8 +41,9 @@ void arp_state_reset(void)
 {
     memset(s_physical_notes, 0, sizeof(s_physical_notes));
     memset(s_active_notes, 0, sizeof(s_active_notes));
-    s_last_status = 0x90u;
-    s_last_note = 60u;
+    last_note_sent.status = 0x90u;
+    last_note_sent.note = 60u;
+    last_note_sent.velocity = 100u;
     s_note_on_playing = 0u;
     s_step_index = 0u;
     s_tick_counter = 0u;
@@ -66,9 +67,11 @@ void arp_handle_midi_note(const midi_note *msg)
     arp_sync_hold_mode();
 
     const uint8_t note = (uint8_t)(msg->note & 0x7Fu);
-    const uint8_t hold_enabled = (save_get(ARPEGGIATOR_HOLD) != 0) ? 1u : 0u;
+    const uint8_t hold_enabled = save_get(ARPEGGIATOR_HOLD);
 
-    s_last_status = (uint8_t)((is_note_on ? 0x90u : 0x80u) | (msg->status & 0x0Fu));
+    // Keep only channel from last played input note; arp will set 0x90/0x80 itself.
+    last_note_sent.status = (uint8_t)(0x90u | (msg->status & 0x0Fu));
+    last_note_sent.velocity = msg->velocity;
 
     if (is_note_on) {
         if ((hold_enabled != 0u) && (physical_note_count() == 0u)) {
@@ -105,14 +108,12 @@ void arp_on_tempo_tick(void)
     uint8_t count = arp_get_pressed_keys(notes, 128u);
 
     if (s_note_on_playing) {
-        midi_note off = {
-            .status = (uint8_t)(0x80u | (s_last_status & 0x0Fu)),
-            .note = s_last_note,
-            .velocity = 0u,
-        };
-        pipeline_final(&off, 3);
-        s_note_on_playing = 0u;
-    }
+    midi_note off = last_note_sent;
+    off.status   = (uint8_t)(0x80u | (last_note_sent.status & 0x0Fu));
+    off.velocity = 0u;
+    pipeline_final(&off, 3);
+    s_note_on_playing = 0u;
+}
 
     if (count == 0u) {
         s_step_index = 0u;
@@ -123,15 +124,16 @@ void arp_on_tempo_tick(void)
         s_step_index = 0u;
     }
 
-    s_last_note = notes[s_step_index];
+    last_note_sent.note = notes[s_step_index];
     s_step_index = (uint8_t)((s_step_index + 1u) % count);
 
-    midi_note on = {
-        .status = (uint8_t)(0x90u | (s_last_status & 0x0Fu)),
-        .note = s_last_note,
-        .velocity = 100u,
-    };
+    midi_note on = last_note_sent;
+    on.status = (uint8_t)(0x90u | (last_note_sent.status & 0x0Fu));
+    // on.note already set
+    // on.velocity already set (default 100 or captured from input if you enabled that)
     pipeline_final(&on, 3);
+
+    last_note_sent = on;
     s_note_on_playing = 1u;
 }
 
@@ -158,7 +160,3 @@ uint8_t arp_get_pressed_key_count(void)
 {
     return arp_get_pressed_keys(NULL, 0);
 }
-
-
-
-
