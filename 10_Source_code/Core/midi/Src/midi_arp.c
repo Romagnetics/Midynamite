@@ -16,8 +16,34 @@ static uint8_t s_active_notes[128];
 static midi_note last_note_sent = {0x90u, 60u, 10u};
 
 static uint8_t s_note_on_playing = 0u;
-static uint8_t s_step_index = 0u;
+static uint8_t s_has_played_note = 0u;
 static uint16_t s_tick_counter = 0u;
+
+static uint8_t arp_next_step_index(const uint8_t *notes, uint8_t count)
+{
+    if ((count == 0u) || (notes == NULL)) {
+        return 0u;
+    }
+
+    if (s_has_played_note == 0u) {
+        return 0u;
+    }
+
+    for (uint8_t i = 0u; i < count; ++i) {
+        if (notes[i] == last_note_sent.note) {
+            return (uint8_t)((i + 1u) % count);
+        }
+    }
+
+    for (uint8_t i = 0u; i < count; ++i) {
+        if (notes[i] > last_note_sent.note) {
+            return i;
+        }
+    }
+
+    return 0u;
+}
+
 
 static uint8_t should_process_arp_step(uint16_t clocks_per_step_value, uint8_t has_pressed_notes)
 {
@@ -58,6 +84,7 @@ static uint8_t physical_note_count(void)
     return count;
 }
 
+//Used for tests
 void arp_state_reset(void)
 {
     memset(s_physical_notes, 0, sizeof(s_physical_notes));
@@ -66,13 +93,14 @@ void arp_state_reset(void)
     last_note_sent.note = 60u;
     last_note_sent.velocity = 100u;
     s_note_on_playing = 0u;
-    s_step_index = 0u;
+    s_has_played_note = 0u;
     s_tick_counter = 0u;
 }
 
 void arp_sync_hold_mode(void)
 {
-    if (save_get(ARPEGGIATOR_HOLD) == 0) {
+    if ((save_get(ARPEGGIATOR_HOLD) == 0u) ||
+        (save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 0u)) {
         memcpy(s_active_notes, s_physical_notes, sizeof(s_active_notes));
     }
 }
@@ -97,7 +125,7 @@ void arp_handle_midi_note(const midi_note *msg)
     if (is_note_on) {
         if ((hold_enabled != 0u) && (physical_note_count() == 0u)) {
             memset(s_active_notes, 0, sizeof(s_active_notes));
-            s_step_index = 0u;
+            s_has_played_note = 0u;
         }
 
         s_physical_notes[note] = 1u;
@@ -114,6 +142,7 @@ void arp_handle_midi_note(const midi_note *msg)
 
 void arp_on_tempo_tick(void)
 {
+    arp_sync_hold_mode();
     if (save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 0) {
         return;
     }
@@ -136,16 +165,11 @@ void arp_on_tempo_tick(void)
 }
 
     if (count == 0u) {
-        s_step_index = 0u;
+        s_has_played_note = 0u;
         return;
     }
 
-    if (s_step_index >= count) {
-        s_step_index = 0u;
-    }
-
-    last_note_sent.note = notes[s_step_index];
-    s_step_index = (uint8_t)((s_step_index + 1u) % count);
+    last_note_sent.note = notes[arp_next_step_index(notes, count)];
 
     midi_note on = last_note_sent;
     on.status = (uint8_t)(0x90u | (last_note_sent.status & 0x0Fu));
@@ -154,6 +178,7 @@ void arp_on_tempo_tick(void)
     pipeline_final(&on, 3);
 
     last_note_sent = on;
+    s_has_played_note = 1u;
     s_note_on_playing = 1u;
 }
 
