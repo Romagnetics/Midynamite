@@ -238,9 +238,9 @@ static uint8_t idx_from_position_selector(const page_group_rule_t *sel)
 // ==============================
 
 
-uint32_t ctrl_active_mask_for_page(menu_list_t page)
+menu_group_mask_t ctrl_active_mask_for_page(menu_list_t page)
 {
-    uint32_t mask = 0;
+    menu_group_mask_t mask = 0;
 
     uint8_t  have_pos_idx = 0;
     uint8_t  pos_idx = 0;
@@ -267,11 +267,11 @@ uint32_t ctrl_active_mask_for_page(menu_list_t page)
             const uint8_t n = group_list_len(sel->groups);
             for (uint8_t k = 0; k < n; ++k) {
                 const uint32_t gid = (uint32_t)sel->groups[k];
-                if (gid >= 1u && gid <= 31u) mask |= (1u << (gid - 1u));
+                if (gid >= 1u && gid <= CTRL_GROUP_SLOT_MAX) mask |= ((menu_group_mask_t)1u << (gid - 1u));
             }
         } else {
             const uint32_t gid = (uint32_t)sel->groups[idx];
-            if (gid >= 1u && gid <= 31u) mask |= (1u << (gid - 1u));
+            if (gid >= 1u && gid <= CTRL_GROUP_SLOT_MAX) mask |= ((menu_group_mask_t)1u << (gid - 1u));
         }
     }
     return mask;
@@ -327,7 +327,7 @@ uint8_t menus_cycle_on_press(menu_list_t page)
         (void)menu_row_hit(&u, row, NULL, NULL, &gid);
     } else {
         // Build active list from mask, in correct ui_order (shared implementation)
-        const uint32_t mask = ctrl_active_mask_for_page(page);
+    	const menu_group_mask_t mask = ctrl_active_mask_for_page(page);
         CtrlActiveList *dst = list_for_page(page);
         ctrl_build_active_fields(mask, dst);
 

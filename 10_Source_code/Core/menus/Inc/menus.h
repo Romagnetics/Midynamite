@@ -8,6 +8,7 @@
 #ifndef INC_MENUS_H_
 #define INC_MENUS_H_
 
+#include <stdint.h>
 #include "memory_main.h"   // save_field_t, SAVE_FIELD_COUNT
 #include "text.h" //definition of message
 
@@ -38,6 +39,8 @@ typedef struct {
     uint16_t fields_idx[MENU_ACTIVE_LIST_CAP];
     uint8_t  count;
 } CtrlActiveList;
+
+typedef uint64_t menu_group_mask_t;
 
 // Selector callback type used by the selector table (menus.c)
 typedef uint8_t (*selector_compute_fn_t)();
@@ -81,9 +84,9 @@ void start_stop_pressed();
 void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line);
 
 // -------- Selector helpers exposed to controller (implemented in menus.c) --------
-uint8_t     build_union_for_position_page(menu_list_t page, CtrlActiveList *out);
-uint32_t    ctrl_active_mask_for_page(menu_list_t page);
-menu_list_t page_for_ctrl_id(uint32_t id);
-uint8_t     menus_cycle_on_press(menu_list_t page);
+uint8_t            build_union_for_position_page(menu_list_t page, CtrlActiveList *out);
+menu_group_mask_t  ctrl_active_mask_for_page(menu_list_t page);
+menu_list_t        page_for_ctrl_id(uint32_t id);
+uint8_t            menus_cycle_on_press(menu_list_t page);
 
 #endif /* INC_MENUS_H_ */

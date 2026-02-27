@@ -246,7 +246,9 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
 // -------------------------
 // Utility (pure logic, data-agnostic)
 // -------------------------
-static inline uint32_t flag_from_id(uint32_t id) { return (id >= 1 && id <= 31) ? (1u << (id - 1)) : 0u; }
+static inline menu_group_mask_t flag_from_id(uint32_t id) {
+    return (id >= 1u && id <= CTRL_GROUP_SLOT_MAX) ? (((menu_group_mask_t)1u) << (id - 1u)) : 0u;
+}
 
 uint8_t menu_row_hit(const CtrlActiveList *list, uint8_t row, save_field_t *out_field, uint8_t *out_bit, uint32_t *out_gid)
 {
@@ -277,13 +279,13 @@ static uint8_t rows_for_list(const CtrlActiveList *list) {
 // -------------------------
 // Build active list (pure logic)
 // -------------------------
-void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out)
+void ctrl_build_active_fields(menu_group_mask_t active_groups, CtrlActiveList *out)
 {
     uint8_t count = 0;
 
     for (uint16_t f = 0; f < SAVE_FIELD_COUNT; ++f) {
         const menu_controls_t mt = menu_controls[f];
-        const uint32_t gm = flag_from_id(mt.groups);
+        const menu_group_mask_t gm = flag_from_id(mt.groups);
 
         if ((gm & active_groups) == 0) continue;
         if (mt.handler == NULL) continue;
@@ -306,8 +308,8 @@ void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out)
 
 static const CtrlActiveList* get_list_for_page(menu_list_t page)
 {
-    const uint32_t mask = ctrl_active_mask_for_page(page); // from menus.c
-    CtrlActiveList *dst = list_for_page(page);             // from menus.c
+	const menu_group_mask_t mask = ctrl_active_mask_for_page(page); // from menus.c
+    CtrlActiveList *dst = list_for_page(page);                      // from menus.c
     ctrl_build_active_fields(mask, dst);
     return dst;
 }
@@ -358,7 +360,7 @@ uint8_t menu_nav_get_select(menu_list_t page) {
     return (page < AMOUNT_OF_MENUS) ? s_menu_selects[page] : 0;
 }
 
-uint32_t ui_active_groups(void) {
+menu_group_mask_t ui_active_groups(void) {
     uint8_t m = get_current_menu(CURRENT_MENU);
     if (m >= AMOUNT_OF_MENUS) m = 0;
     return ctrl_active_mask_for_page((menu_list_t)m); // from menus.c
