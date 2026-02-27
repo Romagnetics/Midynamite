@@ -20,6 +20,7 @@ static midi_note last_note_sent = {0x90, 60, 10};
 static uint8_t s_note_on_playing = 0;
 static uint8_t s_has_played_note = 0;
 static uint16_t s_tick_counter = 0;
+static uint8_t s_sustain_hold_active = 0;
 
 typedef enum {
     ARP_PATTERN_UP = 0,
@@ -93,6 +94,11 @@ static uint8_t physical_note_count(void)
     return count;
 }
 
+static uint8_t arp_hold_is_active(void)
+{
+    return (save_get(ARPEGGIATOR_HOLD) != 0 || s_sustain_hold_active != 0) ? 1 : 0;
+}
+
 static uint8_t arp_get_ordered_keys(uint8_t *out_notes, uint8_t max_notes)
 {
     uint8_t count = 0;
@@ -135,11 +141,12 @@ void arp_state_reset(void)
     s_note_on_playing = 0;
     s_has_played_note = 0;
     s_tick_counter = 0;
+    s_sustain_hold_active = 0;
 }
 
 void arp_sync_hold_mode(void)
 {
-    if ((save_get(ARPEGGIATOR_HOLD) == 0) ||
+    if ((arp_hold_is_active() == 0) ||
         (save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 0)) {
         memcpy(s_active_notes, s_physical_notes, sizeof(s_active_notes));
         arp_sync_note_order_with_active();
@@ -157,7 +164,7 @@ void arp_handle_midi_note(const midi_note *msg)
     arp_sync_hold_mode();
 
     const uint8_t note = (uint8_t)(msg->note & 0x7F);
-    const uint8_t hold_enabled = save_get(ARPEGGIATOR_HOLD);
+    const uint8_t hold_enabled = arp_hold_is_active();
 
     // Keep only channel from last played input note; arp will set 0x90/0x80 itself.
     last_note_sent.status = (uint8_t)(0x90 | (msg->status & 0x0F));
@@ -187,6 +194,21 @@ void arp_handle_midi_note(const midi_note *msg)
         memset(&s_active_notes[note], 0, sizeof(s_active_notes[note]));
         s_note_order[note] = 0;
     }
+}
+
+void arp_handle_midi_cc64(const midi_note *msg)
+{
+    if (msg == NULL) {
+        return;
+    }
+
+    const uint8_t status_nibble = (uint8_t)(msg->status & 0xF0);
+    if ((status_nibble != 0xB0) || ((msg->note & 0x7F) != 64)) {
+        return;
+    }
+
+    s_sustain_hold_active = (msg->velocity >= 64) ? 1 : 0;
+    arp_sync_hold_mode();
 }
 
 void arp_on_tempo_tick(void)
