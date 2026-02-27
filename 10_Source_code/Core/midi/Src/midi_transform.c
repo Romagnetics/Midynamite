@@ -33,48 +33,48 @@ extern midi_modify_circular_buffer midi_modify_buff;
 static inline uint8_t midi_msg_len(uint8_t status)
 {
     // Realtime (F8–FF) are 1 byte
-    if (status >= 0xF8u) return 1u;
+    if (status >= 0xF8) return 1;
 
     switch (status) {
-        case 0xF1u: return 2u; // MTC Quarter Frame
-        case 0xF2u: return 3u; // Song Position
-        case 0xF3u: return 2u; // Song Select
-        case 0xF6u: return 1u; // Tune Request
-        case 0xF7u: return 1u; // EOX
+        case 0xF1: return 2; // MTC Quarter Frame
+        case 0xF2: return 3; // Song Position
+        case 0xF3: return 2; // Song Select
+        case 0xF6: return 1; // Tune Request
+        case 0xF7: return 1; // EOX
         default: break;
     }
 
     // Channel voice:
-    const uint8_t hi = (uint8_t)(status & 0xF0u);
-    return (hi == 0xC0u || hi == 0xD0u) ? 2u : 3u;
+    const uint8_t hi = (uint8_t)(status & 0xF0);
+    return (hi == 0xC0 || hi == 0xD0) ? 2 : 3;
 }
 
 static inline uint8_t midi_is_channel_voice(uint8_t status)
 {
-    const uint8_t hi = (uint8_t)(status & 0xF0u);
-    return (hi >= 0x80u && hi <= 0xE0u) ? 1u : 0u;
+    const uint8_t hi = (uint8_t)(status & 0xF0);
+    return (hi >= 0x80 && hi <= 0xE0) ? 1 : 0;
 }
 
 
 uint8_t midi_is_note_message(const midi_note *msg, uint8_t *is_note_on)
 {
     if ((msg == NULL) || (is_note_on == NULL)) {
-        return 0u;
+        return 0;
     }
 
-    const uint8_t status_nibble = (uint8_t)(msg->status & 0xF0u);
+    const uint8_t status_nibble = (uint8_t)(msg->status & 0xF0);
 
-    if (status_nibble == 0x90u) {
-        *is_note_on = (msg->velocity > 0u) ? 1u : 0u;
-        return 1u;
+    if (status_nibble == 0x90) {
+        *is_note_on = (msg->velocity > 0) ? 1 : 0;
+        return 1;
     }
 
-    if (status_nibble == 0x80u) {
-        *is_note_on = 0u;
-        return 1u;
+    if (status_nibble == 0x80) {
+        *is_note_on = 0;
+        return 1;
     }
 
-    return 0u;
+    return 0;
 }
 
 
@@ -104,12 +104,12 @@ static void change_midi_channel(midi_note *midi_msg, uint8_t *send_to_midi_chann
 
 static void change_velocity(midi_note *midi_msg)
 {
-    const uint8_t status_nibble = (uint8_t)(midi_msg->status & 0xF0u);
-    uint8_t is_note_on = 0u;
+    const uint8_t status_nibble = (uint8_t)(midi_msg->status & 0xF0);
+    uint8_t is_note_on = 0;
     const uint8_t is_note = midi_is_note_message(midi_msg, &is_note_on);
 
-    const uint8_t is_cc = (status_nibble == 0xB0u) ? 1u : 0u;
-    const uint8_t is_cc64 = (is_cc && midi_msg->note == 64u) ? 1u : 0u;
+    const uint8_t is_cc = (status_nibble == 0xB0) ? 1 : 0;
+    const uint8_t is_cc64 = (is_cc && midi_msg->note == 64) ? 1 : 0;
 
     // Velocity shaping applies to note messages and to CC values,
     // except sustain pedal (CC64) which must remain untouched.
@@ -122,7 +122,7 @@ static void change_velocity(midi_note *midi_msg)
 
     // Keep explicit Note Off with velocity 0 unchanged,
     // while allowing non-zero Note Off release velocity to be shaped.
-    if (is_note && is_note_on == 0u && midi_msg->velocity == 0u) {
+    if (is_note && is_note_on == 0 && midi_msg->velocity == 0) {
         return;
     }
 
@@ -503,17 +503,17 @@ void pipeline_final(midi_note *midi_msg, uint8_t length)
 
 void send_midi_out(midi_note *midi_message_raw, uint8_t length)
 {
-    if (midi_message_raw->status < 0x80u) return;
+    if (midi_message_raw->status < 0x80) return;
 
     length = midi_msg_len(midi_message_raw->status); // enforce correctness
 
     uint8_t midi_bytes[3] = {0};
     midi_bytes[0] = midi_message_raw->status;
-    if (length > 1u) midi_bytes[1] = midi_message_raw->note;
-    if (length > 2u) midi_bytes[2] = midi_message_raw->velocity;
+    if (length > 1) midi_bytes[1] = midi_message_raw->note;
+    if (length > 2) midi_bytes[2] = midi_message_raw->velocity;
 
     // Determine if message is a note message for split logic
-    uint8_t is_note_on = 0u;
+    uint8_t is_note_on = 0;
     const uint8_t is_note = midi_is_note_message(midi_message_raw, &is_note_on);
     const uint8_t note = (uint8_t)midi_bytes[1];
 
@@ -560,8 +560,8 @@ void send_usb_midi_out(midi_note *msg, uint8_t length)
 
     uint8_t bytes[3] = {0};
     bytes[0] = msg->status;
-    if (length > 1u) bytes[1] = msg->note;
-    if (length > 2u) bytes[2] = msg->velocity;
+    if (length > 1) bytes[1] = msg->note;
+    if (length > 2) bytes[2] = msg->velocity;
 
     send_usb_midi_message(bytes, length);
 }

@@ -14,11 +14,11 @@ extern TIM_HandleTypeDef htim4;
 // -------------------------
 static inline uint32_t display_flag_for_menu(menu_list_t m)
 {
-    return (m < AMOUNT_OF_MENUS) ? (1u << (uint32_t)m) : 0u;
+    return (m < AMOUNT_OF_MENUS) ? (1 << (uint32_t)m) : 0;
 }
 
 // Wait on any menu flag bit [0..AMOUNT_OF_MENUS-1]
-#define DISPLAY_FLAG_MASK ((AMOUNT_OF_MENUS >= 32) ? 0xFFFFFFFFu : ((1u << (uint32_t)AMOUNT_OF_MENUS) - 1u))
+#define DISPLAY_FLAG_MASK ((AMOUNT_OF_MENUS >= 32) ? 0xFFFFFFFF : ((1 << (uint32_t)AMOUNT_OF_MENUS) - 1))
 
 // -------------------------
 // Internal state

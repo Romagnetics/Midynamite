@@ -46,7 +46,7 @@ void send_usb_midi_message(uint8_t *midi_message, uint8_t length) {
 
 
 	    static uint8_t packetsBuffer[4];
-	    packetsBuffer[0] = (0x00u << 4) | cin;
+	    packetsBuffer[0] = (0x00 << 4) | cin;
 	    packetsBuffer[1] = midi_message[0];
 	    packetsBuffer[2] = (length > 1) ? midi_message[1] : 0;
 	    packetsBuffer[3] = (length > 2) ? midi_message[2] : 0;

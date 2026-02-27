@@ -16,7 +16,7 @@ static uint8_t *mt_send_to_midi_out_cache(void)
 
 void set_tempo_bpm(uint32_t bpm)
 {
-    const uint32_t tempo_click_rate = (bpm > 0u) ? (6000000u / (bpm * 48u)) : 0u;
+    const uint32_t tempo_click_rate = (bpm > 0) ? (6000000 / (bpm * 48)) : 0;
     TIM2->ARR = tempo_click_rate;
 }
 
@@ -38,7 +38,7 @@ void send_midi_tempo_out(void){
 		}
 
     static uint8_t div2 = 0;
-    div2 ^= 1u;
+    div2 ^= 1;
     if (div2) {
         return;
     }

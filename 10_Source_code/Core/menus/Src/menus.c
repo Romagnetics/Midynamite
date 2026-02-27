@@ -83,7 +83,7 @@ typedef struct page_group_rule_s {
 static uint8_t sel_mod_change_split() { return (save_get(MODIFY_CHANGE_OR_SPLIT)  == MIDI_MODIFY_SPLIT)    ? 1 : 0; }
 static uint8_t sel_mod_vel_type()     { return (save_get(MODIFY_VELOCITY_TYPE)    == MIDI_MODIFY_FIXED_VEL) ? 1 : 0; }
 static uint8_t sel_transpose_type()   { return (save_get(TRANSPOSE_TRANSPOSE_TYPE)== MIDI_TRANSPOSE_SCALED) ? 1 : 0; }
-static uint8_t sel_fixed0()           { return 0u; }
+static uint8_t sel_fixed0()           { return 0; }
 
 // -------------------------
 // Group-id lists (avoid compound literals in static tables)
@@ -267,11 +267,11 @@ menu_group_mask_t ctrl_active_mask_for_page(menu_list_t page)
             const uint8_t n = group_list_len(sel->groups);
             for (uint8_t k = 0; k < n; ++k) {
                 const uint32_t gid = (uint32_t)sel->groups[k];
-                if (gid >= 1u && gid <= CTRL_GROUP_SLOT_MAX) mask |= ((menu_group_mask_t)1u << (gid - 1u));
+                if (gid >= 1 && gid <= CTRL_GROUP_SLOT_MAX) mask |= ((menu_group_mask_t)1 << (gid - 1));
             }
         } else {
             const uint32_t gid = (uint32_t)sel->groups[idx];
-            if (gid >= 1u && gid <= CTRL_GROUP_SLOT_MAX) mask |= ((menu_group_mask_t)1u << (gid - 1u));
+            if (gid >= 1 && gid <= CTRL_GROUP_SLOT_MAX) mask |= ((menu_group_mask_t)1 << (gid - 1));
         }
     }
     return mask;
@@ -302,7 +302,7 @@ uint8_t build_union_for_position_page(menu_list_t page, CtrlActiveList *out)
             for (uint8_t j = 0; j < tmp_count; ++j) {
                 if (tmp[j] == gid) { exists = 1; break; }
             }
-            if (!exists && tmp_count < (uint8_t)(sizeof(tmp)/sizeof(tmp[0]) - 1u)) {
+            if (!exists && tmp_count < (uint8_t)(sizeof(tmp)/sizeof(tmp[0]) - 1)) {
                 tmp[tmp_count++] = gid;
                 tmp[tmp_count] = 0; // keep 0-terminated
             }

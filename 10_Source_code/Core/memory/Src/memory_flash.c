@@ -231,11 +231,11 @@ HAL_StatusTypeDef store_settings(void)
     }
 
     const uint32_t* p    = (const uint32_t*)&local;
-    const uint32_t  words = (sizeof(save_struct) + 3u) / 4u;
+    const uint32_t  words = (sizeof(save_struct) + 3) / 4;
 
     for (uint32_t i = 0; i < words; ++i) {
         status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,
-                                   FLASH_SECTOR7_ADDR + i * 4u,
+                                   FLASH_SECTOR7_ADDR + i * 4,
                                    p[i]);
         if (status != HAL_OK) {
             HAL_FLASH_Lock();
@@ -274,7 +274,7 @@ void memory_init_defaults(void)
 
 void memory_set_midi_thru(uint8_t v)
 {
-    (void)save_modify_u8(SETTINGS_MIDI_THRU, SAVE_MODIFY_SET, v ? 1u : 0u);
+    (void)save_modify_u8(SETTINGS_MIDI_THRU, SAVE_MODIFY_SET, v ? 1 : 0);
 }
 
 #endif
