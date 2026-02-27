@@ -29,7 +29,7 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [MODIFY_VEL_PLUS_MINUS]      = {    -80,         80,          0 },
     [MODIFY_VEL_ABSOLUTE]        = {      0,        127,         64 },
 
-    [MODIFY_CURRENTLY_SENDING]             = {      0,          1,          0 },
+    [MODIFY_CURRENTLY_SENDING]   = {      0,          1,          0 },
 
     [TRANSPOSE_TRANSPOSE_TYPE]   = {      0,          1,          0 },
     [TRANSPOSE_MIDI_SHIFT_VALUE] = {    -36,         36,          0 },
@@ -37,19 +37,19 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [TRANSPOSE_INTERVAL]         = {      0,          9,          0 },
     [TRANSPOSE_TRANSPOSE_SCALE]  = {      0,          6,          0 },
     [TRANSPOSE_SEND_ORIGINAL]    = {      0,          1,          0 },
-    [TRANSPOSE_CURRENTLY_SENDING]          = {      0,          1,          0 },
+    [TRANSPOSE_CURRENTLY_SENDING]= {      0,          1,          0 },
 
-	[ARPEGGIATOR_CURRENTLY_SENDING]        = {      0,       1,          0 },
-	[ARPEGGIATOR_DIVISION]       = {      0,       6,          0 },
-	[ARPEGGIATOR_GATE]        = {      1,       10,          10 },
-	[ARPEGGIATOR_OCTAVES]        = {      1,       4,          1 },
-	[ARPEGGIATOR_PATTERN]        = {      0,       7,          0 },
+	[ARPEGGIATOR_CURRENTLY_SENDING]= {      0,       1,          0 },
+	[ARPEGGIATOR_DIVISION]         = {      0,       6,          0 },
+	[ARPEGGIATOR_GATE]             = {      1,       10,          10 },
+	[ARPEGGIATOR_OCTAVES]          = {      1,       4,          1 },
+	[ARPEGGIATOR_PATTERN]          = {      0,       7,          0 },
 
-	[ARPEGGIATOR_SWING]        = {      1,       100,          50 },
-	[ARPEGGIATOR_LENGTH]   = {      1,       8,          8 },
-	[ARPEGGIATOR_NOTES]  = {      0,       0b11111111,    0b11111111 },
-	[ARPEGGIATOR_HOLD]        = {      0,       1,          0 },
-	[ARPEGGIATOR_KEY_SYNC]        = {      0,       1,          0 },
+	[ARPEGGIATOR_SWING]            = {      1,       100,          50 },
+	[ARPEGGIATOR_LENGTH]           = {      1,       8,          8 },
+	[ARPEGGIATOR_NOTES]            = {      0,       0b11111111,    0b11111111 },
+	[ARPEGGIATOR_HOLD]             = {      0,       1,          0 },
+	[ARPEGGIATOR_KEY_SYNC]         = {      0,       1,          0 },
 
 
     [SETTINGS_START_MENU]        = {      0,          AMOUNT_OF_MENUS-1,          0 },

@@ -19,6 +19,27 @@ static uint8_t s_note_on_playing = 0u;
 static uint8_t s_step_index = 0u;
 static uint16_t s_tick_counter = 0u;
 
+static uint8_t should_process_arp_step(uint16_t clocks_per_step_value, uint8_t has_pressed_notes)
+{
+    if ((save_get(TEMPO_CURRENTLY_SENDING) == 0) &&
+        (s_note_on_playing == 0u) &&
+        (has_pressed_notes != 0u)) {
+        s_tick_counter = 0u;
+        return 1u;
+    }
+
+    s_tick_counter++;
+    if (s_tick_counter < clocks_per_step_value) {
+        return 0u;
+    }
+
+    s_tick_counter = 0u;
+    return 1u;
+}
+
+
+
+
 static uint16_t clocks_per_step(uint8_t div)
 {
     // 48 PPQ grid. Divisions: 1/4, 1/6, 1/8, 1/12, 1/16, 1/24, 1/32
@@ -97,15 +118,14 @@ void arp_on_tempo_tick(void)
         return;
     }
 
-    const uint16_t cps = clocks_per_step((uint8_t)save_get(ARPEGGIATOR_DIVISION));
-    s_tick_counter++;
-    if (s_tick_counter < cps) {
-        return;
-    }
-    s_tick_counter = 0u;
-
     uint8_t notes[128];
     uint8_t count = arp_get_pressed_keys(notes, 128u);
+
+
+    const uint16_t cps = clocks_per_step((uint8_t)save_get(ARPEGGIATOR_DIVISION));
+    if (!should_process_arp_step(cps, count)) {
+        return;
+    }
 
     if (s_note_on_playing) {
     midi_note off = last_note_sent;
