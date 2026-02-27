@@ -10,8 +10,8 @@
 #include "memory_main.h"
 #include "midi_arp.h"
 
-static uint8_t s_physical_notes[128];
-static uint8_t s_active_notes[128];
+static midi_note s_physical_notes[128];
+static midi_note s_active_notes[128];
 
 static midi_note last_note_sent = {0x90u, 60u, 10u};
 
@@ -78,7 +78,7 @@ static uint8_t physical_note_count(void)
     uint8_t count = 0;
 
     for (uint8_t note = 0; note < 128u; ++note) {
-        count += s_physical_notes[note] ? 1u : 0u;
+        count += (s_physical_notes[note].status != 0u) ? 1u : 0u;
     }
 
     return count;
@@ -107,7 +107,7 @@ void arp_sync_hold_mode(void)
 
 void arp_handle_midi_note(const midi_note *msg)
 {
-    uint8_t is_note_on = 0;
+    uint8_t is_note_on = 0u;
 
     if (!midi_is_note_message(msg, &is_note_on)) {
         return;
@@ -128,15 +128,19 @@ void arp_handle_midi_note(const midi_note *msg)
             s_has_played_note = 0u;
         }
 
-        s_physical_notes[note] = 1u;
-        s_active_notes[note] = 1u;
+        s_physical_notes[note] = *msg;
+        s_physical_notes[note].note = note;
+
+        s_active_notes[note] = *msg;
+        s_active_notes[note].note = note;
+
         return;
     }
 
-    s_physical_notes[note] = 0u;
+    memset(&s_physical_notes[note], 0, sizeof(s_physical_notes[note]));
 
     if (hold_enabled == 0u) {
-        s_active_notes[note] = 0u;
+        memset(&s_active_notes[note], 0, sizeof(s_active_notes[note]));
     }
 }
 
@@ -170,6 +174,7 @@ void arp_on_tempo_tick(void)
     }
 
     last_note_sent.note = notes[arp_next_step_index(notes, count)];
+    last_note_sent.velocity = s_active_notes[last_note_sent.note].velocity;
 
     midi_note on = last_note_sent;
     on.status = (uint8_t)(0x90u | (last_note_sent.status & 0x0Fu));
@@ -187,7 +192,7 @@ uint8_t arp_get_pressed_keys(uint8_t *out_notes, uint8_t max_notes)
     uint8_t count = 0;
 
     for (uint8_t note = 0; note < 128u; ++note) {
-        if (s_active_notes[note] == 0u) {
+        if (s_active_notes[note].status == 0u) {
             continue;
         }
 
@@ -203,5 +208,5 @@ uint8_t arp_get_pressed_keys(uint8_t *out_notes, uint8_t max_notes)
 
 uint8_t arp_get_pressed_key_count(void)
 {
-    return arp_get_pressed_keys(NULL, 0);
+    return arp_get_pressed_keys(NULL, 0u);
 }
