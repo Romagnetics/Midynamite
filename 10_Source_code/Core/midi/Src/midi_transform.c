@@ -478,11 +478,13 @@ void pipeline_midi_transpose(midi_note *midi_msg)
 void pipeline_arp(midi_note *midi_msg, uint8_t length)
 {
     if (save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 1) {
-        uint8_t is_note_on = 0u;
+        uint8_t is_note_on = 0;
         if (midi_is_note_message(midi_msg, &is_note_on)) {
             arp_handle_midi_note(midi_msg);
             return;
         }
+
+        arp_handle_midi_cc64(midi_msg);
     }
 
     pipeline_final(midi_msg, length);
