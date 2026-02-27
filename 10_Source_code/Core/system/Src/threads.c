@@ -2,6 +2,7 @@
 #include "_menu_ui.h" //menu change check
 #include "main.h" //GPIO
 #include "midi_transform.h" //calculate_incoming_midi
+#include "midi_arp.h" //arp_process_pending_tempo_ticks
 #include "threads.h"
 #include "usb_device.h" //MX_USB_DEVICE_Init
 #include "utils.h" //debounce
@@ -79,7 +80,8 @@ static void MidiCoreThread(void *argument)
     for (;;)
     {
         calculate_incoming_midi();
-        osDelay(5);
+        arp_process_pending_tempo_ticks();
+        osDelay(2);
     }
 }
 

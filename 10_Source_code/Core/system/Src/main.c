@@ -329,7 +329,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   // Romagnetics code
   if (htim->Instance == TIM2) {
     send_midi_tempo_out();
-    arp_on_tempo_tick();
+    arp_request_tempo_tick_from_isr();
   }
 }
 
