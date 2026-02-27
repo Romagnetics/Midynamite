@@ -43,6 +43,13 @@ typedef enum {
 } ctrl_group_id_t;
 
 
+#define CTRL_GROUP_SLOT_MAX 64u
+
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
+_Static_assert((unsigned)CTRL_SETTINGS_ALWAYS <= CTRL_GROUP_SLOT_MAX,
+               "Controller uses more than 64 group slots");
+#endif
+
 
 // ---------------------
 // Field change bits
@@ -72,7 +79,7 @@ extern const menu_controls_t menu_controls[SAVE_FIELD_COUNT];
 
 // Build active list from an active-groups mask (sorted by ui_order).
 // Exported so menus.c can reuse the exact same ordering/filtering logic.
-void ctrl_build_active_fields(uint32_t active_groups, CtrlActiveList *out);
+void ctrl_build_active_fields(menu_group_mask_t active_groups, CtrlActiveList *out);
 
 // =====================
 // Display flag helpers
@@ -129,7 +136,7 @@ void     select_press_menu_change(menu_list_t sel_field);
 
 int8_t   ui_selected_bit(save_field_t f);
 uint8_t  ui_is_field_selected(save_field_t f);
-uint32_t ui_active_groups(void);
+menu_group_mask_t ui_active_groups(void);
 
 void     menu_nav_begin_and_update(menu_list_t field);
 void     save_mark_all_changed(void);

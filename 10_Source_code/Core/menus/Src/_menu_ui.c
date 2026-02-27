@@ -101,12 +101,12 @@ static inline void draw_item_row(const ui_element *e)
     draw_text_ul(table[idx], e->x, e->y, e->font, ui_is_field_selected(f) ? 1u : 0u);
 }
 
-static inline uint8_t elem_is_visible(const ui_element *e, uint32_t active_groups_mask)
+static inline uint8_t elem_is_visible(const ui_element *e, menu_group_mask_t active_groups_mask)
 {
     if (e->ctrl_group_id == 0) return 1;
     uint8_t id = e->ctrl_group_id;
-    if (id < 1 || id > 31) return 0;
-    uint32_t bit = (1u << (id - 1));
+    if (id < 1u || id > CTRL_GROUP_SLOT_MAX) return 0;
+    menu_group_mask_t bit = (((menu_group_mask_t)1u) << (id - 1u));
     return (active_groups_mask & bit) ? 1u : 0u;
 }
 
@@ -214,7 +214,7 @@ static void menu_ui_draw_16ch(const ui_element *e) {
 void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count) {
     (void)menu;
 
-    const uint32_t active = ui_active_groups();
+    const menu_group_mask_t active = ui_active_groups();
 
     screen_driver_Fill(Black);
 
