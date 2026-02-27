@@ -24,6 +24,8 @@ static uint16_t s_tick_counter = 0;
 static uint16_t s_gate_tick_counter = 0;
 
 static uint8_t s_sustain_hold_active = 0;
+static volatile uint16_t s_pending_tempo_ticks = 0;
+
 static uint8_t s_was_arp_enabled = 0;
 
 typedef enum {
@@ -62,7 +64,7 @@ static uint8_t arp_next_step_index(const uint8_t *notes, uint8_t count, uint8_t 
 static uint8_t should_process_arp_step(uint16_t clocks_per_step_value, uint8_t has_pressed_notes)
 {
     if ((save_get(TEMPO_CURRENTLY_SENDING) == 0) &&
-        (s_note_on_playing == 0) &&
+        (s_has_played_note == 0) &&
         (has_pressed_notes != 0)) {
         s_tick_counter = 0;
         return 1;
@@ -77,18 +79,6 @@ static uint8_t should_process_arp_step(uint16_t clocks_per_step_value, uint8_t h
     return 1;
 }
 
-static uint16_t arp_gate_ticks(uint16_t clocks_per_step_value)
-{
-    uint8_t gate = (uint8_t)save_get(ARPEGGIATOR_GATE);
-    if (gate < 1) {
-        gate = 1;
-    }
-    if (gate > 10) {
-        gate = 10;
-    }
-
-    return (uint16_t)(((clocks_per_step_value * gate) + 5) / 10);
-}
 
 static void arp_send_note_off(void)
 {
@@ -183,6 +173,7 @@ void arp_state_reset(void)
     s_tick_counter = 0;
     s_gate_tick_counter = 0;
     s_sustain_hold_active = 0;
+    s_pending_tempo_ticks = 0;
     s_was_arp_enabled = 0;
 }
 
@@ -276,6 +267,39 @@ void arp_handle_midi_cc64(const midi_note *msg)
     s_sustain_hold_active = (msg->velocity >= 64) ? 1 : 0;
     arp_sync_hold_mode();
 }
+
+void arp_request_tempo_tick_from_isr(void)
+{
+    uint16_t pending = __atomic_load_n(&s_pending_tempo_ticks, __ATOMIC_RELAXED);
+
+    while (pending < 65535) {
+        const uint16_t next = (uint16_t)(pending + 1);
+        if (__atomic_compare_exchange_n(&s_pending_tempo_ticks,
+                                        &pending,
+                                        next,
+                                        0,
+                                        __ATOMIC_RELAXED,
+                                        __ATOMIC_RELAXED)) {
+            return;
+        }
+    }
+}
+
+void arp_process_pending_tempo_ticks(void)
+{
+    for (;;) {
+        uint16_t pending = __atomic_exchange_n(&s_pending_tempo_ticks, 0, __ATOMIC_RELAXED);
+        if (pending == 0) {
+            return;
+        }
+
+        while (pending != 0) {
+            pending--;
+            arp_on_tempo_tick();
+        }
+    }
+}
+
 
 void arp_on_tempo_tick(void)
 {
