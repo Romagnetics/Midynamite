@@ -83,8 +83,8 @@ void update_contrast(save_field_t f) {
 // step ticks:            48   32  24   16    12    8     6
 static inline uint8_t arp_step_ticks(uint8_t div_idx)
 {
-    static const uint8_t t[7] = { 48u, 32u, 24u, 16u, 12u, 8u, 6u };
-    if (div_idx > 6u) div_idx = 6u;
+    static const uint8_t t[7] = { 48, 32, 24, 16, 12, 8, 6 };
+    if (div_idx > 6) div_idx = 6;
     return t[div_idx];
 }
 
@@ -92,7 +92,7 @@ static inline uint8_t arp_swing_max(uint8_t div_idx)
 {
     const uint8_t ticks = arp_step_ticks(div_idx);
     // Max “delay” in ticks is ticks-1 (e.g. 48 -> 47)
-    return (ticks > 0u) ? (uint8_t)(ticks - 1u) : 0u;
+    return (ticks > 0) ? (uint8_t)(ticks - 1) : 0;
 }
 
 // Swing editing: 1..max (never allow 0)
@@ -130,8 +130,8 @@ void update_arp_division(save_field_t field)
 
     // Reset swing to 50% (in ticks): ticks/2 (48->24, 32->16, 6->3, etc.)
     const uint8_t ticks = arp_step_ticks((uint8_t)next);
-    uint8_t swing50 = (uint8_t)(ticks / 2u);
-    if (swing50 < 1u) swing50 = 1u; // safety; also enforces “no 0”
+    uint8_t swing50 = (uint8_t)(ticks / 2);
+    if (swing50 < 1) swing50 = 1; // safety; also enforces “no 0”
     (void)save_modify_u8(ARPEGGIATOR_SWING, SAVE_MODIFY_SET, swing50);
 
     s_ui_reload = 1;
@@ -142,9 +142,9 @@ void update_arp_division(save_field_t field)
 // -------------------------
 void update_bits_field(save_field_t field, uint8_t bit_index, uint8_t bits_count)
 {
-    if (bits_count == 0u) return;
+    if (bits_count == 0) return;
     if (bit_index >= bits_count) return;
-    if (bit_index >= 32u) return; // avoid UB
+    if (bit_index >= 32) return; // avoid UB
 
     int8_t step = encoder_read_step(&htim4);
     if (step == 0) return;
@@ -164,7 +164,7 @@ void update_bits_16_fields(save_field_t field)
     const int8_t bit = ui_selected_bit(field);
     if (bit < 0) return;
 
-    update_bits_field(field, (uint8_t)bit, 16u);
+    update_bits_field(field, (uint8_t)bit, 16);
 }
 
 void update_bits_8_steps(save_field_t field)
@@ -173,8 +173,8 @@ void update_bits_8_steps(save_field_t field)
     if (bit < 0) return;
 
     uint8_t len = (uint8_t)save_get(ARPEGGIATOR_LENGTH);
-    if (len < 1u) len = 1u;
-    if (len > 8u) len = 8u;
+    if (len < 1) len = 1;
+    if (len > 8) len = 8;
 
     // Don’t allow edits beyond length
     if ((uint8_t)bit >= len) return;
@@ -247,7 +247,7 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
 // Utility (pure logic, data-agnostic)
 // -------------------------
 static inline menu_group_mask_t flag_from_id(uint32_t id) {
-    return (id >= 1u && id <= CTRL_GROUP_SLOT_MAX) ? (((menu_group_mask_t)1u) << (id - 1u)) : 0u;
+    return (id >= 1 && id <= CTRL_GROUP_SLOT_MAX) ? (((menu_group_mask_t)1) << (id - 1)) : 0;
 }
 
 uint8_t menu_row_hit(const CtrlActiveList *list, uint8_t row, save_field_t *out_field, uint8_t *out_bit, uint32_t *out_gid)
@@ -259,7 +259,7 @@ uint8_t menu_row_hit(const CtrlActiveList *list, uint8_t row, save_field_t *out_
         if (row < (uint8_t)(cursor + span)) {
             if (out_field) *out_field = f;
             if (out_gid)   *out_gid   = (uint32_t)menu_controls[f].groups;
-            if (out_bit)   *out_bit   = (span > 1u) ? (uint8_t)(row - cursor) : 0xFF;
+            if (out_bit)   *out_bit   = (span > 1) ? (uint8_t)(row - cursor) : 0xFF;
             return 1;
         }
         cursor = (uint8_t)(cursor + span);
@@ -462,7 +462,7 @@ uint8_t ui_is_field_selected(save_field_t f)
     menu_list_t page = (menu_list_t)get_current_menu(CURRENT_MENU);
     const NavSel s = nav_selection(page);
 
-    return (s.field == f) ? 1u : 0u;
+    return (s.field == f) ? 1 : 0;
 }
 
 // -------------------------
@@ -481,7 +481,7 @@ static inline void clear_all_field_changed(void)
 }
 
 void save_mark_all_changed(void) {
-    for (int i = 0; i < CHANGE_BITS_WORDS; ++i) s_field_change_bits[i] = 0xFFFFFFFFu;
+    for (int i = 0; i < CHANGE_BITS_WORDS; ++i) s_field_change_bits[i] = 0xFFFFFFFF;
 }
 
 static uint8_t has_menu_changed(menu_list_t page, uint8_t current_select)

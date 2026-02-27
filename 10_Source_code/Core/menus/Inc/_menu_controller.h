@@ -43,7 +43,7 @@ typedef enum {
 } ctrl_group_id_t;
 
 
-#define CTRL_GROUP_SLOT_MAX 64u
+#define CTRL_GROUP_SLOT_MAX 64
 
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 201112L)
 _Static_assert((unsigned)CTRL_SETTINGS_ALWAYS <= CTRL_GROUP_SLOT_MAX,
@@ -92,7 +92,7 @@ void threads_display_notify(uint32_t flags);
 
 // Return a single-bit mask for a menu.
 static inline uint32_t flag_for_menu(menu_list_t m) {
-    return (m < AMOUNT_OF_MENUS) ? (1u << (uint32_t)m) : (1u << (uint32_t)MENU_TEMPO);
+    return (m < AMOUNT_OF_MENUS) ? (1 << (uint32_t)m) : (1 << (uint32_t)MENU_TEMPO);
 }
 
 // Menu → "sending" save_field_t lookup
@@ -115,17 +115,17 @@ static inline uint8_t menu_field_row_span(save_field_t f)
     switch (f) {
 
         case SETTINGS_FILTERED_CH:
-            return 16u;
+            return 16;
 
         case ARPEGGIATOR_NOTES: {
             uint8_t len = (uint8_t)save_get(ARPEGGIATOR_LENGTH);
-            if (len < 1u) len = 1u;
-            if (len > 8u) len = 8u;
+            if (len < 1) len = 1;
+            if (len > 8) len = 8;
             return len;
         }
 
         default:
-            return 1u;
+            return 1;
     }
 }
 
