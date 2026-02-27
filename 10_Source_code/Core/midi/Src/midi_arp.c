@@ -19,8 +19,12 @@ static midi_note last_note_sent = {0x90, 60, 10};
 
 static uint8_t s_note_on_playing = 0;
 static uint8_t s_has_played_note = 0;
+
 static uint16_t s_tick_counter = 0;
+static uint16_t s_gate_tick_counter = 0;
+
 static uint8_t s_sustain_hold_active = 0;
+static uint8_t s_was_arp_enabled = 0;
 
 typedef enum {
     ARP_PATTERN_UP = 0,
@@ -73,6 +77,42 @@ static uint8_t should_process_arp_step(uint16_t clocks_per_step_value, uint8_t h
     return 1;
 }
 
+static uint16_t arp_gate_ticks(uint16_t clocks_per_step_value)
+{
+    uint8_t gate = (uint8_t)save_get(ARPEGGIATOR_GATE);
+    if (gate < 1) {
+        gate = 1;
+    }
+    if (gate > 10) {
+        gate = 10;
+    }
+
+    return (uint16_t)(((clocks_per_step_value * gate) + 5) / 10);
+}
+
+static void arp_send_note_off(void)
+{
+    midi_note off = last_note_sent;
+    off.status = (uint8_t)(0x80 | (last_note_sent.status & 0x0F));
+    off.velocity = 0;
+    pipeline_final(&off, 3);
+    s_note_on_playing = 0;
+    s_gate_tick_counter = 0;
+}
+
+static void arp_process_gate(uint16_t gate_ticks)
+{
+    if (s_note_on_playing == 0) {
+        return;
+    }
+
+    s_gate_tick_counter++;
+    if (s_gate_tick_counter < gate_ticks) {
+        return;
+    }
+
+    arp_send_note_off();
+}
 
 
 
@@ -141,8 +181,34 @@ void arp_state_reset(void)
     s_note_on_playing = 0;
     s_has_played_note = 0;
     s_tick_counter = 0;
+    s_gate_tick_counter = 0;
     s_sustain_hold_active = 0;
+    s_was_arp_enabled = 0;
 }
+
+static void arp_clear_tracked_notes(void)
+{
+    memset(s_physical_notes, 0, sizeof(s_physical_notes));
+    memset(s_active_notes, 0, sizeof(s_active_notes));
+    memset(s_note_order, 0, sizeof(s_note_order));
+    s_note_order_counter = 0;
+    s_has_played_note = 0;
+    s_tick_counter = 0;
+}
+
+static void arp_stop_playing_note(void)
+{
+    if (s_note_on_playing == 0) {
+        return;
+    }
+
+    midi_note off = last_note_sent;
+    off.status = (uint8_t)(0x80 | (last_note_sent.status & 0x0F));
+    off.velocity = 0;
+    pipeline_final(&off, 3);
+    s_note_on_playing = 0;
+}
+
 
 void arp_sync_hold_mode(void)
 {
@@ -214,6 +280,15 @@ void arp_handle_midi_cc64(const midi_note *msg)
 void arp_on_tempo_tick(void)
 {
     arp_sync_hold_mode();
+
+    const uint8_t arp_enabled = (save_get(ARPEGGIATOR_CURRENTLY_SENDING) != 0) ? 1 : 0;
+    if ((arp_enabled == 0) && (s_was_arp_enabled != 0)) {
+        arp_stop_playing_note();
+        arp_clear_tracked_notes();
+    }
+    s_was_arp_enabled = arp_enabled;
+
+
     if (save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 0) {
         return;
     }
@@ -230,16 +305,18 @@ void arp_on_tempo_tick(void)
 
 
     const uint16_t cps = clocks_per_step((uint8_t)save_get(ARPEGGIATOR_DIVISION));
+    const uint16_t gate_ticks = (uint16_t)(((cps * save_get(ARPEGGIATOR_GATE)) + 5) / 10);
+
+    arp_process_gate(gate_ticks);
+
+
+
     if (!should_process_arp_step(cps, count)) {
         return;
     }
 
     if (s_note_on_playing) {
-        midi_note off = last_note_sent;
-        off.status = (uint8_t)(0x80 | (last_note_sent.status & 0x0F));
-        off.velocity = 0;
-        pipeline_final(&off, 3);
-        s_note_on_playing = 0;
+    	arp_stop_playing_note();
     }
 
     if (count == 0) {
@@ -259,6 +336,7 @@ void arp_on_tempo_tick(void)
     last_note_sent = on;
     s_has_played_note = 1;
     s_note_on_playing = 1;
+    s_gate_tick_counter = 0;
 }
 
 uint8_t arp_get_pressed_keys(uint8_t *out_notes, uint8_t max_notes)
