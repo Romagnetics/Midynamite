@@ -266,6 +266,18 @@ void pipeline_start(midi_note *midi_msg)
 {
     const uint8_t status = midi_msg->status;
     const uint8_t length = midi_msg_len(status);
+    const uint8_t status_nibble = (uint8_t)(status & 0xF0);
+    const uint8_t is_cc64 = ((status_nibble == 0xB0) && ((midi_msg->note & 0x7F) == 64)) ? 1 : 0;
+
+
+    arp_handle_midi_cc64(midi_msg);
+
+    if ((save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 1) && (is_cc64 != 0)) {
+        // While arp is active, sustain pedal is an internal hold input only.
+        // Do not forward it, otherwise destination synth sustain overrides arp gate timing.
+        return;
+    }
+
 
     if (is_channel_blocked(status)) return;
 
@@ -483,8 +495,6 @@ void pipeline_arp(midi_note *midi_msg, uint8_t length)
             arp_handle_midi_note(midi_msg);
             return;
         }
-
-        arp_handle_midi_cc64(midi_msg);
     }
 
     pipeline_final(midi_msg, length);
