@@ -137,6 +137,23 @@ void update_arp_division(save_field_t field)
     s_ui_reload = 1;
 }
 
+
+static void update_arp_length(save_field_t field)
+{
+    update_value_inc10(field);
+
+    if ((uint8_t)save_get(ARPEGGIATOR_LENGTH) != 1) {
+        return;
+    }
+
+    const uint32_t notes_mask = (uint32_t)save_get(ARPEGGIATOR_NOTES);
+    if ((notes_mask & 0x01) == 0) {
+        (void)save_modify_u32(ARPEGGIATOR_NOTES, SAVE_MODIFY_SET, (notes_mask | 0x01));
+        s_ui_reload = 1;
+    }
+}
+
+
 // -------------------------
 // Bits fields
 // -------------------------
@@ -175,6 +192,17 @@ void update_bits_8_steps(save_field_t field)
     uint8_t len = (uint8_t)save_get(ARPEGGIATOR_LENGTH);
     if (len < 1) len = 1;
     if (len > 8) len = 8;
+
+    if (len == 1) {
+        const uint32_t notes_mask = (uint32_t)save_get(field);
+        if ((notes_mask & 0x01) == 0) {
+            (void)save_modify_u32(field, SAVE_MODIFY_SET, (notes_mask | 0x01));
+            s_ui_reload = 1;
+        }
+        return;
+    }
+
+
 
     // Don’t allow edits beyond length
     if ((uint8_t)bit >= len) return;
@@ -220,8 +248,8 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     MC(ARPEGGIATOR_OCTAVES,            WRAP,  update_value_inc1,           CTRL_ARPEGGIATOR_PAGE_1),
     MC(ARPEGGIATOR_PATTERN,            WRAP,  update_value_inc1,           CTRL_ARPEGGIATOR_PAGE_1),
 
-    MC(ARPEGGIATOR_SWING,              WRAP,  update_arp_swing,            CTRL_ARPEGGIATOR_PAGE_2),
-    MC(ARPEGGIATOR_LENGTH,           NO_WRAP, update_value_inc10,          CTRL_ARPEGGIATOR_PAGE_2),
+    MC(ARPEGGIATOR_SWING,              WRAP,  update_arp_swing,           CTRL_ARPEGGIATOR_PAGE_2),
+    MC(ARPEGGIATOR_LENGTH,           NO_WRAP, update_arp_length,          CTRL_ARPEGGIATOR_PAGE_2),
     MC(ARPEGGIATOR_NOTES,              WRAP,  update_bits_8_steps,         CTRL_ARPEGGIATOR_PAGE_2),
     MC(ARPEGGIATOR_HOLD,               WRAP,  update_value_inc1,           CTRL_ARPEGGIATOR_PAGE_2),
     MC(ARPEGGIATOR_KEY_SYNC,           WRAP,  update_value_inc1,           CTRL_ARPEGGIATOR_PAGE_2),
