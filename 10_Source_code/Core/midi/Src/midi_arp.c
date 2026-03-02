@@ -27,6 +27,13 @@ static uint8_t s_sustain_hold_active = 0;
 static volatile uint16_t s_pending_tempo_ticks = 0;
 
 static uint8_t s_was_arp_enabled = 0;
+static uint8_t s_swing_phase = 0;
+static uint8_t s_pattern_step = 0;
+
+static uint8_t s_source_notes[128];
+static uint8_t s_expanded_notes[128];
+static uint8_t s_source_for_expanded_note[128];
+
 
 typedef enum {
     ARP_PATTERN_UP = 0,
@@ -61,7 +68,7 @@ static uint8_t arp_next_step_index(const uint8_t *notes, uint8_t count, uint8_t 
 }
 
 
-static uint8_t should_process_arp_step(uint16_t clocks_per_step_value, uint8_t has_pressed_notes)
+static uint8_t should_process_arp_step(uint16_t step_ticks_value, uint8_t has_pressed_notes)
 {
     if ((save_get(TEMPO_CURRENTLY_SENDING) == 0) &&
         (s_has_played_note == 0) &&
@@ -71,7 +78,7 @@ static uint8_t should_process_arp_step(uint16_t clocks_per_step_value, uint8_t h
     }
 
     s_tick_counter++;
-    if (s_tick_counter < clocks_per_step_value) {
+    if (s_tick_counter < step_ticks_value) {
         return 0;
     }
 
@@ -113,6 +120,56 @@ static uint16_t clocks_per_step(uint8_t div)
     return map[div % 7];
 }
 
+
+static uint16_t arp_current_step_ticks(uint16_t clocks_per_step_value)
+{
+    uint16_t swing = (uint16_t)(uint8_t)save_get(ARPEGGIATOR_SWING);
+
+    if (swing >= clocks_per_step_value) {
+        swing = (uint16_t)((clocks_per_step_value * swing + 50) / 100);
+    }
+
+    if (swing < 1) {
+        swing = 1;
+    }
+    if (swing >= clocks_per_step_value) {
+        swing = (uint16_t)(clocks_per_step_value - 1);
+    }
+
+    if (s_swing_phase == 0) {
+        return (uint16_t)(2 * swing);
+    }
+
+    return (uint16_t)(2 * (clocks_per_step_value - swing));
+}
+
+
+static uint8_t arp_step_is_enabled(void)
+{
+    uint8_t length = (uint8_t)save_get(ARPEGGIATOR_LENGTH);
+    if (length < 1) {
+        length = 1;
+    }
+    if (length > 8) {
+        length = 8;
+    }
+
+    if (s_pattern_step >= length) {
+        s_pattern_step = 0;
+    }
+
+    const uint8_t step = s_pattern_step;
+    const uint32_t notes_mask = (uint32_t)save_get(ARPEGGIATOR_NOTES);
+    const uint8_t enabled = (uint8_t)((notes_mask >> step) & 1);
+
+    s_pattern_step = (uint8_t)((s_pattern_step + 1) % length);
+    return enabled;
+}
+
+
+
+
+
 static uint8_t physical_note_count(void)
 {
     uint8_t count = 0;
@@ -148,6 +205,39 @@ static uint8_t arp_get_ordered_keys(uint8_t *out_notes, uint8_t max_notes)
     return count;
 }
 
+static uint8_t arp_expand_notes_across_octaves(uint8_t source_count)
+{
+    if (source_count == 0) {
+        return 0;
+    }
+
+    uint8_t octaves = (uint8_t)save_get(ARPEGGIATOR_OCTAVES);
+    if (octaves < 1) {
+        octaves = 1;
+    }
+    if (octaves > 4) {
+        octaves = 4;
+    }
+
+    uint8_t expanded_count = 0;
+    for (uint8_t octave = 0; octave < octaves; ++octave) {
+        const uint8_t transpose = (uint8_t)(12 * octave);
+        for (uint8_t i = 0; i < source_count; ++i) {
+            const uint16_t candidate = (uint16_t)s_source_notes[i] + transpose;
+            if ((candidate > 127) || (expanded_count >= 128)) {
+                continue;
+            }
+
+            s_expanded_notes[expanded_count] = (uint8_t)candidate;
+            s_source_for_expanded_note[expanded_count] = s_source_notes[i];
+            ++expanded_count;
+        }
+    }
+
+    return expanded_count;
+}
+
+
 
 static void arp_apply_key_sync_on_note_on(uint8_t note)
 {
@@ -161,6 +251,7 @@ static void arp_apply_key_sync_on_note_on(uint8_t note)
 
     s_has_played_note = 0;
     s_tick_counter = 0;
+    s_swing_phase = 0;
 }
 
 
@@ -193,6 +284,8 @@ void arp_state_reset(void)
     s_sustain_hold_active = 0;
     s_pending_tempo_ticks = 0;
     s_was_arp_enabled = 0;
+    s_swing_phase = 0;
+    s_pattern_step = 0;
 }
 
 static void arp_clear_tracked_notes(void)
@@ -203,6 +296,7 @@ static void arp_clear_tracked_notes(void)
     s_note_order_counter = 0;
     s_has_played_note = 0;
     s_tick_counter = 0;
+    s_pattern_step = 0;
 }
 
 static void arp_stop_playing_note(void)
@@ -337,25 +431,28 @@ void arp_on_tempo_tick(void)
         return;
     }
 
-    uint8_t notes[128];
+    uint8_t source_count = 0;
     uint8_t count = 0;
     const uint8_t pattern = (uint8_t)save_get(ARPEGGIATOR_PATTERN);
 
     if (pattern == ARP_PATTERN_ORDER) {
-        count = arp_get_ordered_keys(notes, 128);
+        source_count = arp_get_ordered_keys(s_source_notes, 128);
     } else {
-        count = arp_get_pressed_keys(notes, 128);
+        source_count = arp_get_pressed_keys(s_source_notes, 128);
     }
+
+    count = arp_expand_notes_across_octaves(source_count);
 
 
     const uint16_t cps = clocks_per_step((uint8_t)save_get(ARPEGGIATOR_DIVISION));
     const uint16_t gate_ticks = (uint16_t)(((cps * save_get(ARPEGGIATOR_GATE)) + 5) / 10);
+    const uint16_t step_ticks = arp_current_step_ticks(cps);
 
     arp_process_gate(gate_ticks);
 
 
 
-    if (!should_process_arp_step(cps, count)) {
+    if (!should_process_arp_step(step_ticks, count)) {
         return;
     }
 
@@ -365,11 +462,21 @@ void arp_on_tempo_tick(void)
 
     if (count == 0) {
         s_has_played_note = 0;
+        s_pattern_step = 0;
+        s_swing_phase ^= 1;
         return;
     }
 
-    last_note_sent.note = notes[arp_next_step_index(notes, count, (uint8_t)(pattern == ARP_PATTERN_UP))];
-    last_note_sent.velocity = s_active_notes[last_note_sent.note].velocity;
+    if (arp_step_is_enabled() == 0) {
+        s_swing_phase ^= 1;
+        return;
+    }
+
+    const uint8_t index = arp_next_step_index(s_expanded_notes, count, (uint8_t)(pattern == ARP_PATTERN_UP));
+        last_note_sent.note = s_expanded_notes[index];
+        last_note_sent.velocity = s_active_notes[s_source_for_expanded_note[index]].velocity;
+
+
 
     midi_note on = last_note_sent;
     on.status = (uint8_t)(0x90 | (last_note_sent.status & 0x0F));
@@ -381,6 +488,7 @@ void arp_on_tempo_tick(void)
     s_has_played_note = 1;
     s_note_on_playing = 1;
     s_gate_tick_counter = 0;
+    s_swing_phase ^= 1;
 }
 
 uint8_t arp_get_pressed_keys(uint8_t *out_notes, uint8_t max_notes)
