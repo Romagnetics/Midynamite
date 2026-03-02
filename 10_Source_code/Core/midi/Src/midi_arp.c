@@ -33,38 +33,133 @@ static uint8_t s_pattern_step = 0;
 static uint8_t s_source_notes[128];
 static uint8_t s_expanded_notes[128];
 static uint8_t s_source_for_expanded_note[128];
+static uint16_t s_pattern_note_index = 0;
+static uint8_t s_pattern_note_type = 255;
+
 
 
 typedef enum {
     ARP_PATTERN_UP = 0,
+    ARP_PATTERN_DOWN,
+    ARP_PATTERN_UP_DOWN,
+    ARP_PATTERN_UP_DOWN_2,
+    ARP_PATTERN_RANDOM,
+    ARP_PATTERN_DOUBLE_UP,
+    ARP_PATTERN_DOUBLE_DOWN,
     ARP_PATTERN_ORDER = 7
 } arp_pattern_t;
 
-static uint8_t arp_next_step_index(const uint8_t *notes, uint8_t count, uint8_t keep_pitch_direction)
+static void arp_reset_pattern_runtime_state(void)
 {
-    if ((count == 0) || (notes == NULL)) {
+    s_pattern_note_index = 0;
+}
+
+static uint8_t arp_index_up(uint8_t count)
+{
+    return (uint8_t)(s_pattern_note_index % count);
+}
+
+static uint8_t arp_index_down(uint8_t count)
+{
+    return (uint8_t)((count - 1) - (s_pattern_note_index % count));
+}
+
+static uint8_t arp_index_up_down(uint8_t count)
+{
+    if (count <= 1) {
         return 0;
     }
 
-    if (s_has_played_note == 0) {
+    const uint8_t cycle = (uint8_t)((2 * count) - 2);
+    const uint8_t pos = (uint8_t)(s_pattern_note_index % cycle);
+
+    if (pos < count) {
+        return pos;
+    }
+
+    return (uint8_t)(cycle - pos);
+}
+
+static uint8_t arp_index_up_down_2(uint8_t count)
+{
+    if (count <= 1) {
         return 0;
     }
 
-    for (uint8_t i = 0; i < count; ++i) {
-        if (notes[i] == last_note_sent.note) {
-            return (uint8_t)((i + 1) % count);
-        }
+    const uint8_t cycle = (uint8_t)(2 * count);
+    const uint8_t pos = (uint8_t)(s_pattern_note_index % cycle);
+
+    if (pos < count) {
+        return pos;
     }
 
-    if (keep_pitch_direction != 0) {
-        for (uint8_t i = 0; i < count; ++i) {
-            if (notes[i] > last_note_sent.note) {
-                return i;
-            }
-        }
+    return (uint8_t)((cycle - 1) - pos);
+}
+
+static uint8_t arp_index_random(uint8_t count)
+{
+    const uint32_t mixed = (uint32_t)(s_pattern_note_index + 1) * 1664525 + 1013904223;
+    return (uint8_t)(mixed % count);
+}
+
+static uint8_t arp_index_double_up(uint8_t count)
+{
+    return (uint8_t)((s_pattern_note_index / 2) % count);
+}
+
+static uint8_t arp_index_double_down(uint8_t count)
+{
+    const uint8_t down_index = (uint8_t)((s_pattern_note_index / 2) % count);
+    return (uint8_t)((count - 1) - down_index);
+}
+
+static uint8_t arp_next_step_index(uint8_t count, uint8_t pattern)
+{
+    if (count == 0) {
+        return 0;
     }
 
-    return 0;
+    if (pattern != s_pattern_note_type) {
+        s_pattern_note_type = pattern;
+        arp_reset_pattern_runtime_state();
+    }
+
+    uint8_t index = 0;
+
+    switch (pattern) {
+        case ARP_PATTERN_DOWN:
+            index = arp_index_down(count);
+            break;
+
+        case ARP_PATTERN_UP_DOWN:
+            index = arp_index_up_down(count);
+            break;
+
+        case ARP_PATTERN_UP_DOWN_2:
+            index = arp_index_up_down_2(count);
+            break;
+
+        case ARP_PATTERN_RANDOM:
+            index = arp_index_random(count);
+            break;
+
+        case ARP_PATTERN_DOUBLE_UP:
+            index = arp_index_double_up(count);
+            break;
+
+        case ARP_PATTERN_DOUBLE_DOWN:
+            index = arp_index_double_down(count);
+            break;
+
+        case ARP_PATTERN_ORDER:
+        case ARP_PATTERN_UP:
+        default:
+            index = arp_index_up(count);
+            break;
+    }
+
+    ++s_pattern_note_index;
+    return index;
 }
 
 
@@ -252,6 +347,9 @@ static void arp_apply_key_sync_on_note_on(uint8_t note)
     s_has_played_note = 0;
     s_tick_counter = 0;
     s_swing_phase = 0;
+    arp_reset_pattern_runtime_state();
+    s_pattern_note_type = 255;
+
 }
 
 
@@ -286,6 +384,8 @@ void arp_state_reset(void)
     s_was_arp_enabled = 0;
     s_swing_phase = 0;
     s_pattern_step = 0;
+    arp_reset_pattern_runtime_state();
+    s_pattern_note_type = 255;
 }
 
 static void arp_clear_tracked_notes(void)
@@ -297,6 +397,8 @@ static void arp_clear_tracked_notes(void)
     s_has_played_note = 0;
     s_tick_counter = 0;
     s_pattern_step = 0;
+    arp_reset_pattern_runtime_state();
+    s_pattern_note_type = 255;
 }
 
 static void arp_stop_playing_note(void)
@@ -347,6 +449,8 @@ void arp_handle_midi_note(const midi_note *msg)
             memset(s_note_order, 0, sizeof(s_note_order));
             s_note_order_counter = 0;
             s_has_played_note = 0;
+            arp_reset_pattern_runtime_state();
+            s_pattern_note_type = 255;
         }
 
         s_physical_notes[note] = *msg;
@@ -463,6 +567,8 @@ void arp_on_tempo_tick(void)
     if (count == 0) {
         s_has_played_note = 0;
         s_pattern_step = 0;
+        arp_reset_pattern_runtime_state();
+        s_pattern_note_type = 255;
         s_swing_phase ^= 1;
         return;
     }
@@ -472,9 +578,9 @@ void arp_on_tempo_tick(void)
         return;
     }
 
-    const uint8_t index = arp_next_step_index(s_expanded_notes, count, (uint8_t)(pattern == ARP_PATTERN_UP));
-        last_note_sent.note = s_expanded_notes[index];
-        last_note_sent.velocity = s_active_notes[s_source_for_expanded_note[index]].velocity;
+    const uint8_t index = arp_next_step_index(count, pattern);
+    last_note_sent.note = s_expanded_notes[index];
+    last_note_sent.velocity = s_active_notes[s_source_for_expanded_note[index]].velocity;
 
 
 
