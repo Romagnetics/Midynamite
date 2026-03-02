@@ -148,6 +148,24 @@ static uint8_t arp_get_ordered_keys(uint8_t *out_notes, uint8_t max_notes)
     return count;
 }
 
+
+static void arp_apply_key_sync_on_note_on(uint8_t note)
+{
+    if (save_get(ARPEGGIATOR_KEY_SYNC) == 0) {
+        return;
+    }
+
+    if (s_physical_notes[note].status != 0) {
+        return;
+    }
+
+    s_has_played_note = 0;
+    s_tick_counter = 0;
+}
+
+
+
+
 static void arp_sync_note_order_with_active(void)
 {
     for (uint8_t note = 0; note < 128; ++note) {
@@ -228,6 +246,8 @@ void arp_handle_midi_note(const midi_note *msg)
     last_note_sent.velocity = msg->velocity;
 
     if (is_note_on) {
+        arp_apply_key_sync_on_note_on(note);
+
         if ((hold_enabled != 0) && (physical_note_count() == 0)) {
             memset(s_active_notes, 0, sizeof(s_active_notes));
             memset(s_note_order, 0, sizeof(s_note_order));
