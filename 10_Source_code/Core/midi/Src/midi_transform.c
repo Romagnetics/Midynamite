@@ -306,12 +306,21 @@ void pipeline_midi_split(midi_note *midi_msg)
 {
     midi_note split_msg = *midi_msg;
     uint8_t is_note_on = 0;
+    uint8_t send_dry = 0;
 
     if (midi_is_note_message(&split_msg, &is_note_on) != 0) {
-        const uint8_t split_channel = (split_msg.note >= save_get(SPLIT_NOTE))
+        const uint8_t split_is_high = (split_msg.note >= save_get(SPLIT_NOTE));
+        const uint8_t split_channel = (split_is_high != 0)
                                       ? (uint8_t)save_get(SPLIT_MIDI_CH2)
                                       : (uint8_t)save_get(SPLIT_MIDI_CH1);
+        const save_field_t send_field = (split_is_high != 0) ? SPLIT_SEND_CH2 : SPLIT_SEND_CH1;
+        send_dry = (uint8_t)(save_get(send_field) == 0);
         change_midi_channel(&split_msg, split_channel);
+
+        if (send_dry != 0) {
+            pipeline_final(&split_msg, midi_msg_len(split_msg.status));
+            return;
+        }
     }
 
     if (save_get(MODIFY_CURRENTLY_SENDING) == 1) {
@@ -321,7 +330,6 @@ void pipeline_midi_split(midi_note *midi_msg)
 
     pipeline_midi_transpose(&split_msg);
 }
-
 
 
 // ---------------------

@@ -38,7 +38,7 @@ static const Message _message = {
     .split_point = "Split Point",
     .low_sem = "Low:",
     .high_sem = "High:",
-    .fx_dry = { "FX", "Dry" },
+    .dry_fx = { "Dry", "FX" },
 
 
     // Velocity

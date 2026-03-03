@@ -40,7 +40,7 @@ typedef struct {
     const char *send_2_sem;
 
     // Channel Split
-    const char *fx_dry[2];
+    const char *dry_fx[2];
     const char *split_point;
     const char *low_sem;
     const char *high_sem;
