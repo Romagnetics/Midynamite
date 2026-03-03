@@ -307,8 +307,9 @@ void pipeline_midi_split(midi_note *midi_msg)
     midi_note split_msg = *midi_msg;
     uint8_t is_note_on = 0;
     uint8_t send_dry = 0;
+    const uint8_t is_note = midi_is_note_message(&split_msg, &is_note_on);
 
-    if (midi_is_note_message(&split_msg, &is_note_on) != 0) {
+    if (is_note != 0) {
         const uint8_t split_is_high = (split_msg.note >= save_get(SPLIT_NOTE));
         const uint8_t split_channel = (split_is_high != 0)
                                       ? (uint8_t)save_get(SPLIT_MIDI_CH2)

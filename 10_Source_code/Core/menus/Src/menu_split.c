@@ -19,8 +19,8 @@ void ui_update_split(void)
     const ui_element elems[] = {
         { ELEM_TEXT , 0,                 TEXT_(midi_split),      UI_6x8, TXT_LEFT, LINE_0, CTRL_SPLIT_MAIN },
 
-        { ELEM_TEXT , 0,                 TEXT_(split_point),     UI_6x8, TXT_LEFT, LINE_1, CTRL_SPLIT_MAIN },
-        { ELEM_ITEM , SPLIT_NOTE,        TEXT_(midi_note_names), UI_6x8, 65,       LINE_1, CTRL_SPLIT_MAIN },
+        { ELEM_TEXT , 0,                 TEXT_(split_note),      UI_6x8, TXT_LEFT, LINE_1, CTRL_SPLIT_MAIN },
+        { ELEM_ITEM , SPLIT_NOTE,        TEXT_(midi_note_names), UI_6x8, 70,       LINE_1, CTRL_SPLIT_MAIN },
 
 
         { ELEM_TEXT , 0,                 TEXT_(output_sem),      UI_6x8, TXT_LEFT, LINE_2, CTRL_SPLIT_MAIN },

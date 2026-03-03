@@ -35,7 +35,7 @@ static const Message _message = {
 	.send_to = "Send to",
 
     // Channel Split
-    .split_point = "Split Point",
+    .split_note = "Split Note",
     .low_sem = "Low:",
     .high_sem = "High:",
     .dry_fx = { "Dry", "FX" },
