@@ -50,6 +50,9 @@ typedef enum {
     // midi_split_data
     SPLIT_MIDI_CH1,
     SPLIT_MIDI_CH2,
+	SPLIT_SEND_CH1,
+	SPLIT_SEND_CH2,
+
     SPLIT_NOTE,
     SPLIT_CURRENTLY_SENDING,
 	SPLIT_SEND_TO_MIDI_OUT,

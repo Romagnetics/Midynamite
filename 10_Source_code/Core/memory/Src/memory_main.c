@@ -18,6 +18,9 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
 
 	[SPLIT_MIDI_CH1]             = {      1,         16,          1 },
 	[SPLIT_MIDI_CH2]             = {      1,         16,          2 },
+	[SPLIT_SEND_CH1]             = {      0,         1,           1 },
+	[SPLIT_SEND_CH2]             = {      0,         1,           1 },
+
 	[SPLIT_NOTE]                 = {      0,        127,         60 },
 	[SPLIT_CURRENTLY_SENDING]    = {      0,          1,          0 },
 	[SPLIT_SEND_TO_MIDI_OUT]     = {      0,          3,          3 },

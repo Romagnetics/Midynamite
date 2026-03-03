@@ -28,13 +28,14 @@ void ui_update_split(void)
 
         { ELEM_TEXT , 0,                 TEXT_(low_sem),         UI_6x8, TXT_LEFT, LINE_3, CTRL_SPLIT_MAIN },
         { ELEM_ITEM , SPLIT_MIDI_CH1,    TEXT_(zero_to_sixteen), UI_6x8, 35,       LINE_3, CTRL_SPLIT_MAIN },
-        { ELEM_TEXT , 0,                 TEXT_(send_to),         UI_6x8, 50,       LINE_3, CTRL_SPLIT_MAIN },
+        { ELEM_TEXT , 0,                 TEXT_(send_to),         UI_6x8, 60,       LINE_3, CTRL_SPLIT_MAIN },
+        { ELEM_ITEM , SPLIT_SEND_CH1,    TEXT_(dry_fx),          UI_6x8, 105,      LINE_3, CTRL_SPLIT_MAIN },
+
 
         { ELEM_TEXT , 0,                 TEXT_(high_sem),        UI_6x8, TXT_LEFT, LINE_4, CTRL_SPLIT_MAIN },
         { ELEM_ITEM , SPLIT_MIDI_CH2,    TEXT_(zero_to_sixteen), UI_6x8, 35,       LINE_4, CTRL_SPLIT_MAIN },
-        { ELEM_TEXT , 0,                 TEXT_(send_to),         UI_6x8, 50,       LINE_4, CTRL_SPLIT_MAIN },
-
-
+        { ELEM_TEXT , 0,                 TEXT_(send_to),         UI_6x8, 60,       LINE_4, CTRL_SPLIT_MAIN },
+        { ELEM_ITEM , SPLIT_SEND_CH2,    TEXT_(dry_fx),          UI_6x8, 105,      LINE_4, CTRL_SPLIT_MAIN },
 
     };
     menu_ui_render(MENU_SPLIT, elems, (uint8_t)(sizeof(elems) / sizeof(elems[0])));
