@@ -18,6 +18,7 @@ static const Message _message = {
     .global_settings_2 = "Global Settings 2",
     .about = "About",
     .midi_modify = "MIDI Modify",
+    .midi_split = "MIDI Split",
     .midi_transpose = "MIDI Transpose",
 	.output_sem = "Output:",
 
@@ -29,11 +30,16 @@ static const Message _message = {
 
     // Channel Modify
     .midi_modify_select = "Ch. Modify",
-    .split = "Split",
-    .low_sem = "Low:",
-    .high_sem = "High:",
 	.send_1_sem = "Send 1:",
 	.send_2_sem = "Send 2:",
+	.send_to = "Send to",
+
+    // Channel Split
+    .split_point = "Split Point",
+    .low_sem = "Low:",
+    .high_sem = "High:",
+    .fx_dry = { "FX", "Dry" },
+
 
     // Velocity
     .velocity = "Velocity",
@@ -223,8 +229,6 @@ static const Message _message = {
 	//Error Handlers
 	.error = "ERROR",
 
-    .change_split = { "Change", "Split" },
-    .change_fixed = { "Change", "Fixed" },
     .midi_outs = {"Out 1", "Out 2", "Out 1+2"},
     .midi_outs_split = {"Out 1", "Out 2", "Out 1+2", "Split"},
     .transpose_modes = { "Pitch Shift", "Scale" },
@@ -243,7 +247,7 @@ static const Message _message = {
          "Ch. 9",  "Ch. 10", "Ch. 11", "Ch. 12",
          "Ch. 13", "Ch. 14", "Ch. 15", "Ch. 16"
      },
-    .menu_list = { "Tempo", "Modify", "Transpose", "Arp." , "Settings"},
+	.menu_list = { "Tempo", "Split", "Modify", "Transpose", "Arp." , "Settings"},
 
 	//Arpeggio
 	.division_list = { "1/4", "1/6", "1/8", "1/12", "1/16", "1/24", "1/32" },

@@ -14,15 +14,20 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [TEMPO_CURRENTLY_SENDING]    = {      0,          1,          0 },
     [TEMPO_SEND_TO_MIDI_OUT]     = {      0,          2,          0 },
 
-    [MODIFY_CHANGE_OR_SPLIT]     = {      0,          1,          1 },
-    [MODIFY_VELOCITY_TYPE]       = {      0,          1,          0 },
+
+
+	[SPLIT_MIDI_CH1]             = {      1,         16,          1 },
+	[SPLIT_MIDI_CH2]             = {      1,         16,          2 },
+	[SPLIT_NOTE]                 = {      0,        127,         60 },
+	[SPLIT_CURRENTLY_SENDING]    = {      0,          1,          0 },
+	[SPLIT_SEND_TO_MIDI_OUT]     = {      0,          3,          3 },
+
+
+
+	[MODIFY_VELOCITY_TYPE]       = {      0,          1,          0 },
 
     [MODIFY_SEND_TO_MIDI_CH1]    = {      1,         16,          1 },
     [MODIFY_SEND_TO_MIDI_CH2]    = {      0,         16,          0 },
-
-    [MODIFY_SPLIT_MIDI_CH1]      = {      1,         16,          1 },
-    [MODIFY_SPLIT_MIDI_CH2]      = {      1,         16,          2 },
-    [MODIFY_SPLIT_NOTE]          = {      0,        127,         60 },
 
     [MODIFY_SEND_TO_MIDI_OUT]    = {      0,          2,          0 },
 
@@ -31,6 +36,8 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
 
     [MODIFY_CURRENTLY_SENDING]   = {      0,          1,          0 },
 
+
+
     [TRANSPOSE_TRANSPOSE_TYPE]   = {      0,          1,          0 },
     [TRANSPOSE_MIDI_SHIFT_VALUE] = {    -36,         36,          0 },
     [TRANSPOSE_BASE_NOTE]        = {      0,         11,          0 },
@@ -38,6 +45,8 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [TRANSPOSE_TRANSPOSE_SCALE]  = {      0,          6,          0 },
     [TRANSPOSE_SEND_ORIGINAL]    = {      0,          1,          0 },
     [TRANSPOSE_CURRENTLY_SENDING]= {      0,          1,          0 },
+
+
 
 	[ARPEGGIATOR_CURRENTLY_SENDING]= {      0,       1,          0 },
 	[ARPEGGIATOR_DIVISION]         = {      0,       6,          0 },
@@ -52,6 +61,7 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
 	[ARPEGGIATOR_KEY_SYNC]         = {      0,       1,          0 },
 
 
+
     [SETTINGS_START_MENU]        = {      0,          AMOUNT_OF_MENUS-1,          0 },
     [SETTINGS_SEND_USB]          = {      0,          1,          0 },
     [SETTINGS_BRIGHTNESS]        = {      1,          10,          7 },
@@ -60,6 +70,8 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
     [SETTINGS_CHANNEL_FILTER]    = {      0,          1,          0 },
     [SETTINGS_FILTERED_CH] = {      0,  0x0000FFFF,          0 },
     [SETTINGS_ABOUT]             = {      0,          0,          0 },
+
+
 
     [SAVE_DATA_VALIDITY]         = {      0,  0xFFFFFFFF, DATA_VALIDITY_CHECKSUM },
 };

@@ -79,27 +79,16 @@ uint8_t midi_is_note_message(const midi_note *msg, uint8_t *is_note_on)
 
 
 
-static void change_midi_channel(midi_note *midi_msg, uint8_t *send_to_midi_channel) {
+static void change_midi_channel(midi_note *midi_msg, uint8_t send_to_midi_channel) {
     uint8_t status = midi_msg->status;
-    uint8_t new_channel;
 
     if (status >= 0x80 && status <= 0xEF) {
         uint8_t status_nibble = status & 0xF0;
-
-        if (save_get(MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_CHANGE) {
-            new_channel = *send_to_midi_channel;
-        } else if (save_get(MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_SPLIT) {
-            new_channel = (midi_msg->note >= save_get(MODIFY_SPLIT_NOTE))
-                          ? save_get(MODIFY_SPLIT_MIDI_CH2)
-                          : save_get(MODIFY_SPLIT_MIDI_CH1);
-        } else {
-            new_channel = *send_to_midi_channel;
-        }
-
-        // UI uses 1..16; MIDI status stores 0..15
-        midi_msg->status = status_nibble | ((new_channel - 1) & 0x0F);
+        midi_msg->status = status_nibble | ((send_to_midi_channel - 1) & 0x0F);
     }
 }
+
+
 
 
 static void change_velocity(midi_note *midi_msg)
@@ -281,6 +270,12 @@ void pipeline_start(midi_note *midi_msg)
 
     if (is_channel_blocked(status)) return;
 
+    if (save_get(SPLIT_CURRENTLY_SENDING) == 1) {
+        pipeline_midi_split(midi_msg);
+        return;
+    }
+
+
     if (save_get(MODIFY_CURRENTLY_SENDING) == 1) {
         pipeline_midi_modify(midi_msg);
         return;
@@ -304,6 +299,30 @@ void pipeline_start(midi_note *midi_msg)
     }
 }
 
+// ---------------------
+// Split pipeline
+// ---------------------
+void pipeline_midi_split(midi_note *midi_msg)
+{
+    midi_note split_msg = *midi_msg;
+    uint8_t is_note_on = 0;
+
+    if (midi_is_note_message(&split_msg, &is_note_on) != 0) {
+        const uint8_t split_channel = (split_msg.note >= save_get(SPLIT_NOTE))
+                                      ? (uint8_t)save_get(SPLIT_MIDI_CH2)
+                                      : (uint8_t)save_get(SPLIT_MIDI_CH1);
+        change_midi_channel(&split_msg, split_channel);
+    }
+
+    if (save_get(MODIFY_CURRENTLY_SENDING) == 1) {
+        pipeline_midi_modify(&split_msg);
+        return;
+    }
+
+    pipeline_midi_transpose(&split_msg);
+}
+
+
 
 // ---------------------
 // Modify pipeline
@@ -313,22 +332,23 @@ void pipeline_midi_modify(midi_note *midi_msg) {
 
     if (save_get(MODIFY_SEND_TO_MIDI_CH2) != 0) {
         midi_note midi_note_1 = *midi_msg;
-        uint8_t send_ch_1 = save_get(MODIFY_SEND_TO_MIDI_CH1);
-        change_midi_channel(&midi_note_1, &send_ch_1);
+        uint8_t send_ch_1 = (uint8_t)save_get(MODIFY_SEND_TO_MIDI_CH1);
+        change_midi_channel(&midi_note_1, send_ch_1);
         pipeline_midi_transpose(&midi_note_1);
 
         midi_note midi_note_2 = *midi_msg;
-        uint8_t send_ch_2 = save_get(MODIFY_SEND_TO_MIDI_CH2);
-        change_midi_channel(&midi_note_2, &send_ch_2);
+        uint8_t send_ch_2 = (uint8_t)save_get(MODIFY_SEND_TO_MIDI_CH2);
+        change_midi_channel(&midi_note_2, send_ch_2);
         pipeline_midi_transpose(&midi_note_2);
 
     } else {
         midi_note midi_note_1 = *midi_msg;
-        uint8_t send_ch_1 = save_get(MODIFY_SEND_TO_MIDI_CH1);
-        change_midi_channel(&midi_note_1, &send_ch_1);
+        uint8_t send_ch_1 = (uint8_t)save_get(MODIFY_SEND_TO_MIDI_CH1);
+        change_midi_channel(&midi_note_1, send_ch_1);
         pipeline_midi_transpose(&midi_note_1);
     }
 }
+
 
 // ---------------------
 // Scale helpers
@@ -527,7 +547,10 @@ void send_midi_out(midi_note *midi_message_raw, uint8_t length)
     const uint8_t is_note = midi_is_note_message(midi_message_raw, &is_note_on);
     const uint8_t note = (uint8_t)midi_bytes[1];
 
-    switch (save_get(MODIFY_SEND_TO_MIDI_OUT)) {
+    const save_field_t send_to_out_field =
+        (save_get(SPLIT_CURRENTLY_SENDING) == 1) ? SPLIT_SEND_TO_MIDI_OUT
+                                                  : MODIFY_SEND_TO_MIDI_OUT;
+    switch (save_get(send_to_out_field)) {
         case MIDI_OUT_1:
             HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
             break;
@@ -542,23 +565,24 @@ void send_midi_out(midi_note *midi_message_raw, uint8_t length)
             break;
 
         case MIDI_OUT_SPLIT:
-            if (save_get(MODIFY_CHANGE_OR_SPLIT) == MIDI_MODIFY_SPLIT && is_note) {
-                if (note < save_get(MODIFY_SPLIT_NOTE)) {
-                    HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
-                } else {
-                    HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
-                }
-            } else {
-                // Non-note or not in split mode: mirror to both like your fallback did
-                HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
-                HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
-            }
-            break;
+                   if (save_get(SPLIT_CURRENTLY_SENDING) == 1 && is_note) {
+                       if (note < save_get(SPLIT_NOTE)) {
+                           HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
+                       } else {
+                           HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
+                       }
+                   } else {
+                       // Non-note or not in split mode: mirror to both like your fallback did
+                       HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
+                       HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
+                   }
+                   break;
 
-        default:
-            break;
-    }
-}
+               default:
+                   break;
+           }
+       }
+
 
 void send_usb_midi_out(midi_note *msg, uint8_t length)
 {

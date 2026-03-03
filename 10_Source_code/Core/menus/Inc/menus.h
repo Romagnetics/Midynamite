@@ -24,6 +24,7 @@
 // ---------------------
 typedef enum {
     MENU_TEMPO = 0,
+    MENU_SPLIT,
     MENU_MODIFY,
     MENU_TRANSPOSE,
 	MENU_ARPEGGIATOR,
@@ -51,6 +52,10 @@ CtrlActiveList* list_for_page(menu_list_t page);
 // -------- Individual menu updates --------
 void ui_code_tempo();
 void ui_update_tempo();
+
+void cont_update_split(menu_list_t field);
+void ui_code_split();
+void ui_update_split();
 
 void cont_update_modify(menu_list_t field);
 void ui_code_modify();
