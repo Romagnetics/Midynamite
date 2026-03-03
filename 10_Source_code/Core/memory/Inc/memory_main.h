@@ -17,7 +17,7 @@
 #define SAVE_STATE_BUSY         ((int32_t)0x7FFFFFFF)
 #define SAVE_U8_BUSY    ((uint8_t)0xFF)
 
-#define DATA_VALIDITY_CHECKSUM  0xA545C6A5
+#define DATA_VALIDITY_CHECKSUM  0xA545C5A5
 #define FLASH_SECTOR7_ADDR      ((uint32_t)0x08060000)
 
 
@@ -49,9 +49,11 @@ typedef enum {
 
     // midi_split_data
     SPLIT_MIDI_CH1,
-    SPLIT_MIDI_CH2,
 	SPLIT_SEND_CH1,
+
+    SPLIT_MIDI_CH2,
 	SPLIT_SEND_CH2,
+
 
     SPLIT_NOTE,
     SPLIT_CURRENTLY_SENDING,

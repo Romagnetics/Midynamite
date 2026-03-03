@@ -224,10 +224,12 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
 
     MC(SPLIT_NOTE,            NO_WRAP, update_value_inc12,                  CTRL_SPLIT_MAIN),
 	MC(SPLIT_SEND_TO_MIDI_OUT, WRAP,  update_value_inc1,                    CTRL_SPLIT_MAIN),
-    MC(SPLIT_MIDI_CH1,        NO_WRAP, update_value_inc1,                   CTRL_SPLIT_MAIN),
-    MC(SPLIT_MIDI_CH2,        NO_WRAP, update_value_inc1,                   CTRL_SPLIT_MAIN),
 
+
+	MC(SPLIT_MIDI_CH1,        NO_WRAP, update_value_inc1,                   CTRL_SPLIT_MAIN),
     MC(SPLIT_SEND_CH1,        WRAP, update_value_inc1,                      CTRL_SPLIT_MAIN),
+
+    MC(SPLIT_MIDI_CH2,        NO_WRAP, update_value_inc1,                   CTRL_SPLIT_MAIN),
     MC(SPLIT_SEND_CH2,        WRAP, update_value_inc1,                      CTRL_SPLIT_MAIN),
 
     MC(MODIFY_SEND_TO_MIDI_CH1,      NO_WRAP, update_value_inc1,           CTRL_MODIFY_CHANGE),
