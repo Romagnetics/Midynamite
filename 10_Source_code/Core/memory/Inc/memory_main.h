@@ -47,16 +47,18 @@ typedef enum {
     TEMPO_CURRENTLY_SENDING,
     TEMPO_SEND_TO_MIDI_OUT,
 
+    // midi_split_data
+    SPLIT_MIDI_CH1,
+    SPLIT_MIDI_CH2,
+    SPLIT_NOTE,
+    SPLIT_CURRENTLY_SENDING,
+	SPLIT_SEND_TO_MIDI_OUT,
+
     // midi_modify_data
-    MODIFY_CHANGE_OR_SPLIT,
     MODIFY_VELOCITY_TYPE,
 
     MODIFY_SEND_TO_MIDI_CH1,
     MODIFY_SEND_TO_MIDI_CH2,
-
-    MODIFY_SPLIT_MIDI_CH1,
-    MODIFY_SPLIT_MIDI_CH2,
-    MODIFY_SPLIT_NOTE,
 
     MODIFY_SEND_TO_MIDI_OUT,
 
@@ -115,7 +117,6 @@ extern uint8_t*  u8_fields[SAVE_FIELD_COUNT];
 
 // Some enums you already use elsewhere
 typedef enum { MIDI_OUT_1, MIDI_OUT_2, MIDI_OUT_1_2, MIDI_OUT_SPLIT } midi_outs_t;
-typedef enum { MIDI_MODIFY_CHANGE = 0, MIDI_MODIFY_SPLIT } midi_modify_change_split_t;
 typedef enum { MIDI_MODIFY_CHANGED_VEL = 0, MIDI_MODIFY_FIXED_VEL } midi_modify_velocity_t;
 typedef enum { MIDI_TRANSPOSE_SHIFT = 0, MIDI_TRANSPOSE_SCALED } midi_transpose_types_t;
 

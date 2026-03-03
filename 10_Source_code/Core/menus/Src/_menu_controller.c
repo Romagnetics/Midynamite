@@ -222,13 +222,13 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     MC(TEMPO_CURRENT_TEMPO,          NO_WRAP, update_tempo_bpm,            CTRL_SHARED_TEMPO),
     MC(TEMPO_SEND_TO_MIDI_OUT,         WRAP,  update_tempo_send_to_out,    CTRL_TEMPO_ALL),
 
+    MC(SPLIT_NOTE,            NO_WRAP, update_value_inc12,                  CTRL_SPLIT_MAIN),
+	MC(SPLIT_SEND_TO_MIDI_OUT, WRAP,  update_value_inc1,                    CTRL_SPLIT_MAIN),
+    MC(SPLIT_MIDI_CH1,        NO_WRAP, update_value_inc1,                   CTRL_SPLIT_MAIN),
+    MC(SPLIT_MIDI_CH2,        NO_WRAP, update_value_inc1,                   CTRL_SPLIT_MAIN),
+
     MC(MODIFY_SEND_TO_MIDI_CH1,      NO_WRAP, update_value_inc1,           CTRL_MODIFY_CHANGE),
     MC(MODIFY_SEND_TO_MIDI_CH2,      NO_WRAP, update_value_inc1,           CTRL_MODIFY_CHANGE),
-
-    MC(MODIFY_SPLIT_MIDI_CH1,        NO_WRAP, update_value_inc1,           CTRL_MODIFY_SPLIT),
-    MC(MODIFY_SPLIT_MIDI_CH2,        NO_WRAP, update_value_inc1,           CTRL_MODIFY_SPLIT),
-    MC(MODIFY_SPLIT_NOTE,            NO_WRAP, update_value_inc12,          CTRL_MODIFY_SPLIT),
-
     MC(MODIFY_SEND_TO_MIDI_OUT,        WRAP,  update_value_inc1,           CTRL_MODIFY_ALL),
 
     MC(MODIFY_VEL_PLUS_MINUS,       NO_WRAP, update_value_inc10,           CTRL_MODIFY_VEL_CHANGED),
@@ -241,6 +241,7 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     MC(TRANSPOSE_TRANSPOSE_SCALE,     WRAP,  update_value_inc1,            CTRL_TRANSPOSE_SCALED),
 
     MC(TRANSPOSE_SEND_ORIGINAL,       WRAP,  update_value_inc1,            CTRL_TRANSPOSE_ALL),
+
 
     // Arp
     MC(ARPEGGIATOR_DIVISION,           WRAP,  update_arp_division,         CTRL_ARPEGGIATOR_PAGE_1),

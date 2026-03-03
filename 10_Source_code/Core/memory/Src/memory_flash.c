@@ -34,7 +34,12 @@ enum {
     IDX_U8_TEMPO_CURRENTLY_SENDING = 0,
     IDX_U8_TEMPO_SEND_TO_OUT,
 
-    IDX_U8_MODIFY_CHANGE_OR_SPLIT,
+	IDX_U8_SPLIT_NOTE,
+	IDX_U8_SPLIT_CH1,
+	IDX_U8_SPLIT_CH2,
+	IDX_U8_SPLIT_SENDING,
+	IDX_U8_SPLIT_SEND_TO_OUT,
+
     IDX_U8_MODIFY_VELOCITY_TYPE,
     IDX_U8_MODIFY_SEND_TO_OUT,
     IDX_U8_MODIFY_SEND_CH1,
@@ -120,14 +125,18 @@ static void bind_field_pointers(save_struct* s, int32_t** u32tab, uint8_t** u8ta
     u8tab[TEMPO_CURRENTLY_SENDING]     = &s->u8_vals[IDX_U8_TEMPO_CURRENTLY_SENDING];
     u8tab[TEMPO_SEND_TO_MIDI_OUT]      = &s->u8_vals[IDX_U8_TEMPO_SEND_TO_OUT];
 
-    u8tab[MODIFY_CHANGE_OR_SPLIT]      = &s->u8_vals[IDX_U8_MODIFY_CHANGE_OR_SPLIT];
+    u8tab[SPLIT_MIDI_CH1]             = &s->u8_vals[IDX_U8_SPLIT_CH1];
+    u8tab[SPLIT_MIDI_CH2]             = &s->u8_vals[IDX_U8_SPLIT_CH2];
+    u8tab[SPLIT_NOTE]                  = &s->u8_vals[IDX_U8_SPLIT_NOTE];
+    u8tab[SPLIT_CURRENTLY_SENDING]    = &s->u8_vals[IDX_U8_SPLIT_SENDING];
+    u8tab[SPLIT_SEND_TO_MIDI_OUT]    = &s->u8_vals[IDX_U8_SPLIT_SEND_TO_OUT];
+
+
+
     u8tab[MODIFY_VELOCITY_TYPE]        = &s->u8_vals[IDX_U8_MODIFY_VELOCITY_TYPE];
     u8tab[MODIFY_SEND_TO_MIDI_CH1]=&s->u8_vals[IDX_U8_MODIFY_SEND_CH1];
-    u8tab[MODIFY_SEND_TO_MIDI_CH2]=&s->u8_vals[IDX_U8_MODIFY_SEND_CH2];
-    u8tab[MODIFY_SPLIT_NOTE]           = &s->u8_vals[IDX_U8_MODIFY_SPLIT_NOTE];
+
     u8tab[MODIFY_SEND_TO_MIDI_OUT]     = &s->u8_vals[IDX_U8_MODIFY_SEND_TO_OUT];
-    u8tab[MODIFY_SPLIT_MIDI_CH1] = &s->u8_vals[IDX_U8_MODIFY_SPLIT_CH1];
-    u8tab[MODIFY_SPLIT_MIDI_CH2] = &s->u8_vals[IDX_U8_MODIFY_SPLIT_CH2];
     u8tab[MODIFY_VEL_ABSOLUTE]    = &s->u8_vals[IDX_U8_MODIFY_VEL_ABS];
     u8tab[MODIFY_CURRENTLY_SENDING]    = &s->u8_vals[IDX_U8_MODIFY_SENDING];
 

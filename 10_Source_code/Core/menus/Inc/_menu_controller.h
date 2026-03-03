@@ -20,8 +20,9 @@ typedef enum {
     CTRL_TEMPO_ALL = 1,
 	CTRL_SHARED_TEMPO,
 
+    CTRL_SPLIT_MAIN,
+
     CTRL_MODIFY_CHANGE,
-    CTRL_MODIFY_SPLIT,
     CTRL_MODIFY_ALL,
     CTRL_MODIFY_VEL_CHANGED,
     CTRL_MODIFY_VEL_FIXED,
@@ -99,6 +100,7 @@ static inline uint32_t flag_for_menu(menu_list_t m) {
 static inline save_field_t sending_field_for_menu(menu_list_t m) {
     switch (m) {
         case MENU_TEMPO:       return TEMPO_CURRENTLY_SENDING;
+        case MENU_SPLIT:       return SPLIT_CURRENTLY_SENDING;
         case MENU_MODIFY:      return MODIFY_CURRENTLY_SENDING;
         case MENU_TRANSPOSE:   return TRANSPOSE_CURRENTLY_SENDING;
         case MENU_SETTINGS:    return SAVE_FIELD_INVALID;

@@ -21,11 +21,14 @@ typedef struct {
 // Definitions of pipelines
 // ---------------------
 void pipeline_start(midi_note *midi_msg);
+
+void pipeline_midi_split(midi_note *midi_msg);
 void pipeline_midi_modify(midi_note *midi_msg);
 void pipeline_midi_transpose(midi_note *midi_msg);
-void pipeline_midi_arp(midi_note *midi_msg);
-void pipeline_final(midi_note *midi_msg, uint8_t length) ;
 void pipeline_arp(midi_note *midi_msg, uint8_t length);
+
+void pipeline_final(midi_note *midi_msg, uint8_t length) ;
+
 
 //midi_modify_transform
 uint8_t midi_is_note_message(const midi_note *msg, uint8_t *is_note_on);

@@ -37,6 +37,7 @@ static inline menu_list_t current_menu(void) {
 
 static const MenuVTable kMenuVT[AMOUNT_OF_MENUS] = {
     [MENU_TEMPO]       = { ui_update_tempo,       ui_code_tempo,       NULL },
+    [MENU_SPLIT]       = { ui_update_split,       ui_code_split,       cont_update_split },
     [MENU_MODIFY]      = { ui_update_modify,      ui_code_modify,      cont_update_modify },
     [MENU_TRANSPOSE]   = { ui_update_transpose,   ui_code_transpose,   cont_update_transpose },
     [MENU_ARPEGGIATOR] = { ui_update_arpeggiator, ui_code_arpeggiator, cont_update_arpeggiator },
@@ -80,7 +81,6 @@ typedef struct page_group_rule_s {
 } page_group_rule_t;
 
 // save-based computes
-static uint8_t sel_mod_change_split() { return (save_get(MODIFY_CHANGE_OR_SPLIT)  == MIDI_MODIFY_SPLIT)    ? 1 : 0; }
 static uint8_t sel_mod_vel_type()     { return (save_get(MODIFY_VELOCITY_TYPE)    == MIDI_MODIFY_FIXED_VEL) ? 1 : 0; }
 static uint8_t sel_transpose_type()   { return (save_get(TRANSPOSE_TRANSPOSE_TYPE)== MIDI_TRANSPOSE_SCALED) ? 1 : 0; }
 static uint8_t sel_fixed0()           { return 0; }
@@ -90,8 +90,10 @@ static uint8_t sel_fixed0()           { return 0; }
 // -------------------------
 static const ctrl_group_id_t GR_TEMPO_ALL[]        = { CTRL_TEMPO_ALL, CTRL_SHARED_TEMPO, 0};
 
+static const ctrl_group_id_t GR_SPLIT_MAIN[]       = { CTRL_SPLIT_MAIN };
+
 static const ctrl_group_id_t GR_MODIFY_ALL[]       = { CTRL_MODIFY_ALL };
-static const ctrl_group_id_t GR_MODIFY_TYPE[]      = { CTRL_MODIFY_CHANGE, CTRL_MODIFY_SPLIT };
+static const ctrl_group_id_t GR_MODIFY_CHANGE[]    = { CTRL_MODIFY_CHANGE };
 static const ctrl_group_id_t GR_MODIFY_VEL_TYPE[]  = { CTRL_MODIFY_VEL_CHANGED, CTRL_MODIFY_VEL_FIXED };
 
 static const ctrl_group_id_t GR_TRANSPOSE_ALL[]    = { CTRL_TRANSPOSE_ALL };
@@ -115,8 +117,10 @@ static const ctrl_group_id_t GR_SETTINGS_SECTIONS[] = {
 static const page_group_rule_t kPageGroupRules[] = {
     { GROUP_STATE_BASED, 1, GR_TEMPO_ALL,         SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TEMPO },
 
+    { GROUP_STATE_BASED, 1, GR_SPLIT_MAIN,        SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_SPLIT },
+
     { GROUP_STATE_BASED, 1, GR_MODIFY_ALL,        SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_MODIFY },
-    { GROUP_STATE_BASED, 2, GR_MODIFY_TYPE,       MODIFY_CHANGE_OR_SPLIT,      sel_mod_change_split, 1, MENU_MODIFY },
+    { GROUP_STATE_BASED, 1, GR_MODIFY_CHANGE,     SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_MODIFY },
     { GROUP_STATE_BASED, 2, GR_MODIFY_VEL_TYPE,   MODIFY_VELOCITY_TYPE,        sel_mod_vel_type,     1, MENU_MODIFY },
 
     { GROUP_STATE_BASED, 1, GR_TRANSPOSE_ALL,     SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TRANSPOSE },
