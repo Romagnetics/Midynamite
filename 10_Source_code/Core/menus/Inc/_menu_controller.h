@@ -1,7 +1,7 @@
 /* _menu_controller.h
  *
  *  Created on: Sep 8, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 
 #ifndef MIDI_INC_MENU_CONTROLLER_H_
@@ -20,7 +20,7 @@ typedef enum {
     CTRL_TEMPO_ALL = 1,
 	CTRL_SHARED_TEMPO,
 
-    CTRL_SPLIT_MAIN,
+    CTRL_SPLIT_ALL,
 
     CTRL_MODIFY_CHANGE,
     CTRL_MODIFY_ALL,
@@ -33,6 +33,8 @@ typedef enum {
 
 	CTRL_ARPEGGIATOR_PAGE_1,
 	CTRL_ARPEGGIATOR_PAGE_2,
+
+	CTRL_DISPATCH_ALL,
 
     CTRL_SETTINGS_GLOBAL1,
     CTRL_SETTINGS_GLOBAL2,
@@ -102,9 +104,10 @@ static inline save_field_t sending_field_for_menu(menu_list_t m) {
         case MENU_TEMPO:       return TEMPO_CURRENTLY_SENDING;
         case MENU_SPLIT:       return SPLIT_CURRENTLY_SENDING;
         case MENU_MODIFY:      return MODIFY_CURRENTLY_SENDING;
+        case MENU_ARPEGGIATOR: return ARPEGGIATOR_CURRENTLY_SENDING;
+        case MENU_DISPATCH:    return DISPATCH_CURRENTLY_SENDING;
         case MENU_TRANSPOSE:   return TRANSPOSE_CURRENTLY_SENDING;
         case MENU_SETTINGS:    return SAVE_FIELD_INVALID;
-        case MENU_ARPEGGIATOR: return ARPEGGIATOR_CURRENTLY_SENDING;
         default:               return SAVE_FIELD_INVALID;
     }
 }
@@ -147,15 +150,20 @@ uint8_t  menu_nav_get_select(menu_list_t field);
 
 void     update_menu();
 
+//update_dispatch_from_ch needs to be updated every cycle
+
 #ifdef UNIT_TEST
-
-
 void update_value_inc1(save_field_t);
 void update_value_inc10(save_field_t);
 void update_value_inc12(save_field_t);
 
 void update_tempo_bpm(save_field_t);
 void update_tempo_send_to_out(save_field_t);
+
+void update_dispatch_from_ch(save_field_t field);
+
+
+void update_tempo_bpm(save_field_t field);
 
 void shadow_select(save_field_t field);
 void update_contrast(save_field_t f);

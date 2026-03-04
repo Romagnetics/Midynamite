@@ -20,6 +20,7 @@ static const Message _message = {
     .midi_modify = "MIDI Modify",
     .midi_split = "MIDI Split",
     .midi_transpose = "MIDI Transpose",
+    .midi_dispatch = "MIDI Dispatch",
 	.output_sem = "Output:",
 
 	.MIDI_Thru_ = "MIDI Thru:",
@@ -140,6 +141,17 @@ static const Message _message = {
 	.length_ = "Length:",
 	.key_sync_ = "KeySync:",
 
+	//Dispatch
+	.synths_ = "Synths:",
+	.from_ch_ =  "From Ch:",
+	.notes_per_synth_ =  "Notes/synth:",
+	.voice_delete_ = "Voice delete:",
+	.voice_manage_options = {"First", "Last", "Veloc.", "Random"},
+
+
+	//Error Handlers
+	.error = "ERROR",
+
     // MIDI Note Names (C-1 to G9)
     .midi_note_names = {
         "C-1", "C#-1", "D-1", "D#-1", "E-1", "F-1", "F#-1", "G-1", "G#-1", "A-1", "A#-1", "B-1",
@@ -226,8 +238,7 @@ static const Message _message = {
 	    "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G"
 	},
 
-	//Error Handlers
-	.error = "ERROR",
+
 
     .midi_outs = {"Out 1", "Out 2", "Out 1+2"},
     .midi_outs_split = {"Out 1", "Out 2", "Out 1+2", "Split"},
@@ -247,7 +258,7 @@ static const Message _message = {
          "Ch. 9",  "Ch. 10", "Ch. 11", "Ch. 12",
          "Ch. 13", "Ch. 14", "Ch. 15", "Ch. 16"
      },
-	.menu_list = { "Tempo", "Split", "Modify", "Transpose", "Arp." , "Settings"},
+	.menu_list = { "Tempo", "Split", "Modify", "Transpose", "Arp." , "Dispatch", "Settings"},
 
 	//Arpeggio
 	.division_list = { "1/4", "1/6", "1/8", "1/12", "1/16", "1/24", "1/32" },

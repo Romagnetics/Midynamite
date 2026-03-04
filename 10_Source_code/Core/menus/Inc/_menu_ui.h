@@ -2,7 +2,7 @@
  * _menu_ui.h
  *
  *  Created on: Aug 23, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 
 #ifndef MENU_INC_MENU_UI_H_

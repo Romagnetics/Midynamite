@@ -63,6 +63,13 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
 	[ARPEGGIATOR_HOLD]             = {      0,       1,          0 },
 	[ARPEGGIATOR_KEY_SYNC]         = {      0,       1,          0 },
 
+	[DISPATCH_CURRENTLY_SENDING]   = {      0,       1,          0 },
+	[DISPATCH_AMOUNT_OF_SYNTHS]    = {      1,      16,          4},
+	[DISPATCH_FROM_CHANNEL]        = {      1,      16,          1 },
+	[DISPATCH_NOTES_PER_SYNTH]     = {      1,       6,          1 },
+	[DISPATCH_VOICE_MANAGE]        = {      0,       3,          0 },
+
+
 
 
     [SETTINGS_START_MENU]        = {      0,          AMOUNT_OF_MENUS-1,          0 },

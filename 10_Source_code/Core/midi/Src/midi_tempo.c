@@ -2,7 +2,7 @@
  * midi_transform.c
  *
  *  Created on: Sep 5, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 #include "midi_tempo.h"
 #include "utils.h" //For enums

@@ -2,7 +2,7 @@
  * midi_transform.c
  *
  *  Created on: Sep 5, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 
 
@@ -15,6 +15,8 @@
 
 #include "midi_transform.h"
 #include "midi_arp.h"
+#include "midi_dispatch.h"
+
 
 #include "main.h"
 #include "midi_usb.h"
@@ -49,12 +51,7 @@ static inline uint8_t midi_msg_len(uint8_t status)
     return (hi == 0xC0 || hi == 0xD0) ? 2 : 3;
 }
 
-static inline uint8_t midi_is_channel_voice(uint8_t status)
-{
-    const uint8_t hi = (uint8_t)(status & 0xF0);
-    return (hi >= 0x80 && hi <= 0xE0) ? 1 : 0;
-}
-
+static void change_midi_channel(midi_note *midi_msg, uint8_t send_to_midi_channel);
 
 uint8_t midi_is_note_message(const midi_note *msg, uint8_t *is_note_on)
 {
@@ -290,6 +287,12 @@ void pipeline_start(midi_note *midi_msg)
         pipeline_arp(midi_msg, length);
         return;
     }
+
+    if (save_get(DISPATCH_CURRENTLY_SENDING) == 1) {
+        pipeline_final(midi_msg, length);
+        return;
+    }
+
 
     if (save_get(SETTINGS_MIDI_THRU) == 1) {
         send_midi_out(midi_msg, length);
@@ -536,6 +539,10 @@ void pipeline_arp(midi_note *midi_msg, uint8_t length)
 // ---------------------
 void pipeline_final(midi_note *midi_msg, uint8_t length)
 {
+    if (midi_dispatch_process(midi_msg, length) != 0) {
+        return;
+    }
+
     send_midi_out(midi_msg, length);
     send_usb_midi_out(midi_msg, length);
 }

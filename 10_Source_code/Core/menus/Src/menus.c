@@ -37,10 +37,11 @@ static inline menu_list_t current_menu(void) {
 
 static const MenuVTable kMenuVT[AMOUNT_OF_MENUS] = {
     [MENU_TEMPO]       = { ui_update_tempo,       ui_code_tempo,       NULL },
-    [MENU_SPLIT]       = { ui_update_split,       ui_code_split,       cont_update_split },
+    [MENU_SPLIT]       = { ui_update_split,       ui_code_split,       NULL },
     [MENU_MODIFY]      = { ui_update_modify,      ui_code_modify,      cont_update_modify },
     [MENU_TRANSPOSE]   = { ui_update_transpose,   ui_code_transpose,   cont_update_transpose },
     [MENU_ARPEGGIATOR] = { ui_update_arpeggiator, ui_code_arpeggiator, cont_update_arpeggiator },
+    [MENU_DISPATCH]    = { ui_update_dispatch,    ui_code_dispatch,    NULL },
     [MENU_SETTINGS]    = { ui_update_settings,    ui_code_settings,    (cont_fn1_t)cont_update_settings },
 };
 
@@ -90,7 +91,7 @@ static uint8_t sel_fixed0()           { return 0; }
 // -------------------------
 static const ctrl_group_id_t GR_TEMPO_ALL[]        = { CTRL_TEMPO_ALL, CTRL_SHARED_TEMPO, 0};
 
-static const ctrl_group_id_t GR_SPLIT_MAIN[]       = { CTRL_SPLIT_MAIN };
+static const ctrl_group_id_t GR_SPLIT_ALL[]        = { CTRL_SPLIT_ALL };
 
 static const ctrl_group_id_t GR_MODIFY_ALL[]       = { CTRL_MODIFY_ALL };
 static const ctrl_group_id_t GR_MODIFY_CHANGE[]    = { CTRL_MODIFY_CHANGE };
@@ -100,8 +101,10 @@ static const ctrl_group_id_t GR_TRANSPOSE_ALL[]    = { CTRL_TRANSPOSE_ALL };
 static const ctrl_group_id_t GR_TRANSPOSE_TYPE[]   = { CTRL_TRANSPOSE_SHIFT, CTRL_TRANSPOSE_SCALED };
 
 static const ctrl_group_id_t GR_ARP_SECTIONS[] = {CTRL_ARPEGGIATOR_PAGE_1, CTRL_ARPEGGIATOR_PAGE_2,};
-
 static const ctrl_group_id_t GR_ARP_TEMPO_GATE[] = {CTRL_SHARED_TEMPO, 0};
+
+static const ctrl_group_id_t GR_DISPATCH_ALL[]        = { CTRL_DISPATCH_ALL };
+
 
 static const ctrl_group_id_t GR_SETTINGS_ALWAYS[]  = { CTRL_SETTINGS_ALWAYS };
 static const ctrl_group_id_t GR_SETTINGS_SECTIONS[] = {
@@ -117,7 +120,7 @@ static const ctrl_group_id_t GR_SETTINGS_SECTIONS[] = {
 static const page_group_rule_t kPageGroupRules[] = {
     { GROUP_STATE_BASED, 1, GR_TEMPO_ALL,         SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TEMPO },
 
-    { GROUP_STATE_BASED, 1, GR_SPLIT_MAIN,        SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_SPLIT },
+    { GROUP_STATE_BASED, 1, GR_SPLIT_ALL,        SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_SPLIT },
 
     { GROUP_STATE_BASED, 1, GR_MODIFY_ALL,        SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_MODIFY },
     { GROUP_STATE_BASED, 1, GR_MODIFY_CHANGE,     SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_MODIFY },
@@ -126,11 +129,16 @@ static const page_group_rule_t kPageGroupRules[] = {
     { GROUP_STATE_BASED, 1, GR_TRANSPOSE_ALL,     SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TRANSPOSE },
     { GROUP_STATE_BASED, 2, GR_TRANSPOSE_TYPE,    TRANSPOSE_TRANSPOSE_TYPE,    sel_transpose_type,   1, MENU_TRANSPOSE },
 
+	{ CURRENT_POSITION_BASED, 2, GR_ARP_SECTIONS,    SAVE_FIELD_INVALID, NULL, 0, MENU_ARPEGGIATOR },
+	{ CURRENT_POSITION_BASED, 2, GR_ARP_TEMPO_GATE,  SAVE_FIELD_INVALID, NULL, 0, MENU_ARPEGGIATOR },
+
+    { GROUP_STATE_BASED, 1, GR_DISPATCH_ALL,         SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_DISPATCH },
+
+
     { GROUP_STATE_BASED, 1, GR_SETTINGS_ALWAYS,   SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_SETTINGS },
     { CURRENT_POSITION_BASED, 4, GR_SETTINGS_SECTIONS, SAVE_FIELD_INVALID,     NULL,                0, MENU_SETTINGS },
 
-	{ CURRENT_POSITION_BASED, 2, GR_ARP_SECTIONS,    SAVE_FIELD_INVALID, NULL, 0, MENU_ARPEGGIATOR },
-	{ CURRENT_POSITION_BASED, 2, GR_ARP_TEMPO_GATE,  SAVE_FIELD_INVALID, NULL, 0, MENU_ARPEGGIATOR },
+
 };
 
 #define KPAGEGROUPRULES_COUNT (sizeof(kPageGroupRules) / sizeof(kPageGroupRules[0]))

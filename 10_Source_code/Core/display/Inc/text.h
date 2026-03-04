@@ -24,6 +24,7 @@ typedef struct {
     const char *midi_modify;
     const char *midi_split;
     const char *midi_transpose;
+    const char *midi_dispatch;
     const char *output_sem;
 
     // Settings
@@ -144,6 +145,12 @@ typedef struct {
     const char *length_;
     const char *key_sync_;
 
+	//Dispatch
+    const char *synths_;
+    const char *from_ch_;
+    const char *notes_per_synth_;
+    const char *voice_delete_;
+    const char *voice_manage_options[4];
 
     //Error handlers
     const char *error;
@@ -167,7 +174,7 @@ typedef struct {
     const char *off_on[2];
     const char *usb_receive_send[2];
     const char *midi_channels[17];
-    const char *menu_list[6];
+    const char *menu_list[7];
 
     const char *division_list[7];
     const char *arp_patterns[8];
