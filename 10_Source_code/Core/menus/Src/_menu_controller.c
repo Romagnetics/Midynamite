@@ -62,6 +62,19 @@ void update_tempo_bpm(save_field_t field)
     set_tempo_bpm(save_get(field));
 }
 
+
+void update_dispatch_from_ch(save_field_t field)
+{
+	update_value(field, 1);
+	int8_t current_first_channel = save_get(DISPATCH_FROM_CHANNEL);
+	int8_t amount_of_synths = save_get(DISPATCH_AMOUNT_OF_SYNTHS);
+	if(current_first_channel + amount_of_synths > 16 ){
+		current_first_channel = 17 - amount_of_synths;
+		save_modify_u8(DISPATCH_FROM_CHANNEL, SAVE_MODIFY_SET, (uint8_t)current_first_channel);
+	}
+
+}
+
 void update_tempo_send_to_out(save_field_t field)
 {
     update_value(field, 1);
@@ -222,15 +235,15 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     MC(TEMPO_CURRENT_TEMPO,          NO_WRAP, update_tempo_bpm,            CTRL_SHARED_TEMPO),
     MC(TEMPO_SEND_TO_MIDI_OUT,         WRAP,  update_tempo_send_to_out,    CTRL_TEMPO_ALL),
 
-    MC(SPLIT_NOTE,            NO_WRAP, update_value_inc12,                  CTRL_SPLIT_MAIN),
-	MC(SPLIT_SEND_TO_MIDI_OUT, WRAP,  update_value_inc1,                    CTRL_SPLIT_MAIN),
+    MC(SPLIT_NOTE,            NO_WRAP, update_value_inc12,                  CTRL_SPLIT_ALL),
+	MC(SPLIT_SEND_TO_MIDI_OUT, WRAP,  update_value_inc1,                    CTRL_SPLIT_ALL),
 
 
-	MC(SPLIT_MIDI_CH1,        NO_WRAP, update_value_inc1,                   CTRL_SPLIT_MAIN),
-    MC(SPLIT_SEND_CH1,        WRAP, update_value_inc1,                      CTRL_SPLIT_MAIN),
+	MC(SPLIT_MIDI_CH1,        NO_WRAP, update_value_inc1,                   CTRL_SPLIT_ALL),
+    MC(SPLIT_SEND_CH1,        WRAP, update_value_inc1,                      CTRL_SPLIT_ALL),
 
-    MC(SPLIT_MIDI_CH2,        NO_WRAP, update_value_inc1,                   CTRL_SPLIT_MAIN),
-    MC(SPLIT_SEND_CH2,        WRAP, update_value_inc1,                      CTRL_SPLIT_MAIN),
+    MC(SPLIT_MIDI_CH2,        NO_WRAP, update_value_inc1,                   CTRL_SPLIT_ALL),
+    MC(SPLIT_SEND_CH2,        WRAP, update_value_inc1,                      CTRL_SPLIT_ALL),
 
     MC(MODIFY_SEND_TO_MIDI_CH1,      NO_WRAP, update_value_inc1,           CTRL_MODIFY_CHANGE),
     MC(MODIFY_SEND_TO_MIDI_CH2,      NO_WRAP, update_value_inc1,           CTRL_MODIFY_CHANGE),
@@ -259,6 +272,14 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     MC(ARPEGGIATOR_NOTES,              WRAP,  update_bits_8_steps,         CTRL_ARPEGGIATOR_PAGE_2),
     MC(ARPEGGIATOR_HOLD,               WRAP,  update_value_inc1,           CTRL_ARPEGGIATOR_PAGE_2),
     MC(ARPEGGIATOR_KEY_SYNC,           WRAP,  update_value_inc1,           CTRL_ARPEGGIATOR_PAGE_2),
+
+    // Dispatch
+    MC(DISPATCH_AMOUNT_OF_SYNTHS,    NO_WRAP, update_dispatch_from_ch,      CTRL_DISPATCH_ALL),
+    MC(DISPATCH_FROM_CHANNEL,        NO_WRAP, update_dispatch_from_ch,      CTRL_DISPATCH_ALL),
+    MC(DISPATCH_NOTES_PER_SYNTH,     NO_WRAP, update_value_inc1,            CTRL_DISPATCH_ALL),
+    MC(DISPATCH_VOICE_MANAGE,        NO_WRAP, update_value_inc1,            CTRL_DISPATCH_ALL),
+
+
 
     // Settings
     MC(SETTINGS_START_MENU,            WRAP,  update_value_inc1,           CTRL_SETTINGS_GLOBAL1),
@@ -456,9 +477,7 @@ static inline NavSel nav_selection(menu_list_t page)
 // Press-to-cycle (menus decides if/what cycles)
 // -------------------------
 void select_press_menu_change(menu_list_t page) {
-    if (menus_cycle_on_press(page)) { // from menus.c
-        if (page < AMOUNT_OF_MENUS) s_menu_selects[page] = 0;
-    }
+    (void)menus_cycle_on_press(page); // from menus.c
 }
 
 // -------------------------
