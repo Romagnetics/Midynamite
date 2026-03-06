@@ -1,9 +1,11 @@
 #include "menus.h"
 #include "_menu_ui.h" //menu change check
 #include "main.h" //GPIO
+
 #include "midi_transform.h" //calculate_incoming_midi
 #include "midi_arp.h" //arp_process_pending_tempo_ticks
-#include "midi_tempo.h" //mt_process_pending_tempo_out
+#include "midi_tempo.h" //tempo_sync_from_save
+
 #include "threads.h"
 #include "usb_device.h" //MX_USB_DEVICE_Init
 #include "utils.h" //debounce
@@ -84,7 +86,7 @@ static void MidiCoreThread(void *argument)
         calculate_incoming_midi();
 
 
-        uint32_t flags = osThreadFlagsWait(MIDI_CORE_FLAG_MASK, osFlagsWaitAny, 1);
+        uint32_t flags = osThreadFlagsWait(MIDI_CORE_FLAG_MASK, osFlagsWaitAny, osWaitForever);
         if ((flags & osFlagsError) != 0) {
             continue;
         }
@@ -96,7 +98,6 @@ static void MidiCoreThread(void *argument)
         if ((flags & MIDI_CORE_FLAG_TEMPO_OUT) != 0) {
             mt_process_pending_tempo_out();
         }
-        osDelay(1);
 
     }
 }
@@ -168,6 +169,16 @@ void threads_midi_core_set_flags(uint32_t flags)
 
     osThreadFlagsSet(s_midi_core_handle, flags);
 }
+
+void threads_midi_core_notify_tempo_tick_from_isr(void)
+{
+    if (s_midi_core_handle == NULL) {
+        return;
+    }
+
+    osThreadFlagsSet(s_midi_core_handle, MIDI_CORE_FLAG_ARP_TICK | MIDI_CORE_FLAG_TEMPO_OUT);
+}
+
 
 
 
