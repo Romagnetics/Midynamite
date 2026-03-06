@@ -12,22 +12,6 @@
 #include "memory_main.h"
 #include "midi_dispatch.h"
 
-static inline uint8_t dispatch_msg_len(uint8_t status)
-{
-    if (status >= 0xF8) return 1;
-
-    switch (status) {
-        case 0xF1: return 2;
-        case 0xF2: return 3;
-        case 0xF3: return 2;
-        case 0xF6: return 1;
-        case 0xF7: return 1;
-        default: break;
-    }
-
-    const uint8_t hi = (uint8_t)(status & 0xF0);
-    return (hi == 0xC0 || hi == 0xD0) ? 2 : 3;
-}
 
 static inline uint8_t dispatch_is_channel_voice(uint8_t status)
 {
@@ -35,15 +19,6 @@ static inline uint8_t dispatch_is_channel_voice(uint8_t status)
     return (hi >= 0x80 && hi <= 0xE0) ? 1 : 0;
 }
 
-static void dispatch_change_midi_channel(midi_note *midi_msg, uint8_t send_to_midi_channel)
-{
-    const uint8_t status = midi_msg->status;
-
-    if (status >= 0x80 && status <= 0xEF) {
-        const uint8_t status_nibble = (uint8_t)(status & 0xF0);
-        midi_msg->status = (uint8_t)(status_nibble | ((send_to_midi_channel - 1) & 0x0F));
-    }
-}
 
 typedef enum {
     DISPATCH_VOICE_FIRST = 0,
@@ -91,9 +66,11 @@ static uint8_t dispatch_synth_channel(const dispatch_state_t *state, uint8_t syn
 static void dispatch_send_on_synth(const midi_note *src_msg, uint8_t synth_channel)
 {
     midi_note out = *src_msg;
-    dispatch_change_midi_channel(&out, synth_channel);
-    send_midi_out(&out, dispatch_msg_len(out.status));
-    send_usb_midi_out(&out, dispatch_msg_len(out.status));
+    midi_change_channel(&out, synth_channel);
+    const uint8_t length = midi_message_length(out.status);
+    send_midi_out(&out, length);
+    send_usb_midi_out(&out, length);
+
 }
 
 static void dispatch_send_note_off_on_synth(uint8_t note, uint8_t synth_channel)
@@ -103,9 +80,19 @@ static void dispatch_send_note_off_on_synth(uint8_t note, uint8_t synth_channel)
         .note = note,
         .velocity = 0
     };
-    dispatch_change_midi_channel(&off_msg, synth_channel);
-    send_midi_out(&off_msg, dispatch_msg_len(off_msg.status));
-    send_usb_midi_out(&off_msg, dispatch_msg_len(off_msg.status));
+    midi_change_channel(&off_msg, synth_channel);
+    const uint8_t length = midi_message_length(off_msg.status);
+    send_midi_out(&off_msg, length);
+    send_usb_midi_out(&off_msg, length);
+}
+
+
+static void dispatch_broadcast_to_all_synths(const midi_note *midi_msg, const dispatch_state_t *state)
+{
+    for (uint8_t i = 0; i < state->amount_of_synths; ++i) {
+        dispatch_send_on_synth(midi_msg, dispatch_synth_channel(state, i));
+    }
+
 }
 
 static void dispatch_release_all_tracked_notes(dispatch_state_t *state)
@@ -132,11 +119,18 @@ static void dispatch_init_or_reconfigure(dispatch_state_t *state)
     const uint8_t voice_manage = (uint8_t)save_get(DISPATCH_VOICE_MANAGE);
 
     const uint8_t capped_synths = (amount_of_synths == 0) ? 1 : ((amount_of_synths > DISPATCH_MAX_SYNTHS) ? DISPATCH_MAX_SYNTHS : amount_of_synths);
+
+    uint8_t capped_from_channel = (from_channel == 0) ? 1 : ((from_channel > 16) ? 16 : from_channel);
+    if ((uint8_t)(capped_from_channel + capped_synths) > 17) {
+        capped_from_channel = (uint8_t)(17 - capped_synths);
+    }
+
+
     const uint8_t capped_notes = (notes_per_synth == 0) ? 1 : ((notes_per_synth > DISPATCH_MAX_NOTES_PER_SYNTH) ? DISPATCH_MAX_NOTES_PER_SYNTH : notes_per_synth);
 
     const uint8_t needs_reconfig = (state->initialized == 0)
         || (state->amount_of_synths != capped_synths)
-        || (state->from_channel != from_channel)
+        || (state->from_channel != capped_from_channel)
         || (state->notes_per_synth != capped_notes)
         || (state->voice_manage != voice_manage);
 
@@ -146,7 +140,7 @@ static void dispatch_init_or_reconfigure(dispatch_state_t *state)
         }
         memset(state, 0, sizeof(*state));
         state->amount_of_synths = capped_synths;
-        state->from_channel = from_channel;
+        state->from_channel = capped_from_channel;
         state->notes_per_synth = capped_notes;
         state->voice_manage = voice_manage;
         state->initialized = 1;
@@ -321,16 +315,12 @@ uint8_t midi_dispatch_process(midi_note *midi_msg, uint8_t length)
     }
 
     if (is_cc64 != 0) {
-        for (uint8_t i = 0; i < g_dispatch_state.amount_of_synths; ++i) {
-            dispatch_send_on_synth(midi_msg, dispatch_synth_channel(&g_dispatch_state, i));
-        }
+        dispatch_broadcast_to_all_synths(midi_msg, &g_dispatch_state);
         return 1;
     }
 
     if (dispatch_is_channel_voice(midi_msg->status) != 0) {
-        for (uint8_t i = 0; i < g_dispatch_state.amount_of_synths; ++i) {
-            dispatch_send_on_synth(midi_msg, dispatch_synth_channel(&g_dispatch_state, i));
-        }
+    	dispatch_broadcast_to_all_synths(midi_msg, &g_dispatch_state);
         return 1;
     }
 

@@ -17,7 +17,6 @@ void arp_sync_hold_mode(void);
 void arp_handle_midi_note(const midi_note *msg);
 void arp_handle_midi_cc64(const midi_note *msg);
 
-void arp_request_tempo_tick_from_isr(void);
 void arp_process_pending_tempo_ticks(void);
 
 void arp_on_tempo_tick(void);

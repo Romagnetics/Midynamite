@@ -14,8 +14,7 @@ void set_tempo_bpm(uint32_t bpm);
 void mt_set_send_to_midi_out(uint8_t send_to_midi_out);
 void tempo_sync_from_save(void);
 
-void send_midi_tempo_out(void);
-
+void mt_process_pending_tempo_out(void);
 
 void mt_start_stop(void);
 
