@@ -176,9 +176,6 @@ void update_bits_field(save_field_t field, uint8_t bit_index, uint8_t bits_count
     if (bit_index >= bits_count) return;
     if (bit_index >= 32) return; // avoid UB
 
-    int8_t step = encoder_read_step(&htim4);
-    if (step == 0) return;
-
     uint32_t mask = (uint32_t)save_get(field);
     const uint32_t bit = (1UL << bit_index);
 
@@ -189,19 +186,25 @@ void update_bits_field(save_field_t field, uint8_t bit_index, uint8_t bits_count
     s_ui_reload = 1;
 }
 
+static uint8_t update_selected_bits_field_with_step(save_field_t field, uint8_t bits_count)
+{
+    int8_t step = encoder_read_step(&htim4);
+    if (step == 0) return 0;
+
+    const int8_t bit = ui_selected_bit(field);
+    if (bit < 0) return 0;
+
+    update_bits_field(field, (uint8_t)bit, bits_count);
+    return 1;
+}
+
 void update_bits_16_fields(save_field_t field)
 {
-    const int8_t bit = ui_selected_bit(field);
-    if (bit < 0) return;
-
-    update_bits_field(field, (uint8_t)bit, 16);
+    (void)update_selected_bits_field_with_step(field, 16);
 }
 
 void update_bits_8_steps(save_field_t field)
 {
-    const int8_t bit = ui_selected_bit(field);
-    if (bit < 0) return;
-
     uint8_t len = (uint8_t)save_get(ARPEGGIATOR_LENGTH);
     if (len < 1) len = 1;
     if (len > 8) len = 8;
@@ -214,13 +217,7 @@ void update_bits_8_steps(save_field_t field)
         }
         return;
     }
-
-
-
-    // Don’t allow edits beyond length
-    if ((uint8_t)bit >= len) return;
-
-    update_bits_field(field, (uint8_t)bit, len);
+    (void)update_selected_bits_field_with_step(field, len);
 }
 
 // -------------------------
