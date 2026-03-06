@@ -32,7 +32,7 @@ extern midi_modify_circular_buffer midi_modify_buff;
 // ---------------------
 // Helpers
 // ---------------------
-static inline uint8_t midi_msg_len(uint8_t status)
+uint8_t midi_message_length(uint8_t status)
 {
     // Realtime (F8–FF) are 1 byte
     if (status >= 0xF8) return 1;
@@ -51,7 +51,6 @@ static inline uint8_t midi_msg_len(uint8_t status)
     return (hi == 0xC0 || hi == 0xD0) ? 2 : 3;
 }
 
-static void change_midi_channel(midi_note *midi_msg, uint8_t send_to_midi_channel);
 
 uint8_t midi_is_note_message(const midi_note *msg, uint8_t *is_note_on)
 {
@@ -76,7 +75,7 @@ uint8_t midi_is_note_message(const midi_note *msg, uint8_t *is_note_on)
 
 
 
-static void change_midi_channel(midi_note *midi_msg, uint8_t send_to_midi_channel) {
+void midi_change_channel(midi_note *midi_msg, uint8_t send_to_midi_channel) {
     uint8_t status = midi_msg->status;
 
     if (status >= 0x80 && status <= 0xEF) {
@@ -251,7 +250,7 @@ static uint8_t is_channel_blocked(uint8_t status_byte) {
 void pipeline_start(midi_note *midi_msg)
 {
     const uint8_t status = midi_msg->status;
-    const uint8_t length = midi_msg_len(status);
+    const uint8_t length = midi_message_length(status);
     const uint8_t status_nibble = (uint8_t)(status & 0xF0);
     const uint8_t is_cc64 = ((status_nibble == 0xB0) && ((midi_msg->note & 0x7F) == 64)) ? 1 : 0;
 
@@ -319,10 +318,10 @@ void pipeline_midi_split(midi_note *midi_msg)
                                       : (uint8_t)save_get(SPLIT_MIDI_CH1);
         const save_field_t send_field = (split_is_high != 0) ? SPLIT_SEND_CH2 : SPLIT_SEND_CH1;
         send_dry = (uint8_t)(save_get(send_field) == 0);
-        change_midi_channel(&split_msg, split_channel);
+        midi_change_channel(&split_msg, split_channel);
 
         if (send_dry != 0) {
-            pipeline_final(&split_msg, midi_msg_len(split_msg.status));
+            pipeline_final(&split_msg, midi_message_length(split_msg.status));
             return;
         }
     }
@@ -345,18 +344,18 @@ void pipeline_midi_modify(midi_note *midi_msg) {
     if (save_get(MODIFY_SEND_TO_MIDI_CH2) != 0) {
         midi_note midi_note_1 = *midi_msg;
         uint8_t send_ch_1 = (uint8_t)save_get(MODIFY_SEND_TO_MIDI_CH1);
-        change_midi_channel(&midi_note_1, send_ch_1);
+        midi_change_channel(&midi_note_1, send_ch_1);
         pipeline_midi_transpose(&midi_note_1);
 
         midi_note midi_note_2 = *midi_msg;
         uint8_t send_ch_2 = (uint8_t)save_get(MODIFY_SEND_TO_MIDI_CH2);
-        change_midi_channel(&midi_note_2, send_ch_2);
+        midi_change_channel(&midi_note_2, send_ch_2);
         pipeline_midi_transpose(&midi_note_2);
 
     } else {
         midi_note midi_note_1 = *midi_msg;
         uint8_t send_ch_1 = (uint8_t)save_get(MODIFY_SEND_TO_MIDI_CH1);
-        change_midi_channel(&midi_note_1, send_ch_1);
+        midi_change_channel(&midi_note_1, send_ch_1);
         pipeline_midi_transpose(&midi_note_1);
     }
 }
@@ -485,7 +484,7 @@ static void midi_pitch_shift(midi_note *midi_msg) {
 // ---------------------
 void pipeline_midi_transpose(midi_note *midi_msg)
 {
-    const uint8_t length = midi_msg_len(midi_msg->status);
+    const uint8_t length = midi_message_length(midi_msg->status);
 
     if (save_get(TRANSPOSE_CURRENTLY_SENDING) == 0) {
         pipeline_arp(midi_msg, length);
@@ -551,7 +550,7 @@ void send_midi_out(midi_note *midi_message_raw, uint8_t length)
 {
     if (midi_message_raw->status < 0x80) return;
 
-    length = midi_msg_len(midi_message_raw->status); // enforce correctness
+    length = midi_message_length(midi_message_raw->status); // enforce correctness
 
     uint8_t midi_bytes[3] = {0};
     midi_bytes[0] = midi_message_raw->status;
@@ -606,7 +605,7 @@ void send_usb_midi_out(midi_note *msg, uint8_t length)
         return;
     }
 
-    length = midi_msg_len(msg->status);
+    length = midi_message_length(msg->status);
 
     uint8_t bytes[3] = {0};
     bytes[0] = msg->status;

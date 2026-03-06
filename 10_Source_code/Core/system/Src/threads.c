@@ -3,6 +3,7 @@
 #include "main.h" //GPIO
 #include "midi_transform.h" //calculate_incoming_midi
 #include "midi_arp.h" //arp_process_pending_tempo_ticks
+#include "midi_tempo.h" //mt_process_pending_tempo_out
 #include "threads.h"
 #include "usb_device.h" //MX_USB_DEVICE_Init
 #include "utils.h" //debounce
@@ -50,6 +51,7 @@ static const osThreadAttr_t s_medium_tasks_attrs = {
   .priority   = (osPriority_t)osPriorityAboveNormal,
 };
 
+
 // -------------------------
 // Display thread
 // -------------------------
@@ -80,8 +82,22 @@ static void MidiCoreThread(void *argument)
     for (;;)
     {
         calculate_incoming_midi();
-        arp_process_pending_tempo_ticks();
-        osDelay(2);
+
+
+        uint32_t flags = osThreadFlagsWait(MIDI_CORE_FLAG_MASK, osFlagsWaitAny, 1);
+        if ((flags & osFlagsError) != 0) {
+            continue;
+        }
+
+        if ((flags & MIDI_CORE_FLAG_ARP_TICK) != 0) {
+            arp_process_pending_tempo_ticks();
+        }
+
+        if ((flags & MIDI_CORE_FLAG_TEMPO_OUT) != 0) {
+            mt_process_pending_tempo_out();
+        }
+        osDelay(1);
+
     }
 }
 
@@ -143,6 +159,17 @@ void threads_display_notify(uint32_t flags)
 {
     if (s_display_flags) osEventFlagsSet(s_display_flags, flags);
 }
+
+void threads_midi_core_set_flags(uint32_t flags)
+{
+    if (s_midi_core_handle == NULL) {
+        return;
+    }
+
+    osThreadFlagsSet(s_midi_core_handle, flags);
+}
+
+
 
 osThreadId_t threads_display_handle(void)
 {

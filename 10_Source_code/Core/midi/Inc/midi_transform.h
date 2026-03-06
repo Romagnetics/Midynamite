@@ -32,6 +32,11 @@ void pipeline_final(midi_note *midi_msg, uint8_t length) ;
 
 //midi_modify_transform
 uint8_t midi_is_note_message(const midi_note *msg, uint8_t *is_note_on);
+
+uint8_t midi_message_length(uint8_t status);
+void midi_change_channel(midi_note *midi_msg, uint8_t send_to_midi_channel);
+
+
 void midi_buffer_push(uint8_t byte);
 uint8_t midi_buffer_pop(uint8_t *byte);
 
