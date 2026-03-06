@@ -7,7 +7,6 @@
 #include "midi_tempo.h"
 #include "utils.h" //For enums
 #include "midi_usb.h"
-#include "midi_usb.h"
 #include "threads.h"
 
 static uint8_t *mt_send_to_midi_out_cache(void)

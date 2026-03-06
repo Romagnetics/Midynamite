@@ -10,6 +10,7 @@
 void threads_start(void);
 void threads_display_notify(uint32_t flags);
 void threads_midi_core_set_flags(uint32_t flags);
+void threads_midi_core_notify_tempo_tick_from_isr(void);
 
 osThreadId_t threads_display_handle(void);
 
