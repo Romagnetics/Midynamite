@@ -177,7 +177,7 @@ int32_t save_get(save_field_t field) {
 // ---------------------
 static void mark_field_changed(save_field_t f) {
     if ((unsigned)f >= SAVE_FIELD_COUNT) return;
-    s_field_change_bits[f >> 5] |= (1 << (f & 31));
+    s_field_change_bits[f >> 5] |= ((uint32_t)1 << (f & 31));
 }
 
 // Utils: wrap/clamp a value into [min, max] with optional wrap
