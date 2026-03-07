@@ -66,7 +66,7 @@ static void DisplayUpdateThread(void *arg)
             s_display_flags,
             DISPLAY_FLAG_MASK,
             osFlagsWaitAny,
-            osWaitForever
+            1
         );
 
         screen_update_menu(f);
@@ -86,7 +86,7 @@ static void MidiCoreThread(void *argument)
         calculate_incoming_midi();
 
 
-        uint32_t flags = osThreadFlagsWait(MIDI_CORE_FLAG_MASK, osFlagsWaitAny, osWaitForever);
+        uint32_t flags = osThreadFlagsWait(MIDI_CORE_FLAG_MASK, osFlagsWaitAny, 1);
         if ((flags & osFlagsError) != 0) {
             continue;
         }
