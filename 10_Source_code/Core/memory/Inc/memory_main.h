@@ -17,7 +17,7 @@
 #define SAVE_STATE_BUSY         ((int32_t)0x7FFFFFFF)
 #define SAVE_U8_BUSY    ((uint8_t)0xFF)
 
-#define DATA_VALIDITY_CHECKSUM  0x35474AA5
+#define DATA_VALIDITY_CHECKSUM  0x354747A5
 #define FLASH_SECTOR7_ADDR      ((uint32_t)0x08060000)
 
 
@@ -50,22 +50,20 @@ typedef enum {
     // midi_split_data
     SPLIT_MIDI_CH1,
 	SPLIT_SEND_CH1,
-
     SPLIT_MIDI_CH2,
 	SPLIT_SEND_CH2,
 
-
+	SPLIT_TYPE,
     SPLIT_NOTE,
+	SPLIT_MIDI_CHANNEL,
+	SPLIT_VELOCITY,
     SPLIT_CURRENTLY_SENDING,
-	SPLIT_SEND_TO_MIDI_OUT,
 
     // midi_modify_data
     MODIFY_VELOCITY_TYPE,
 
     MODIFY_SEND_TO_MIDI_CH1,
     MODIFY_SEND_TO_MIDI_CH2,
-
-    MODIFY_SEND_TO_MIDI_OUT,
 
     MODIFY_VEL_PLUS_MINUS,
     MODIFY_VEL_ABSOLUTE,
@@ -107,7 +105,7 @@ typedef enum {
     SETTINGS_SEND_USB,
     SETTINGS_BRIGHTNESS,
     SETTINGS_MIDI_THRU,
-    SETTINGS_USB_THRU,
+	SETTINGS_SEND_TO_OUT,
     SETTINGS_CHANNEL_FILTER,
     SETTINGS_FILTERED_CH,
     SETTINGS_ABOUT,
@@ -143,7 +141,6 @@ typedef enum {
     THIRD_UP, FOURTH_UP, FIFTH_UP, SIXTH_UP, OCTAVE_UP
 } intervals_t;
 
-typedef enum { USB_MIDI_OFF, USB_MIDI_SEND } midi_mode_t;
 typedef enum { NOT_SENDING, SENDING } sending_t;
 typedef enum { FALSE, TRUE } boolean_t;
 

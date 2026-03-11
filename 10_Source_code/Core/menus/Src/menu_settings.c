@@ -47,7 +47,7 @@ void ui_update_settings(void)
         { ELEM_ITEM , SETTINGS_START_MENU,     TEXT_(menu_list),           UI_6x8, 70,       LINE_1, CTRL_SETTINGS_GLOBAL1 },
 
         { ELEM_TEXT , 0,                       TEXT_(usb_midi_),            UI_6x8, TXT_LEFT, LINE_2, CTRL_SETTINGS_GLOBAL1 },
-        { ELEM_ITEM , SETTINGS_SEND_USB,       TEXT_(usb_receive_send),    UI_6x8, 70,       LINE_2, CTRL_SETTINGS_GLOBAL1 },
+        { ELEM_ITEM , SETTINGS_SEND_USB,       TEXT_(off_out_thru_thru_both),UI_6x8, 70,       LINE_2, CTRL_SETTINGS_GLOBAL1 },
 
         { ELEM_TEXT , 0,                       TEXT_(contrast_),            UI_6x8, TXT_LEFT, LINE_3, CTRL_SETTINGS_GLOBAL1 },
         { ELEM_ITEM , SETTINGS_BRIGHTNESS,     TEXT_(ten_hundred_ten_percent),     UI_6x8, 70,       LINE_3, CTRL_SETTINGS_GLOBAL1 },
@@ -56,8 +56,9 @@ void ui_update_settings(void)
         { ELEM_TEXT , 0,                       TEXT_(MIDI_Thru_),           UI_6x8, TXT_LEFT, LINE_1, CTRL_SETTINGS_GLOBAL2 },
         { ELEM_ITEM , SETTINGS_MIDI_THRU,      TEXT_(off_on),              UI_6x8, 80,       LINE_1, CTRL_SETTINGS_GLOBAL2 },
 
-        { ELEM_TEXT , 0,                       TEXT_(USB_Thru_),            UI_6x8, TXT_LEFT, LINE_2, CTRL_SETTINGS_GLOBAL2 },
-        { ELEM_ITEM , SETTINGS_USB_THRU,       TEXT_(off_on),              UI_6x8, 80,       LINE_2, CTRL_SETTINGS_GLOBAL2 },
+		{ ELEM_TEXT , 0,                       TEXT_(MIDI_Out_),           UI_6x8, TXT_LEFT, LINE_2, CTRL_SETTINGS_GLOBAL2 },
+        { ELEM_ITEM , SETTINGS_SEND_TO_OUT,    TEXT_(midi_outs_split),     UI_6x8, 80,       LINE_2, CTRL_SETTINGS_GLOBAL2 },
+
 
         { ELEM_TEXT , 0,                       TEXT_(MIDI_Filter_),         UI_6x8, TXT_LEFT, LINE_3, CTRL_SETTINGS_GLOBAL2 },
         { ELEM_ITEM , SETTINGS_CHANNEL_FILTER, TEXT_(off_on),              UI_6x8, 80,       LINE_3, CTRL_SETTINGS_GLOBAL2 },
