@@ -37,8 +37,7 @@ void list_of_UART_to_send_to(uint8_t send_channels,
 
 
 void all_notes_off(UART_HandleTypeDef *huart);
-void panic_midi(UART_HandleTypeDef *huart1, UART_HandleTypeDef *huart2,
-				GPIO_TypeDef *port,
+void panic_midi(GPIO_TypeDef *port,
 				uint16_t pin1,
 				uint16_t pin2);
 

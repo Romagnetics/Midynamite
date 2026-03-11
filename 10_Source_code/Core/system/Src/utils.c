@@ -72,11 +72,11 @@ void all_notes_off(UART_HandleTypeDef *huart) {
 }
 
 // Panic on both UART1 and UART2
-void panic_midi(UART_HandleTypeDef *huart1,
-			    UART_HandleTypeDef *huart2,
-				GPIO_TypeDef *port,
+void panic_midi(GPIO_TypeDef *port,
 				uint16_t pin1,
 				uint16_t pin2) {
+	extern UART_HandleTypeDef huart1;
+	extern UART_HandleTypeDef huart2;
 
 	if (HAL_GPIO_ReadPin(port, pin1) == GPIO_PIN_RESET &&
 	    HAL_GPIO_ReadPin(port, pin2) == GPIO_PIN_RESET) {
@@ -86,13 +86,12 @@ void panic_midi(UART_HandleTypeDef *huart1,
     if (HAL_GPIO_ReadPin(port, pin1) == GPIO_PIN_RESET &&
         HAL_GPIO_ReadPin(port, pin2) == GPIO_PIN_RESET) {
 
-    	all_notes_off(huart1);
-    	all_notes_off(huart2);
+    	all_notes_off(&huart1);
+    	all_notes_off(&huart2);
     }
 }
 
 }
-
 
 uint8_t debounce_button(GPIO_TypeDef *port,
 		                uint16_t      pin,
