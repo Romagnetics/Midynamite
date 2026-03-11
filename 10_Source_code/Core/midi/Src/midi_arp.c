@@ -471,19 +471,25 @@ void arp_handle_midi_note(const midi_note *msg)
     }
 }
 
-void arp_handle_midi_cc64(const midi_note *msg)
+uint8_t arp_handle_midi_cc64(const midi_note *msg)
 {
     if (msg == NULL) {
-        return;
+        return 0;
     }
 
     const uint8_t status_nibble = (uint8_t)(msg->status & 0xF0);
     if ((status_nibble != 0xB0) || ((msg->note & 0x7F) != 64)) {
-        return;
+        return 0;
     }
 
     s_sustain_hold_active = (msg->velocity >= 64) ? 1 : 0;
     arp_sync_hold_mode();
+
+    if (save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 1) {
+        return 1;
+    }
+    return 0;
+
 }
 
 
