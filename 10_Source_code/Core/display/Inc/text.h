@@ -25,11 +25,10 @@ typedef struct {
     const char *midi_split;
     const char *midi_transpose;
     const char *midi_dispatch;
-    const char *output_sem;
 
     // Settings
     const char *MIDI_Thru_;
-    const char *USB_Thru_;
+    const char *MIDI_Out_;
     const char *MIDI_Filter_;
 
     const char *equals_ignore_channel;
@@ -41,13 +40,11 @@ typedef struct {
     const char *send_2_sem;
 
     // Channel Split
-    const char *dry_fx[2];
+    const char *dry_buses_all[4];
     const char *split_note;
     const char *low_sem;
     const char *high_sem;
-
-
-
+    const char *split_types[3];
 
     // Velocity
     const char *velocity;
@@ -172,8 +169,9 @@ typedef struct {
     const char *intervals[10];
     const char *no_yes[2];
     const char *off_on[2];
-    const char *usb_receive_send[2];
-    const char *midi_channels[17];
+    const char *off_out_thru_thru_both[4];
+
+    const char *midi_channels[18];
     const char *menu_list[7];
 
     const char *division_list[7];

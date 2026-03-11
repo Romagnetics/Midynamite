@@ -288,7 +288,7 @@ void pipeline_start(midi_note *midi_msg)
     if (save_get(SETTINGS_MIDI_THRU) == 1) {
         send_midi_out(midi_msg, length);
     }
-    if (save_get(SETTINGS_USB_THRU) == 1) {
+    if (save_get(SETTINGS_SEND_USB) >= SETTINGS_SEND_USB) {
         send_usb_midi_out(midi_msg, length);
     }
 }
@@ -334,24 +334,25 @@ void pipeline_midi_modify(midi_note *midi_msg) {
 
     change_velocity(midi_msg);
 
-    if (save_get(MODIFY_SEND_TO_MIDI_CH2) != 0) {
+    const uint8_t send_ch1 = (uint8_t)save_get(MODIFY_SEND_TO_MIDI_CH1);
+    if (send_ch1 != 0) {
         midi_note midi_note_1 = *midi_msg;
-        uint8_t send_ch_1 = (uint8_t)save_get(MODIFY_SEND_TO_MIDI_CH1);
-        midi_change_channel(&midi_note_1, send_ch_1);
-        pipeline_midi_transpose(&midi_note_1);
-
-        midi_note midi_note_2 = *midi_msg;
-        uint8_t send_ch_2 = (uint8_t)save_get(MODIFY_SEND_TO_MIDI_CH2);
-        midi_change_channel(&midi_note_2, send_ch_2);
-        pipeline_midi_transpose(&midi_note_2);
-
-    } else {
-        midi_note midi_note_1 = *midi_msg;
-        uint8_t send_ch_1 = (uint8_t)save_get(MODIFY_SEND_TO_MIDI_CH1);
-        midi_change_channel(&midi_note_1, send_ch_1);
+        if (send_ch1 >= 2) {
+            midi_change_channel(&midi_note_1, (uint8_t)(send_ch1 - 1));
+        }
         pipeline_midi_transpose(&midi_note_1);
     }
+
+    const uint8_t send_ch2 = (uint8_t)save_get(MODIFY_SEND_TO_MIDI_CH2);
+    if (send_ch2 != 0) {
+        midi_note midi_note_2 = *midi_msg;
+        if (send_ch2 >= 2) {
+            midi_change_channel(&midi_note_2, (uint8_t)(send_ch2 - 1));
+        }
+        pipeline_midi_transpose(&midi_note_2);
+    }
 }
+
 
 
 // ---------------------
@@ -555,10 +556,7 @@ void send_midi_out(midi_note *midi_message_raw, uint8_t length)
     const uint8_t is_note = midi_is_note_message(midi_message_raw, &is_note_on);
     const uint8_t note = (uint8_t)midi_bytes[1];
 
-    const save_field_t send_to_out_field =
-        (save_get(SPLIT_CURRENTLY_SENDING) == 1) ? SPLIT_SEND_TO_MIDI_OUT
-                                                  : MODIFY_SEND_TO_MIDI_OUT;
-    switch (save_get(send_to_out_field)) {
+    switch (save_get(SETTINGS_SEND_TO_OUT)) {
         case MIDI_OUT_1:
             HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
             break;
@@ -594,7 +592,7 @@ void send_midi_out(midi_note *midi_message_raw, uint8_t length)
 
 void send_usb_midi_out(midi_note *msg, uint8_t length)
 {
-    if (save_get(SETTINGS_SEND_USB) == USB_MIDI_OFF) {
+    if (save_get(SETTINGS_SEND_USB) == MIDI_USB_OFF) {
         return;
     }
 

@@ -232,8 +232,8 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     MC(TEMPO_CURRENT_TEMPO,          NO_WRAP, update_tempo_bpm,            CTRL_SHARED_TEMPO),
     MC(TEMPO_SEND_TO_MIDI_OUT,         WRAP,  update_tempo_send_to_out,    CTRL_TEMPO_ALL),
 
+    MC(SPLIT_TYPE,            NO_WRAP, update_value_inc1,                   CTRL_SPLIT_ALL),
     MC(SPLIT_NOTE,            NO_WRAP, update_value_inc12,                  CTRL_SPLIT_ALL),
-	MC(SPLIT_SEND_TO_MIDI_OUT, WRAP,  update_value_inc1,                    CTRL_SPLIT_ALL),
 
 
 	MC(SPLIT_MIDI_CH1,        NO_WRAP, update_value_inc1,                   CTRL_SPLIT_ALL),
@@ -244,7 +244,6 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
 
     MC(MODIFY_SEND_TO_MIDI_CH1,      NO_WRAP, update_value_inc1,           CTRL_MODIFY_CHANGE),
     MC(MODIFY_SEND_TO_MIDI_CH2,      NO_WRAP, update_value_inc1,           CTRL_MODIFY_CHANGE),
-    MC(MODIFY_SEND_TO_MIDI_OUT,        WRAP,  update_value_inc1,           CTRL_MODIFY_ALL),
 
     MC(MODIFY_VEL_PLUS_MINUS,       NO_WRAP, update_value_inc10,           CTRL_MODIFY_VEL_CHANGED),
     MC(MODIFY_VEL_ABSOLUTE,         NO_WRAP, update_value_inc10,           CTRL_MODIFY_VEL_FIXED),
@@ -284,7 +283,7 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     MC(SETTINGS_BRIGHTNESS,          NO_WRAP, update_contrast,             CTRL_SETTINGS_GLOBAL1),
 
     MC(SETTINGS_MIDI_THRU,             WRAP,  update_value_inc1,           CTRL_SETTINGS_GLOBAL2),
-    MC(SETTINGS_USB_THRU,              WRAP,  update_value_inc1,           CTRL_SETTINGS_GLOBAL2),
+	MC(SETTINGS_SEND_TO_OUT,           WRAP,  update_value_inc1,           CTRL_SETTINGS_GLOBAL2),
     MC(SETTINGS_CHANNEL_FILTER,        WRAP,  update_value_inc1,           CTRL_SETTINGS_GLOBAL2),
 
     MC(SETTINGS_FILTERED_CH,           WRAP,  update_bits_16_fields,       CTRL_SETTINGS_FILTER),

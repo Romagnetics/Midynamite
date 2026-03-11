@@ -21,10 +21,9 @@ static const Message _message = {
     .midi_split = "MIDI Split",
     .midi_transpose = "MIDI Transpose",
     .midi_dispatch = "MIDI Dispatch",
-	.output_sem = "Output:",
 
 	.MIDI_Thru_ = "MIDI Thru:",
-	.USB_Thru_ = "USB Thru:",
+	.MIDI_Out_ = "MIDI Out:",
 	.MIDI_Filter_ = "MIDI Filter:",
 
 	.equals_ignore_channel = "0 = Ignore Channel",
@@ -36,11 +35,11 @@ static const Message _message = {
 	.send_to = "Send to",
 
     // Channel Split
+    .dry_buses_all = { "Dry", "Bus 1", "Bus 2", "All" },
     .split_note = "Split Note",
     .low_sem = "Low:",
     .high_sem = "High:",
-    .dry_fx = { "Dry", "FX" },
-
+	.split_types = { "Note", "MIDI Ch.", "Velocity" },
 
     // Velocity
     .velocity = "Velocity",
@@ -107,7 +106,7 @@ static const Message _message = {
     // About
     .about_brand = "Romagnetics",
     .about_product = "Midynamite",
-    .about_version = "v1.0.0",
+    .about_version = "v2.0.0",
 
     // Saving
     .save_instruction = "Press select to Save",
@@ -250,9 +249,10 @@ static const Message _message = {
      },
     .no_yes = { "No", "Yes" },
     .off_on = { "Off", "On" },
-    .usb_receive_send = { "No USB", "Send USB"},
+	.off_out_thru_thru_both = { "Off", "Out", "Thru", "Thru+Out" },
+
     .midi_channels = {
-         "Off",
+         "Off", "Thru",
          "Ch. 1",  "Ch. 2",  "Ch. 3",  "Ch. 4",
          "Ch. 5",  "Ch. 6",  "Ch. 7",  "Ch. 8",
          "Ch. 9",  "Ch. 10", "Ch. 11", "Ch. 12",

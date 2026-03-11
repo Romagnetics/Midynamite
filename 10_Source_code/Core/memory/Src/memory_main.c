@@ -18,21 +18,24 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
 
 	[SPLIT_MIDI_CH1]             = {      1,         16,          1 },
 	[SPLIT_MIDI_CH2]             = {      1,         16,          2 },
-	[SPLIT_SEND_CH1]             = {      0,         1,           1 },
-	[SPLIT_SEND_CH2]             = {      0,         1,           1 },
+	[SPLIT_SEND_CH1]             = {      0,         3,           3 },
+	[SPLIT_SEND_CH2]             = {      0,         3,           3 },
 
+	[SPLIT_TYPE]                 = {      0,        2,            0 },
 	[SPLIT_NOTE]                 = {      0,        127,         60 },
+	[SPLIT_MIDI_CHANNEL]         = {      2,        16,           8 },
+	[SPLIT_VELOCITY]             = {      0,        127,          60 },
+
+
 	[SPLIT_CURRENTLY_SENDING]    = {      0,          1,          0 },
-	[SPLIT_SEND_TO_MIDI_OUT]     = {      0,          3,          3 },
 
 
 
 	[MODIFY_VELOCITY_TYPE]       = {      0,          1,          0 },
 
-    [MODIFY_SEND_TO_MIDI_CH1]    = {      1,         16,          1 },
-    [MODIFY_SEND_TO_MIDI_CH2]    = {      0,         16,          0 },
+    [MODIFY_SEND_TO_MIDI_CH1]    = {      0,         17,          0 },
+    [MODIFY_SEND_TO_MIDI_CH2]    = {      1,         17,          1 },
 
-    [MODIFY_SEND_TO_MIDI_OUT]    = {      0,          2,          0 },
 
     [MODIFY_VEL_PLUS_MINUS]      = {    -80,         80,          0 },
     [MODIFY_VEL_ABSOLUTE]        = {      0,        127,         64 },
@@ -53,13 +56,13 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
 
 	[ARPEGGIATOR_CURRENTLY_SENDING]= {      0,       1,          0 },
 	[ARPEGGIATOR_DIVISION]         = {      0,       6,          0 },
-	[ARPEGGIATOR_GATE]             = {      1,       10,          10 },
+	[ARPEGGIATOR_GATE]             = {      1,       10,         10 },
 	[ARPEGGIATOR_OCTAVES]          = {      1,       4,          1 },
 	[ARPEGGIATOR_PATTERN]          = {      0,       7,          0 },
 
-	[ARPEGGIATOR_SWING]            = {      1,       100,          50 },
+	[ARPEGGIATOR_SWING]            = {      1,       100,        50 },
 	[ARPEGGIATOR_LENGTH]           = {      1,       8,          8 },
-	[ARPEGGIATOR_NOTES]            = {      0,       0b11111111,    0b11111111 },
+	[ARPEGGIATOR_NOTES]            = {      0,       0b11111111, 0b11111111 },
 	[ARPEGGIATOR_HOLD]             = {      0,       1,          0 },
 	[ARPEGGIATOR_KEY_SYNC]         = {      0,       1,          0 },
 
@@ -70,15 +73,13 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
 	[DISPATCH_VOICE_MANAGE]        = {      0,       3,          0 },
 
 
-
-
     [SETTINGS_START_MENU]        = {      0,          AMOUNT_OF_MENUS-1,          0 },
-    [SETTINGS_SEND_USB]          = {      0,          1,          0 },
-    [SETTINGS_BRIGHTNESS]        = {      1,          10,          7 },
+    [SETTINGS_SEND_USB]          = {      0,          3,          0 },
+    [SETTINGS_BRIGHTNESS]        = {      1,          10,         7 },
     [SETTINGS_MIDI_THRU]         = {      0,          1,          0 },
-    [SETTINGS_USB_THRU]          = {      0,          1,          0 },
+	[SETTINGS_SEND_TO_OUT]       = {      0,          3,          0 },
     [SETTINGS_CHANNEL_FILTER]    = {      0,          1,          0 },
-    [SETTINGS_FILTERED_CH] = {      0,  0x0000FFFF,          0 },
+    [SETTINGS_FILTERED_CH]       = {      0,  0x0000FFFF,         0 },
     [SETTINGS_ABOUT]             = {      0,          0,          0 },
 
 
