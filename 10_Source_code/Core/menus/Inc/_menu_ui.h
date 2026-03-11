@@ -69,9 +69,45 @@ uint8_t  get_current_menu(menu_list_t field);
 // API
 // ---------------------
 void initialize_screen(void);
-
 void draw_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
-
 void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count);
+
+typedef enum {
+    GROUP_STATE_BASED = 0,
+    CURRENT_POSITION_BASED
+} selector_kind_t;
+
+typedef struct page_group_rule_s {
+    selector_kind_t   kind;
+    uint8_t           case_count;
+    const ctrl_group_id_t *groups;
+    save_field_t      field;
+    selector_compute_fn_t compute;
+    uint8_t           cycle_on_press;
+    menu_list_t       page;
+} page_group_rule_t;
+
+extern const page_group_rule_t kPageGroupRules[];
+extern const size_t kPageGroupRulesCount;
+
+uint8_t idx_from_save(save_field_t f, uint8_t case_count);
+uint8_t group_list_len(const ctrl_group_id_t *groups);
+uint8_t idx_from_position_selector(const page_group_rule_t *sel);
+void build_union_for_groups_local(const ctrl_group_id_t *groups, uint8_t n_groups, CtrlActiveList *out);
+uint8_t build_union_for_position_page(menu_list_t page, CtrlActiveList *out);
+
+
+
+// -------- Menu helpers --------
+void screen_update_menu(uint32_t flag);
+
+void cont_update_menu(menu_list_t field);
+
+
+// Controller-facing polling entrypoint
+void refresh_menu(void);
+void toggle_subpage(menu_list_t field);
+
+void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line);
 
 #endif /* MENU_INC_MENU_UI_H_ */

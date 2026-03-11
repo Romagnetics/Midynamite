@@ -358,6 +358,45 @@ void ctrl_build_active_fields(menu_group_mask_t active_groups, CtrlActiveList *o
     out->count = count;
 }
 
+menu_group_mask_t ctrl_active_mask_for_page(menu_list_t page)
+{
+    menu_group_mask_t mask = 0;
+
+    uint8_t  have_pos_idx = 0;
+    uint8_t  pos_idx = 0;
+
+    for (size_t i = 0; i < kPageGroupRulesCount; ++i) {
+        const page_group_rule_t *sel = &kPageGroupRules[i];
+        if (sel->page != page) continue;
+
+        uint8_t idx = 0;
+
+        if (sel->kind == GROUP_STATE_BASED) {
+            idx = sel->compute ? sel->compute() : idx_from_save(sel->field, sel->case_count);
+        } else {
+            if (!have_pos_idx) {
+                pos_idx = idx_from_position_selector(sel); // compute once
+                have_pos_idx = 1;
+            }
+            idx = pos_idx; // reuse
+        }
+
+        if (idx >= sel->case_count) idx = 0;
+
+        if (sel->case_count == 1) {
+            const uint8_t n = group_list_len(sel->groups);
+            for (uint8_t k = 0; k < n; ++k) {
+                const uint32_t gid = (uint32_t)sel->groups[k];
+                if (gid >= 1 && gid <= CTRL_GROUP_SLOT_MAX) mask |= ((menu_group_mask_t)1 << (gid - 1));
+            }
+        } else {
+            const uint32_t gid = (uint32_t)sel->groups[idx];
+            if (gid >= 1 && gid <= CTRL_GROUP_SLOT_MAX) mask |= ((menu_group_mask_t)1 << (gid - 1));
+        }
+    }
+    return mask;
+}
+
 static const CtrlActiveList* get_list_for_page(menu_list_t page)
 {
 	const menu_group_mask_t mask = ctrl_active_mask_for_page(page); // from menus.c
@@ -473,6 +512,50 @@ static inline NavSel nav_selection(menu_list_t page)
 // -------------------------
 // Press-to-cycle (menus decides if/what cycles)
 // -------------------------
+static uint8_t menus_cycle_on_press(menu_list_t page)
+{
+    const uint8_t row = menu_nav_get_select(page);
+
+    uint32_t gid = 0;
+    CtrlActiveList u = {0};
+
+    if (build_union_for_position_page(page, &u)) {
+        (void)menu_row_hit(&u, row, NULL, NULL, &gid);
+    } else {
+        // Build active list from mask, in correct ui_order (shared implementation)
+    	const menu_group_mask_t mask = ctrl_active_mask_for_page(page);
+        CtrlActiveList *dst = list_for_page(page);
+        ctrl_build_active_fields(mask, dst);
+
+        (void)menu_row_hit(dst, row, NULL, NULL, &gid);
+    }
+
+
+    if (!gid) return 0;
+
+    for (size_t i = 0; i < kPageGroupRulesCount; ++i) {
+        const page_group_rule_t *sel = &kPageGroupRules[i];
+        if (sel->page != page) continue;
+        if (sel->kind != GROUP_STATE_BASED) continue;
+        if (!sel->cycle_on_press) continue;
+
+        const uint8_t n = (sel->case_count == 1) ? group_list_len(sel->groups) : sel->case_count;
+
+        for (uint8_t k = 0; k < n; ++k) {
+            if (sel->case_count == 1 && sel->groups[k] == 0) break;
+            if ((uint32_t)sel->groups[k] != gid) continue;
+
+            if (sel->field != SAVE_FIELD_INVALID) {
+                save_modify_u8(sel->field, SAVE_MODIFY_INCREMENT, 0);
+                return 1;
+            }
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
 void select_press_menu_change(menu_list_t page) {
     (void)menus_cycle_on_press(page); // from menus.c
 }

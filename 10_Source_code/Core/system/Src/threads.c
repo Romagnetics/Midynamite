@@ -1,5 +1,5 @@
 #include "menus.h"
-#include "_menu_ui.h" //menu change check
+#include "_menu_ui.h"
 #include "main.h" //GPIO
 
 #include "midi_transform.h" //calculate_incoming_midi
@@ -111,35 +111,13 @@ static void MediumTasksThread(void *argument)
 
     // Initial menu draw trigger
     set_current_menu(CURRENT_MENU, UI_MODIFY_SET, save_get(SETTINGS_START_MENU));
-    set_current_menu(OLD_MENU, UI_MODIFY_SET, 99);
-    refresh_screen();
+    set_current_menu(OLD_MENU, UI_MODIFY_SET, AMOUNT_OF_MENUS);
 
     for (;;)
     {
-        menu_change_check();
+        refresh_menu();
 
-        uint8_t old_menu     = get_current_menu(OLD_MENU);
-        uint8_t current_menu = get_current_menu(CURRENT_MENU);
-
-        if (old_menu != current_menu) {
-            refresh_screen();
-        }
-
-        // IMPORTANT: your latest _menu_controller.c defines update_menu() with NO args.
-        update_menu();
-
-        current_menu = get_current_menu(CURRENT_MENU);
-        set_current_menu(OLD_MENU, UI_MODIFY_SET, current_menu);
-
-        // Btn3 toggles "currently sending" depending on menu
-        static uint8_t OldBtn3State = 1;
-        if (debounce_button(GPIOB, Btn3_Pin, &OldBtn3State, 50)) {
-            start_stop_pressed();
-        }
-
-        // Panic (both buttons)
-        extern UART_HandleTypeDef huart1, huart2;
-        panic_midi(&huart1, &huart2, GPIOB, Btn1_Pin, Btn2_Pin);
+        panic_midi(GPIOB, Btn1_Pin, Btn2_Pin);
 
         osDelay(10);
     }

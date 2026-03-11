@@ -72,30 +72,9 @@ void ui_update_arpeggiator();
 void ui_code_dispatch();
 void ui_update_dispatch();
 
-
-
 void cont_update_settings();
 void ui_code_settings();
 void ui_update_settings();
 
-// -------- Menu helpers --------
-void screen_update_menu(uint32_t flag);
-void ui_code_menu();
-void cont_update_menu(menu_list_t field);
-
-
-void menu_change_check();
-void refresh_screen();
-void toggle_subpage(menu_list_t field);
-
-// Thread related
-void start_stop_pressed();
-void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line);
-
-// -------- Selector helpers exposed to controller (implemented in menus.c) --------
-uint8_t            build_union_for_position_page(menu_list_t page, CtrlActiveList *out);
-menu_group_mask_t  ctrl_active_mask_for_page(menu_list_t page);
-menu_list_t        page_for_ctrl_id(uint32_t id);
-uint8_t            menus_cycle_on_press(menu_list_t page);
 
 #endif /* INC_MENUS_H_ */

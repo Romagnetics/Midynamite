@@ -83,6 +83,7 @@ extern const menu_controls_t menu_controls[SAVE_FIELD_COUNT];
 // Build active list from an active-groups mask (sorted by ui_order).
 // Exported so menus.c can reuse the exact same ordering/filtering logic.
 void ctrl_build_active_fields(menu_group_mask_t active_groups, CtrlActiveList *out);
+menu_group_mask_t ctrl_active_mask_for_page(menu_list_t page);
 
 // =====================
 // Display flag helpers
