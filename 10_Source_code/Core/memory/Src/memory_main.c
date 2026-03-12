@@ -16,15 +16,21 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
 
 
 
-	[SPLIT_MIDI_CH1]             = {      1,         16,          1 },
-	[SPLIT_MIDI_CH2]             = {      1,         16,          2 },
+	[SPLIT_MIDI_CH1]             = {      0,         16,          0 },
+	[SPLIT_MIDI_CH2]             = {      0,         16,          0 },
 	[SPLIT_SEND_CH1]             = {      0,         3,           3 },
 	[SPLIT_SEND_CH2]             = {      0,         3,           3 },
 
 	[SPLIT_TYPE]                 = {      0,        2,            0 },
 	[SPLIT_NOTE]                 = {      0,        127,         60 },
 	[SPLIT_MIDI_CHANNEL]         = {      2,        16,           8 },
-	[SPLIT_VELOCITY]             = {      0,        127,          60 },
+	[SPLIT_VELOCITY]             = {      2,        127,          60 },
+	[SPLIT_MENU_MASK]            = {      0,        255,        255 },
+
+	[SPLIT_MASK_MODIFY]          = {      1,         3,           3 },
+	[SPLIT_MASK_TRANSPOSE]       = {      1,         3,           3 },
+	[SPLIT_MASK_ARPEGGIATOR]     = {      1,         3,           3 },
+	[SPLIT_MASK_DISPATCH]        = {      1,         3,           3 },
 
 
 	[SPLIT_CURRENTLY_SENDING]    = {      0,          1,          0 },
@@ -146,6 +152,42 @@ static int32_t save_get_u32(save_field_t field) {
     return clamp_i32(v, lim.min, lim.max);
 }
 
+static uint8_t split_mask_field_to_index(save_field_t field)
+{
+    switch (field) {
+        case SPLIT_MASK_MODIFY:      return 0;
+        case SPLIT_MASK_TRANSPOSE:   return 1;
+        case SPLIT_MASK_ARPEGGIATOR: return 2;
+        case SPLIT_MASK_DISPATCH:    return 3;
+        default:                     return 0xFF;
+    }
+}
+
+static uint8_t split_mask_get_slot_value(save_field_t field)
+{
+    const uint8_t idx = split_mask_field_to_index(field);
+    if (idx == 0xFF) return 0;
+
+    const uint32_t mask = (uint32_t)save_get(SPLIT_MENU_MASK);
+    return (uint8_t)((mask >> (idx * 2)) & 0x03);
+}
+
+static uint8_t split_mask_set_slot_value(save_field_t field, uint8_t value)
+{
+    const uint8_t idx = split_mask_field_to_index(field);
+    if (idx == 0xFF) return 0;
+
+    uint8_t new_value = value;
+    if (new_value < 1) new_value = 1;
+    if (new_value > 3) new_value = 3;
+
+    uint32_t mask = (uint32_t)save_get(SPLIT_MENU_MASK);
+    const uint32_t shift = (uint32_t)(idx * 2);
+    const uint32_t clear_slot = ~(0x03UL << shift);
+    mask = (mask & clear_slot) | (((uint32_t)new_value & 0x03UL) << shift);
+    return save_modify_u32(SPLIT_MENU_MASK, SAVE_MODIFY_SET, mask);
+}
+
 static uint8_t save_get_8(save_field_t field) {
     if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;
     uint8_t *p = u8_fields[field];
@@ -164,6 +206,10 @@ static uint8_t save_get_8(save_field_t field) {
 
 int32_t save_get(save_field_t field) {
     if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;
+
+    if (field >= SPLIT_MASK_MODIFY && field <= SPLIT_MASK_DISPATCH) {
+        return (int32_t)split_mask_get_slot_value(field);
+    }
 
     // Prefer exact width based on backing storage
     if (u8_fields[field])  return (int32_t)save_get_8(field);
@@ -231,6 +277,19 @@ uint8_t save_modify_u32(save_field_t field, save_modify_op_t op, uint32_t value_
 
 uint8_t save_modify_u8(save_field_t field, save_modify_op_t op, uint8_t value_if_set) {
     if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;
+
+    if (field >= SPLIT_MASK_MODIFY && field <= SPLIT_MASK_DISPATCH) {
+        uint8_t cur = split_mask_get_slot_value(field);
+        if (op == SAVE_MODIFY_INCREMENT) {
+            cur = (cur >= 3) ? 1 : (uint8_t)(cur + 1);
+            return split_mask_set_slot_value(field, cur);
+        }
+        if (op == SAVE_MODIFY_SET) {
+            return split_mask_set_slot_value(field, value_if_set);
+        }
+        return 0;
+    }
+
     if (!u8_fields[field]) return 0;
     if (!save_lock_with_retries()) return 0;
 

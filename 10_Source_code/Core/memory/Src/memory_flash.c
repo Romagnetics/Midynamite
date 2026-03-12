@@ -23,6 +23,8 @@ enum {
 
 	IDX_U32_TRANSPOSE_SHIFT,
 
+	IDX_U32_SPLIT_MENU_MASK,
+
 	IDX_U32_ARPEGGIATOR_NOTES,
 
     IDX_U32_SETTINGS_FILTERED_CH,
@@ -127,6 +129,8 @@ static void bind_field_pointers(save_struct* s, int32_t** u32tab, uint8_t** u8ta
     u32tab[MODIFY_VEL_PLUS_MINUS] = &s->u32_vals[IDX_U32_MODIFY_VEL_PM];
 
     u32tab[TRANSPOSE_MIDI_SHIFT_VALUE] = &s->u32_vals[IDX_U32_TRANSPOSE_SHIFT];
+
+    u32tab[SPLIT_MENU_MASK] = &s->u32_vals[IDX_U32_SPLIT_MENU_MASK];
 
     u32tab[ARPEGGIATOR_NOTES] = &s->u32_vals[IDX_U32_ARPEGGIATOR_NOTES];
 
@@ -318,4 +322,3 @@ void memory_set_midi_thru(uint8_t v)
 }
 
 #endif
-

@@ -25,6 +25,15 @@
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
 
+typedef enum {
+    SPLIT_TARGET_BOTH = 0,
+    SPLIT_TARGET_LOW,
+    SPLIT_TARGET_HIGH
+} split_output_target_t;
+
+static uint8_t g_pipeline_split_route = 3;
+static split_output_target_t g_pipeline_split_target = SPLIT_TARGET_BOTH;
+
 // Circular buffer instance declared externally
 extern midi_modify_circular_buffer midi_modify_buff;
 
@@ -240,6 +249,58 @@ static uint8_t is_channel_blocked(uint8_t status_byte) {
     return 0;
 }
 
+static uint8_t split_type_is_high(const midi_note *msg)
+{
+    if (msg == NULL) return 0;
+
+    const uint8_t split_type = (uint8_t)save_get(SPLIT_TYPE);
+    if (split_type == 1) {
+        const uint8_t status_nibble = (uint8_t)(msg->status & 0xF0);
+        if (status_nibble >= 0x80 && status_nibble <= 0xE0) {
+            const uint8_t channel = (uint8_t)((msg->status & 0x0F) + 1);
+            return (uint8_t)(channel >= (uint8_t)save_get(SPLIT_MIDI_CHANNEL));
+        }
+        return 0;
+    }
+
+    if (split_type == 2) {
+        uint8_t is_note_on = 0;
+        if (midi_is_note_message(msg, &is_note_on) != 0) {
+            return (uint8_t)(msg->velocity >= (uint8_t)save_get(SPLIT_VELOCITY));
+        }
+        return 0;
+    }
+
+    return (uint8_t)(msg->note >= (uint8_t)save_get(SPLIT_NOTE));
+}
+
+static uint8_t split_route_allows_menu(menu_list_t menu)
+{
+    if (g_pipeline_split_route == 3) return 1;
+    if (g_pipeline_split_route == 0) return 0;
+
+    uint8_t slot = 0;
+    switch (menu) {
+        case MENU_MODIFY:      slot = 0; break;
+        case MENU_TRANSPOSE:   slot = 1; break;
+        case MENU_ARPEGGIATOR: slot = 2; break;
+        case MENU_DISPATCH:    slot = 3; break;
+        default:               return 1;
+    }
+
+    const uint32_t mask = (uint32_t)save_get(SPLIT_MENU_MASK);
+    const uint8_t menu_mask = (uint8_t)((mask >> (slot * 2)) & 0x03);
+    if (menu_mask == 0) return 0;
+    if (menu_mask == 3) return 1;
+    return (uint8_t)(menu_mask == g_pipeline_split_route);
+}
+
+static void split_send_direct(midi_note *msg, uint8_t length)
+{
+    send_midi_out(msg, length);
+    send_usb_midi_out(msg, length);
+}
+
 
 
 
@@ -251,6 +312,9 @@ void pipeline_start(midi_note *midi_msg)
 {
     const uint8_t status = midi_msg->status;
     const uint8_t length = midi_message_length(status);
+
+    g_pipeline_split_route = 3;
+    g_pipeline_split_target = SPLIT_TARGET_BOTH;
 
     if (arp_handle_midi_cc64(midi_msg) != 0) {
         return;
@@ -299,23 +363,23 @@ void pipeline_start(midi_note *midi_msg)
 void pipeline_midi_split(midi_note *midi_msg)
 {
     midi_note split_msg = *midi_msg;
-    uint8_t is_note_on = 0;
-    uint8_t send_dry = 0;
-    const uint8_t is_note = midi_is_note_message(&split_msg, &is_note_on);
+    const uint8_t split_is_high = split_type_is_high(&split_msg);
+    const uint8_t split_channel = (split_is_high != 0)
+                                  ? (uint8_t)save_get(SPLIT_MIDI_CH2)
+                                  : (uint8_t)save_get(SPLIT_MIDI_CH1);
+    const save_field_t send_field = (split_is_high != 0) ? SPLIT_SEND_CH2 : SPLIT_SEND_CH1;
+    const uint8_t split_send_mode = (uint8_t)save_get(send_field);
 
-    if (is_note != 0) {
-        const uint8_t split_is_high = (split_msg.note >= save_get(SPLIT_NOTE));
-        const uint8_t split_channel = (split_is_high != 0)
-                                      ? (uint8_t)save_get(SPLIT_MIDI_CH2)
-                                      : (uint8_t)save_get(SPLIT_MIDI_CH1);
-        const save_field_t send_field = (split_is_high != 0) ? SPLIT_SEND_CH2 : SPLIT_SEND_CH1;
-        send_dry = (uint8_t)(save_get(send_field) == 0);
+    if (split_channel > 0) {
         midi_change_channel(&split_msg, split_channel);
+    }
 
-        if (send_dry != 0) {
-            pipeline_final(&split_msg, midi_message_length(split_msg.status));
-            return;
-        }
+    g_pipeline_split_target = (split_is_high != 0) ? SPLIT_TARGET_HIGH : SPLIT_TARGET_LOW;
+    g_pipeline_split_route = split_send_mode;
+
+    if (split_send_mode == 0) {
+        split_send_direct(&split_msg, midi_message_length(split_msg.status));
+        return;
     }
 
     pipeline_midi_modify(&split_msg);
@@ -326,7 +390,7 @@ void pipeline_midi_split(midi_note *midi_msg)
 // Modify pipeline
 // ---------------------
 void pipeline_midi_modify(midi_note *midi_msg) {
-    if (save_get(MODIFY_CURRENTLY_SENDING) == 0) {
+    if (save_get(MODIFY_CURRENTLY_SENDING) == 0 || split_route_allows_menu(MENU_MODIFY) == 0) {
         pipeline_midi_transpose(midi_msg);
         return;
     }
@@ -480,7 +544,7 @@ void pipeline_midi_transpose(midi_note *midi_msg)
 {
     const uint8_t length = midi_message_length(midi_msg->status);
 
-    if (save_get(TRANSPOSE_CURRENTLY_SENDING) == 0) {
+    if (save_get(TRANSPOSE_CURRENTLY_SENDING) == 0 || split_route_allows_menu(MENU_TRANSPOSE) == 0) {
         pipeline_arp(midi_msg, length);
         return;
     }
@@ -514,7 +578,7 @@ void pipeline_midi_transpose(midi_note *midi_msg)
 // --------------------
 void pipeline_arp(midi_note *midi_msg, uint8_t length)
 {
-    if (save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 1) {
+    if (save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 1 && split_route_allows_menu(MENU_ARPEGGIATOR) == 1) {
         uint8_t is_note_on = 0;
         if (midi_is_note_message(midi_msg, &is_note_on)) {
             arp_handle_midi_note(midi_msg);
@@ -532,7 +596,7 @@ void pipeline_arp(midi_note *midi_msg, uint8_t length)
 // ---------------------
 void pipeline_final(midi_note *midi_msg, uint8_t length)
 {
-    if (midi_dispatch_process(midi_msg, length) != 0) {
+    if (split_route_allows_menu(MENU_DISPATCH) == 1 && midi_dispatch_process(midi_msg, length) != 0) {
         return;
     }
 
@@ -551,11 +615,6 @@ void send_midi_out(midi_note *midi_message_raw, uint8_t length)
     if (length > 1) midi_bytes[1] = midi_message_raw->note;
     if (length > 2) midi_bytes[2] = midi_message_raw->velocity;
 
-    // Determine if message is a note message for split logic
-    uint8_t is_note_on = 0;
-    const uint8_t is_note = midi_is_note_message(midi_message_raw, &is_note_on);
-    const uint8_t note = (uint8_t)midi_bytes[1];
-
     switch (save_get(SETTINGS_SEND_TO_OUT)) {
         case MIDI_OUT_1:
             HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
@@ -571,18 +630,20 @@ void send_midi_out(midi_note *midi_message_raw, uint8_t length)
             break;
 
         case MIDI_OUT_SPLIT:
-                   if (save_get(SPLIT_CURRENTLY_SENDING) == 1 && is_note) {
-                       if (note < save_get(SPLIT_NOTE)) {
-                           HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
-                       } else {
-                           HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
-                       }
-                   } else {
-                       // Non-note or not in split mode: mirror to both like your fallback did
-                       HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
-                       HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
-                   }
-                   break;
+            if (save_get(SPLIT_CURRENTLY_SENDING) == 1) {
+                if (g_pipeline_split_target == SPLIT_TARGET_LOW) {
+                    HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
+                } else if (g_pipeline_split_target == SPLIT_TARGET_HIGH) {
+                    HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
+                } else {
+                    HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
+                    HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
+                }
+            } else {
+                HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
+                HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
+            }
+            break;
 
                default:
                    break;

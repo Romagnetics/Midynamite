@@ -42,9 +42,20 @@ typedef struct {
     // Channel Split
     const char *dry_buses_all[4];
     const char *split_note;
+    const char *split_ch;
+    const char *split_velocity;
     const char *low_sem;
     const char *high_sem;
+    const char *low_to;
+    const char *high_to;
+    const char *ch_sem;
+    const char *select_bus_effects;
+    const char *modify_short;
+    const char *transpose_short;
+    const char *arpeggiator_short;
+    const char *dispatch_short;
     const char *split_types[3];
+    const char *bus_effect_mask[4];
 
     // Velocity
     const char *velocity;

@@ -232,15 +232,21 @@ const menu_controls_t menu_controls[SAVE_FIELD_COUNT] = {
     MC(TEMPO_CURRENT_TEMPO,          NO_WRAP, update_tempo_bpm,            CTRL_SHARED_TEMPO),
     MC(TEMPO_SEND_TO_MIDI_OUT,         WRAP,  update_tempo_send_to_out,    CTRL_TEMPO_ALL),
 
-    MC(SPLIT_TYPE,            NO_WRAP, update_value_inc1,                   CTRL_SPLIT_ALL),
-    MC(SPLIT_NOTE,            NO_WRAP, update_value_inc12,                  CTRL_SPLIT_ALL),
+    MC(SPLIT_TYPE,             NO_WRAP, update_value_inc1,                  CTRL_SPLIT_PAGE_1),
+    MC(SPLIT_NOTE,             NO_WRAP, update_value_inc12,                 CTRL_SPLIT_TYPE_NOTE),
+    MC(SPLIT_MIDI_CHANNEL,     NO_WRAP, update_value_inc1,                  CTRL_SPLIT_TYPE_CH),
+    MC(SPLIT_VELOCITY,         NO_WRAP, update_value_inc10,                 CTRL_SPLIT_TYPE_VELOCITY),
 
+	MC(SPLIT_MIDI_CH1,         NO_WRAP, update_value_inc1,                  CTRL_SPLIT_PAGE_1),
+    MC(SPLIT_SEND_CH1,           WRAP, update_value_inc1,                  CTRL_SPLIT_PAGE_1),
 
-	MC(SPLIT_MIDI_CH1,        NO_WRAP, update_value_inc1,                   CTRL_SPLIT_ALL),
-    MC(SPLIT_SEND_CH1,        WRAP, update_value_inc1,                      CTRL_SPLIT_ALL),
+    MC(SPLIT_MIDI_CH2,         NO_WRAP, update_value_inc1,                  CTRL_SPLIT_PAGE_1),
+    MC(SPLIT_SEND_CH2,           WRAP, update_value_inc1,                  CTRL_SPLIT_PAGE_1),
 
-    MC(SPLIT_MIDI_CH2,        NO_WRAP, update_value_inc1,                   CTRL_SPLIT_ALL),
-    MC(SPLIT_SEND_CH2,        WRAP, update_value_inc1,                      CTRL_SPLIT_ALL),
+    MC(SPLIT_MASK_MODIFY,         WRAP, update_value_inc1,                  CTRL_SPLIT_PAGE_2),
+    MC(SPLIT_MASK_TRANSPOSE,      WRAP, update_value_inc1,                  CTRL_SPLIT_PAGE_2),
+    MC(SPLIT_MASK_ARPEGGIATOR,    WRAP, update_value_inc1,                  CTRL_SPLIT_PAGE_2),
+    MC(SPLIT_MASK_DISPATCH,       WRAP, update_value_inc1,                  CTRL_SPLIT_PAGE_2),
 
     MC(MODIFY_SEND_TO_MIDI_CH1,      NO_WRAP, update_value_inc1,           CTRL_MODIFY_CHANGE),
     MC(MODIFY_SEND_TO_MIDI_CH2,      NO_WRAP, update_value_inc1,           CTRL_MODIFY_CHANGE),
