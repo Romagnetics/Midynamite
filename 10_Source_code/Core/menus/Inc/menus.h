@@ -56,6 +56,7 @@ void ui_update_tempo();
 
 void ui_code_split();
 void ui_update_split();
+void cont_update_split(menu_list_t field);
 
 void cont_update_modify(menu_list_t field);
 void ui_code_modify();

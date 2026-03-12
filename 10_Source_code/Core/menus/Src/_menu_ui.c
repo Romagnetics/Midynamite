@@ -237,7 +237,7 @@ static inline menu_list_t current_menu(void) {
 
 static const MenuVTable kMenuVT[AMOUNT_OF_MENUS] = {
     [MENU_TEMPO]       = { ui_update_tempo,       ui_code_tempo,       NULL },
-    [MENU_SPLIT]       = { ui_update_split,       ui_code_split,       NULL },
+    [MENU_SPLIT]       = { ui_update_split,       ui_code_split,       cont_update_split },
     [MENU_MODIFY]      = { ui_update_modify,      ui_code_modify,      cont_update_modify },
     [MENU_TRANSPOSE]   = { ui_update_transpose,   ui_code_transpose,   cont_update_transpose },
     [MENU_ARPEGGIATOR] = { ui_update_arpeggiator, ui_code_arpeggiator, cont_update_arpeggiator },
@@ -307,7 +307,8 @@ static uint8_t sel_fixed0()           { return 0; }
 // -------------------------
 static const ctrl_group_id_t GR_TEMPO_ALL[]        = { CTRL_TEMPO_ALL, CTRL_SHARED_TEMPO, 0};
 
-static const ctrl_group_id_t GR_SPLIT_ALL[]        = { CTRL_SPLIT_ALL };
+static const ctrl_group_id_t GR_SPLIT_SECTIONS[]   = { CTRL_SPLIT_PAGE_1, CTRL_SPLIT_PAGE_2 };
+static const ctrl_group_id_t GR_SPLIT_TYPES[]      = { CTRL_SPLIT_TYPE_NOTE, CTRL_SPLIT_TYPE_CH, CTRL_SPLIT_TYPE_VELOCITY };
 
 static const ctrl_group_id_t GR_MODIFY_ALL[]       = { CTRL_MODIFY_ALL };
 static const ctrl_group_id_t GR_MODIFY_CHANGE[]    = { CTRL_MODIFY_CHANGE };
@@ -336,7 +337,8 @@ static const ctrl_group_id_t GR_SETTINGS_SECTIONS[] = {
 const page_group_rule_t kPageGroupRules[] = {
     { GROUP_STATE_BASED, 1, GR_TEMPO_ALL,         SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TEMPO },
 
-    { GROUP_STATE_BASED, 1, GR_SPLIT_ALL,        SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_SPLIT },
+    { CURRENT_POSITION_BASED, 2, GR_SPLIT_SECTIONS, SAVE_FIELD_INVALID,       NULL,                 0, MENU_SPLIT },
+    { GROUP_STATE_BASED, 3, GR_SPLIT_TYPES,      SPLIT_TYPE,                  NULL,                 0, MENU_SPLIT },
 
     { GROUP_STATE_BASED, 1, GR_MODIFY_ALL,        SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_MODIFY },
     { GROUP_STATE_BASED, 1, GR_MODIFY_CHANGE,     SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_MODIFY },
@@ -579,4 +581,3 @@ void midi_display_on_off(uint8_t on_or_off, uint8_t bottom_line){
     const char *text_print = message->off_on[on_or_off];
     write_1118(text_print, 95, text_position);
 }
-

@@ -18,7 +18,7 @@ static const Message _message = {
     .global_settings_2 = "Global Settings 2",
     .about = "About",
     .midi_modify = "MIDI Modify",
-    .midi_split = "MIDI Split",
+    .midi_split = "MIDI Split 1/2",
     .midi_transpose = "MIDI Transpose",
     .midi_dispatch = "MIDI Dispatch",
 
@@ -37,9 +37,20 @@ static const Message _message = {
     // Channel Split
     .dry_buses_all = { "Dry", "Bus 1", "Bus 2", "All" },
     .split_note = "Split Note",
+    .split_ch = "Split Ch.",
+    .split_velocity = "Split Vel.",
     .low_sem = "Low:",
     .high_sem = "High:",
+	.low_to = "Low to:",
+	.high_to = "High to:",
+	.ch_sem = "Ch:",
+	.select_bus_effects = "Select BUS effects",
+	.modify_short = "Modify:",
+	.transpose_short = "Transpose:",
+	.arpeggiator_short = "Arpeggiator:",
+	.dispatch_short = "Dispatch:",
 	.split_types = { "Note", "MIDI Ch.", "Velocity" },
+	.bus_effect_mask = { "Err", "Bus 1", "Bus 2", "All" },
 
     // Velocity
     .velocity = "Velocity",
@@ -229,7 +240,7 @@ static const Message _message = {
     },
 
 	.zero_to_sixteen = {
-			"Err",  "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"
+			"/",  "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"
 	},
 
 	//Used by 6_82
