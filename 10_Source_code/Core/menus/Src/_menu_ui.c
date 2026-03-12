@@ -302,13 +302,45 @@ static uint8_t sel_mod_vel_type()     { return (save_get(MODIFY_VELOCITY_TYPE)  
 static uint8_t sel_transpose_type()   { return (save_get(TRANSPOSE_TRANSPOSE_TYPE)== MIDI_TRANSPOSE_SCALED) ? 1 : 0; }
 static uint8_t sel_fixed0()           { return 0; }
 
+static uint8_t split_section_idx(void)
+{
+    const uint8_t sel_row = menu_nav_get_select(MENU_SPLIT);
+
+    CtrlActiveList union_rows = {0};
+    if (!build_union_for_position_page(MENU_SPLIT, &union_rows)) {
+        return 0;
+    }
+
+    uint32_t gid = 0;
+    if (!menu_row_hit(&union_rows, sel_row, NULL, NULL, &gid)) {
+        return 0;
+    }
+
+    if (gid == CTRL_SPLIT_PAGE_2) {
+        return 1;
+    }
+
+    return 0;
+}
+
+static uint8_t sel_split_type_page1(void)
+{
+    if (split_section_idx() != 0) {
+        return 3;
+    }
+
+    const uint8_t split_type = (uint8_t)save_get(SPLIT_TYPE);
+    return (split_type < 3) ? split_type : 0;
+}
+
+
 // -------------------------
 // Group-id lists (avoid compound literals in static tables)
 // -------------------------
 static const ctrl_group_id_t GR_TEMPO_ALL[]        = { CTRL_TEMPO_ALL, CTRL_SHARED_TEMPO, 0};
 
 static const ctrl_group_id_t GR_SPLIT_SECTIONS[]   = { CTRL_SPLIT_PAGE_1, CTRL_SPLIT_PAGE_2 };
-static const ctrl_group_id_t GR_SPLIT_TYPES[]      = { CTRL_SPLIT_TYPE_NOTE, CTRL_SPLIT_TYPE_CH, CTRL_SPLIT_TYPE_VELOCITY };
+static const ctrl_group_id_t GR_SPLIT_TYPES[]      = { CTRL_SPLIT_TYPE_NOTE, CTRL_SPLIT_TYPE_CH, CTRL_SPLIT_TYPE_VELOCITY, 0 };
 
 static const ctrl_group_id_t GR_MODIFY_ALL[]       = { CTRL_MODIFY_ALL };
 static const ctrl_group_id_t GR_MODIFY_CHANGE[]    = { CTRL_MODIFY_CHANGE };
@@ -338,7 +370,7 @@ const page_group_rule_t kPageGroupRules[] = {
     { GROUP_STATE_BASED, 1, GR_TEMPO_ALL,         SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_TEMPO },
 
     { CURRENT_POSITION_BASED, 2, GR_SPLIT_SECTIONS, SAVE_FIELD_INVALID,       NULL,                 0, MENU_SPLIT },
-    { GROUP_STATE_BASED, 3, GR_SPLIT_TYPES,      SPLIT_TYPE,                  NULL,                 0, MENU_SPLIT },
+    { GROUP_STATE_BASED, 4, GR_SPLIT_TYPES,      SAVE_FIELD_INVALID,          sel_split_type_page1, 0, MENU_SPLIT },
 
     { GROUP_STATE_BASED, 1, GR_MODIFY_ALL,        SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_MODIFY },
     { GROUP_STATE_BASED, 1, GR_MODIFY_CHANGE,     SAVE_FIELD_INVALID,          sel_fixed0,           0, MENU_MODIFY },
@@ -488,6 +520,27 @@ uint8_t build_union_for_position_page(menu_list_t page, CtrlActiveList *out)
             }
         }
     }
+
+    if (page == MENU_SPLIT) {
+        const uint8_t split_type = (uint8_t)save_get(SPLIT_TYPE);
+        ctrl_group_id_t split_gid = CTRL_SPLIT_TYPE_NOTE;
+
+        if (split_type == 1) {
+            split_gid = CTRL_SPLIT_TYPE_CH;
+        } else if (split_type == 2) {
+            split_gid = CTRL_SPLIT_TYPE_VELOCITY;
+        }
+
+        uint8_t exists = 0;
+        for (uint8_t j = 0; j < tmp_count; ++j) {
+            if (tmp[j] == split_gid) { exists = 1; break; }
+        }
+        if (!exists && tmp_count < (uint8_t)(sizeof(tmp) / sizeof(tmp[0]) - 1)) {
+            tmp[tmp_count++] = split_gid;
+            tmp[tmp_count] = 0;
+        }
+    }
+
 
     if (tmp_count == 0) return 0;
 

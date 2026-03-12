@@ -279,16 +279,27 @@ uint8_t save_modify_u8(save_field_t field, save_modify_op_t op, uint8_t value_if
     if (field < 0 || field >= SAVE_FIELD_COUNT) return 0;
 
     if (field >= SPLIT_MASK_MODIFY && field <= SPLIT_MASK_DISPATCH) {
-        uint8_t cur = split_mask_get_slot_value(field);
+        const save_limits_t lim = save_limits[field];
+        const menu_controls_t mt = menu_controls[field];
+
         if (op == SAVE_MODIFY_INCREMENT) {
+            uint8_t cur = split_mask_get_slot_value(field);
             cur = (cur >= 3) ? 1 : (uint8_t)(cur + 1);
             return split_mask_set_slot_value(field, cur);
         }
+
         if (op == SAVE_MODIFY_SET) {
-            return split_mask_set_slot_value(field, value_if_set);
+            int32_t v = (int32_t)value_if_set;
+            if (v > 230) {
+                v = (mt.wrap == WRAP) ? lim.max : lim.min;
+            }
+            v = wrap_or_clamp_i32(v, lim.min, lim.max, mt.wrap);
+            return split_mask_set_slot_value(field, (uint8_t)v);
         }
+
         return 0;
     }
+
 
     if (!u8_fields[field]) return 0;
     if (!save_lock_with_retries()) return 0;
