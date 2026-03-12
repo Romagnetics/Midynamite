@@ -437,9 +437,6 @@ void arp_handle_midi_note(const midi_note *msg)
     const uint8_t note = (uint8_t)(msg->note & 0x7F);
     const uint8_t hold_enabled = arp_hold_is_active();
 
-    // Keep only channel from last played input note; arp will set 0x90/0x80 itself.
-    last_note_sent.status = (uint8_t)(0x90 | (msg->status & 0x0F));
-    last_note_sent.velocity = msg->velocity;
 
     if (is_note_on) {
         arp_apply_key_sync_on_note_on(note);
@@ -559,8 +556,15 @@ void arp_on_tempo_tick(void)
     }
 
     const uint8_t index = arp_next_step_index(count, pattern);
+
+
+    const uint8_t source_note = s_source_for_expanded_note[index];
+    const uint8_t source_channel = (uint8_t)(s_active_notes[source_note].status & 0x0F);
+
+    last_note_sent.status = (uint8_t)((last_note_sent.status & 0xF0) | source_channel);
     last_note_sent.note = s_expanded_notes[index];
-    last_note_sent.velocity = s_active_notes[s_source_for_expanded_note[index]].velocity;
+    last_note_sent.velocity = s_active_notes[source_note].velocity;
+
 
 
 

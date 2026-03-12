@@ -39,8 +39,8 @@ const save_limits_t save_limits[SAVE_FIELD_COUNT] = {
 
 	[MODIFY_VELOCITY_TYPE]       = {      0,          1,          0 },
 
-    [MODIFY_SEND_TO_MIDI_CH1]    = {      0,         17,          0 },
-    [MODIFY_SEND_TO_MIDI_CH2]    = {      1,         17,          1 },
+    [MODIFY_SEND_TO_MIDI_CH1]    = {      1,         17,          1 },
+    [MODIFY_SEND_TO_MIDI_CH2]    = {      0,         17,          0 },
 
 
     [MODIFY_VEL_PLUS_MINUS]      = {    -80,         80,          0 },
