@@ -2,7 +2,7 @@
  * _menu_ui.c
  *
  *  Created on: Aug 23, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 
 #include <stddef.h>
@@ -282,6 +282,10 @@ void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count) {
 
 
 void screen_update_menu(uint32_t flag){
+    if (menu_select_blocks_render()) {
+        return;
+    }
+
     const menu_list_t m = current_menu();
     if (flag & flag_for_menu(m)) kMenuVT[m].ui_update();
 }
@@ -553,11 +557,9 @@ uint8_t build_union_for_position_page(menu_list_t page, CtrlActiveList *out)
 // Save helper functions / small UI IO
 // ==============================
 
-static void menu_change_check(){
-    static uint8_t button_pressed = 0;
-    if (debounce_button(GPIOB, Btn4_Pin, &button_pressed, 50)) {
-        set_current_menu(CURRENT_MENU, UI_MODIFY_INCREMENT, 0);
-    }
+static uint8_t menu_change_check(){
+    return menu_select_refresh();
+
 }
 
 static void notify_menu_refresh(){
@@ -607,16 +609,24 @@ static void start_stop_pressed() {
 
 void refresh_menu(void)
 {
-    menu_change_check();
+    const uint8_t selecting_menu = menu_change_check();
 
     uint8_t old_menu = get_current_menu(OLD_MENU);
     uint8_t current = get_current_menu(CURRENT_MENU);
 
-    if (old_menu != current) {
+    if (!selecting_menu && old_menu != current) {
+    	notify_menu_refresh();
+    }
+
+    if (!selecting_menu && old_menu != current) {
         notify_menu_refresh();
     }
 
-    update_menu();
+    if (!selecting_menu) {
+        update_menu();
+    }
+
+
 
     current = get_current_menu(CURRENT_MENU);
     set_current_menu(OLD_MENU, UI_MODIFY_SET, current);

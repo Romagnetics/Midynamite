@@ -77,5 +77,10 @@ void cont_update_settings();
 void ui_code_settings();
 void ui_update_settings();
 
+uint8_t menu_select_refresh(void);
+uint8_t menu_select_blocks_render(void);
+
+
+
 
 #endif /* INC_MENUS_H_ */

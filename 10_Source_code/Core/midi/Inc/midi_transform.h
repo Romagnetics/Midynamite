@@ -2,7 +2,7 @@
  * midi_tranform.h
  *
  *  Created on: Sep 5, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 
 #ifndef MIDI_INC_MIDI_TRANSFORM_H_

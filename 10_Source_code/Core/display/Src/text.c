@@ -270,7 +270,13 @@ static const Message _message = {
          "Ch. 13", "Ch. 14", "Ch. 15", "Ch. 16"
      },
 	.menu_list = { "Tempo", "Split", "Modify", "Transpose", "Arp." , "Dispatch", "Settings"},
-
+	.menu_list_long = { "Send Tempo",
+			            "MIDI Split",
+					    "MIDI Modify",
+						"Transpose",
+						"Arpeggiator" ,
+						"MIDI Dispatch",
+						"Settings"},
 	//Arpeggio
 	.division_list = { "1/4", "1/6", "1/8", "1/12", "1/16", "1/24", "1/32" },
 	.arp_patterns = { "Up", "Down", "Up/Down", "Up/Down 2", "Random", "Double Up", "Double Down", "Order"},

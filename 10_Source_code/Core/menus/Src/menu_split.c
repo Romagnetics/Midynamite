@@ -2,7 +2,7 @@
  * menu_split.c
  *
  *  Created on: Mar 3, 2026
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 #include "memory_main.h"
 #include "_menu_ui.h"
