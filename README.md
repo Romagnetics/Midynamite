@@ -106,6 +106,9 @@ Contrast, send behaviour, MIDI masks etc… Change the behavior of the pedal wit
 
 Incoming MIDI messages can also be filtered from the settings.
 
+[More information about the settings.](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:settings)
+
+
 ---
 
 ## Menu Select
