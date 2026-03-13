@@ -276,8 +276,19 @@ static uint8_t split_type_is_high(const midi_note *msg)
 
 static uint8_t split_route_allows_menu(menu_list_t menu)
 {
-    if (g_pipeline_split_route == 3) return 1;
-    if (g_pipeline_split_route == 0) return 0;
+   uint8_t active_route = g_pipeline_split_route;
+
+	if (save_get(SPLIT_CURRENTLY_SENDING) == 1) {
+		if (g_pipeline_split_target == SPLIT_TARGET_LOW) {
+			active_route = (uint8_t)save_get(SPLIT_SEND_CH1);
+		} else if (g_pipeline_split_target == SPLIT_TARGET_HIGH) {
+			active_route = (uint8_t)save_get(SPLIT_SEND_CH2);
+		}
+	}
+
+	if (active_route == 3) return 1;
+	if (active_route == 0) return 0;
+
 
     uint8_t slot = 0;
     switch (menu) {
@@ -292,7 +303,7 @@ static uint8_t split_route_allows_menu(menu_list_t menu)
     const uint8_t menu_mask = (uint8_t)((mask >> (slot * 2)) & 0x03);
     if (menu_mask == 0) return 0;
     if (menu_mask == 3) return 1;
-    return (uint8_t)(menu_mask == g_pipeline_split_route);
+    return (uint8_t)(menu_mask == active_route);
 }
 
 static void split_send_direct(midi_note *msg, uint8_t length)
