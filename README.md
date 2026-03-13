@@ -92,7 +92,7 @@ Everything you want from a modern arpeggiator, from Gate to programmable steps a
 
 Do you want to dispatch your MIDI notes to several synthesizers?
 
-[More information about MIDI Dispatch.](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:dispatch)
+[More information about MIDI Dispatch.](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:midi_dispatch)
 
 ---
 
