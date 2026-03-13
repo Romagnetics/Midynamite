@@ -135,5 +135,12 @@ This will send all notes off to all 16 MIDI channels.
 ## Major Version History
 
 **August 2025 — Version 1.0**
+- MIDI Tempo
+- MIDI Modify
+- MIDI Transpose
+- Settings (with MIDI Filter)
 
-- MIDI
+**March 2026 — Version 2.0**
+- MIDI Split
+- Arpeggiator
+- MIDI Dispatch
