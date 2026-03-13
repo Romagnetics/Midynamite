@@ -8,6 +8,9 @@ It can function as a standalone pedal or as a USB MIDI interface for a computer.
 
 All effects can be toggled independently and configured via the onboard screen and encoder.
 
+List of effects as of version 2.0
+
+The detailed manual for the pedal can be consulted here: https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:start
 Available to buy here: https://www.romagnetics.com/product/romagnetics-midynamite/
 
 ---
@@ -16,69 +19,43 @@ Available to buy here: https://www.romagnetics.com/product/romagnetics-midynamit
 
 ---
 
-### 🎵 MIDI Tempo
+### MIDI Tempo
 
-![Romagnetics_Midynamite](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/MIDI_Tempo.png "Midynamite MIDI Tempo")
+![MIDI_Tempo](https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:midi_tempo_1.png "MIDI Tempo")
 
-Send a MIDI clock signal to:
-
-- MIDI OUT 1  
-- MIDI OUT 2  
-- Both  
-- USB MIDI (optional via Settings)
-
-**Adjustable parameters:**
-
-- **Tempo** (BPM)  
-- **Output destinations** (including USB)
+ Send a MIDI clock signal to any OUT you want. 
+ [More information about MIDI Tempo. ](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:midi_tempo)
 
 ---
 
-### 🎚 MIDI Modify
+###  MIDI Split
 
-![MIDI_Modify](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/MIDI_Modify.png " MIDI Modify")
+![MIDI_Split](https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:midi_split_1.png "MIDI Split")
 
-Modify incoming MIDI messages in two main ways:
 
-#### 🌀 Channel Mode
+ MIDI Split allows you to send MIDI notes to two different groups based on the note, the MIDI channel, or the velocity. 
+ You can sen send each group either to all the effects, to dry, or to Bus 1 or Bus 2.
+ 
+![MIDI_Split_bus](https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:midi_split_bus.png "Midi Split Bus")
 
-- **MIDI Change**  
-  Redirect all incoming MIDI messages to one or two selected MIDI channels.
-  This allows you to play two synths at the same time.
-  Also allows very quick channel changes between scenes.
+ [More information about MIDI Split. ](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:midi_split)
 
-- **MIDI Split**  
-  Split the keyboard into two zones:  
-  - Notes below a split point go to one MIDI channel.  
-  - Notes above go to another.  
-  Ideal for controlling two synths with one keyboard.
 
-> The split point and both output channels are fully configurable.
+More info about MIDI Split 
 
-> The switch between MIDI Change and MIDI Split is made by pressing the select button when selecting a MIDI Change or MIDI Split item
 
-> The OUTs are fully configurable between OUT 1, OUT 2, OUT 1 & 2 & Split.
----
+###  MIDI Modify
 
-#### 🎛 Velocity Mode
+![MIDI_Modify](https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:midi_modify_1.png " MIDI Modify")
 
-- **Velocity Change**  
-  Add or subtract velocity from the incoming signal.  
-  *(Range: -50 to +50)*  
-  Preserves dynamic expression.
-
-- **Fixed Velocity**  
-  All incoming notes are set to a fixed velocity.  
-  Useful for consistent volume or triggering.
-
-  > The switch between Velocity Change and Fixed Velocity is made by pressing the select button when selecting a velocity item
+Modify the MIDI Channel and the velocity of incoming MIDI messages.
 
 
 ---
 
 ### 🎼 MIDI Transpose
 
-![MIDI_Transpose](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/MIDI_Transpose.png " MIDI Transpose")
+![MIDI_Transpose](https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:midi_transpose_1.png " MIDI Transpose")
 
 
 Apply real-time note transformations to incoming MIDI notes.
@@ -128,3 +105,8 @@ This will send all notes off to all 16 MIDI channels.
 
 ---
 
+## Major Version History
+August 2025: Version 1.0
+- MIDI 
+
+March 2026
