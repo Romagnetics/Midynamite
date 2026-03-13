@@ -52,18 +52,27 @@ static void menu_select_draw_mode(void)
         const uint8_t current = get_current_menu(CURRENT_MENU);
         const uint8_t menu_idx = menu_wrap_index((int16_t)current + offset);
         const int16_t y = (int16_t)(5 + (i * 10));
+        const save_field_t sending_field = sending_field_for_menu((menu_list_t)menu_idx);
 
-        write_underline_68(message->menu_list_long[menu_idx], 20, y, (i == 1) ? 1 : 0);
+        write_underline_68(message->menu_list_long[menu_idx], TXT_LEFT, y, (i == 1) ? 1 : 0);
+
+        if (sending_field != SAVE_FIELD_INVALID) {
+            const uint8_t sending = save_get(sending_field);
+            write_68(message->off_on[sending], 100, y);
+        }
     }
 
     screen_driver_UpdateScreen();
 }
+
+
 
 uint8_t menu_select_refresh(void)
 {
     static uint8_t was_pressed = 0;
     static uint8_t menu_mode_on = 0;
     static uint32_t pressed_since = 0;
+    static uint8_t prev_btn3 = 1;
 
     const uint8_t is_pressed = (HAL_GPIO_ReadPin(GPIOB, Btn4_Pin) == 0) ? 1 : 0;
     s_menu_select_blocks_render = is_pressed;
@@ -89,6 +98,18 @@ uint8_t menu_select_refresh(void)
                 set_current_menu(CURRENT_MENU, UI_MODIFY_SET, next);
             }
 
+            const uint8_t btn3 = HAL_GPIO_ReadPin(GPIOB, Btn3_Pin);
+            if (btn3 == 0 && prev_btn3 == 1) {
+                const menu_list_t menu = (menu_list_t)get_current_menu(CURRENT_MENU);
+                const save_field_t field = sending_field_for_menu(menu);
+                if (field != SAVE_FIELD_INVALID) {
+                    save_modify_u8(field, SAVE_MODIFY_INCREMENT, 0);
+                    threads_display_notify(flag_for_menu(menu));
+                }
+            }
+            prev_btn3 = btn3;
+
+
             menu_select_draw_mode();
         }
 
@@ -107,6 +128,7 @@ uint8_t menu_select_refresh(void)
 
     was_pressed = 0;
     menu_mode_on = 0;
+    prev_btn3 = 1;
     return 0;
 }
 

@@ -615,10 +615,6 @@ void refresh_menu(void)
     uint8_t current = get_current_menu(CURRENT_MENU);
 
     if (!selecting_menu && old_menu != current) {
-    	notify_menu_refresh();
-    }
-
-    if (!selecting_menu && old_menu != current) {
         notify_menu_refresh();
     }
 
@@ -632,7 +628,7 @@ void refresh_menu(void)
     set_current_menu(OLD_MENU, UI_MODIFY_SET, current);
 
     static uint8_t old_btn3_state = 1;
-    if (debounce_button(GPIOB, Btn3_Pin, &old_btn3_state, 50)) {
+    if (!selecting_menu && debounce_button(GPIOB, Btn3_Pin, &old_btn3_state, 50)) {
         start_stop_pressed();
     }
 }
