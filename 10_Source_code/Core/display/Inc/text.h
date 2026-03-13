@@ -184,6 +184,8 @@ typedef struct {
 
     const char *midi_channels[18];
     const char *menu_list[7];
+    const char *menu_list_long[7];
+
 
     const char *division_list[7];
     const char *arp_patterns[8];
