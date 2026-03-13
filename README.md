@@ -8,7 +8,16 @@ It can function as a standalone pedal or as a USB MIDI interface for a computer.
 
 All effects can be toggled independently and configured via the onboard screen and encoder.
 
-List of effects as of version 2.0
+List of effects as of version 2.0:
+
+* MIDI Tempo
+* MIDI Split
+* MIDI Modify
+* Transpose
+* Arpeggiator
+* MIDI Dispatch
+* Settings
+→ Settings contains the MIDI Filter
 
 The detailed manual for the pedal can be consulted here: https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:start
 Available to buy here: https://www.romagnetics.com/product/romagnetics-midynamite/
@@ -41,61 +50,71 @@ Available to buy here: https://www.romagnetics.com/product/romagnetics-midynamit
  [More information about MIDI Split. ](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:midi_split)
 
 
-More info about MIDI Split 
-
-
 ###  MIDI Modify
 
-![MIDI_Modify](https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:midi_modify_1.png " MIDI Modify")
+ ![MIDI_Modify](https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:midi_modify_1.png " MIDI Modify")
 
-Modify the MIDI Channel and the velocity of incoming MIDI messages.
+ Modify the MIDI Channel and the velocity of incoming MIDI messages.
+
+ [More information about MIDI Modify. ](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:midi_modify)
 
 
 ---
 
-### 🎼 MIDI Transpose
+### MIDI Transpose
 
-![MIDI_Transpose](https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:midi_transpose_1.png " MIDI Transpose")
+ ![MIDI_Transpose](https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:midi_transpose_1.png " MIDI Transpose")
 
 
-Apply real-time note transformations to incoming MIDI notes.
+ Apply real-time note transformations to incoming MIDI notes.
+ Change the pitch of incoming notes, either with Pitch Shift or with the Harmonizer. 
 
-#### 📉 Pitch Shift
+ [More information about MIDI Transpose. ](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:midi_transpose)
 
-- Shift all incoming notes up/down by a specified number of semitones.  
-- Optionally **mute the original note**.
+---
+ 
+### Arpeggiator
 
-#### 🎶 Scale Mode (Harmonizer)
+ ![MIDI_Arpeggiator](https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:arpeggiator_1.png" MIDI Arpeggiator")
 
-- Select a **scale**, **mode**, and **interval**.  
-- The pedal generates a harmonized note based on the input.
+ Everything you want from a modern arpeggiator, from Gate to Programmable steps and Keysync. 
 
-> Optionally mute the original note only to hear the harmony.
+ [More information about the Arpeggiator.](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:arpeggiator)
 
-> The switch between Pitch Shift and Scale Mode is made by pressing the select button in the Transpose menu
 
 ---
 
-## ⚙️ Settings
+### MIDI Dispatch
 
-![Midynamite Settings](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/Settings.png "Midynamite Settings")
+ ![MIDI_Dispatch](https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:dispatch_1.png" MIDI Dispatch")
 
-Accessible in the **Settings** menu:
-- **Start Menu**  
-  Choose default screen on startup:  
-  *Tempo*, *MIDI Modify*, *Transpose*, or *Settings*.
 
-- **USB MIDI**  
-  Configure USB MIDI behavior:  
-  - *Send to USB*  
-  - *No USB*
+  Do you want to dispatch your MIDI notes to several synthesizers? 
 
-- **Contrast**  
-  Adjust screen contrast in 10 levels (from 10% to 100%).
+ [More information about the MIDI Dispatch.](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:arpeggiator)
+
 
 ---
+ 
+### Settings
 
-## 🆘 Panic Button
+![Midynamite Settings](https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:settings_1.png "Midynamite Settings")
+
+ Contrast, send behaviour, MIDI masks etc… Change the behavior of the pedal with the settings. 
+
+![Midynamite Filter](https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:settings_2.png "Midynamite Settings Filter")
+ 
+ Incoming MIDI messages can also be filtered from the settings
+ 
+## Menu Select
+
+![Menu Select](https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:menu_select.png "Menu Select")
+
+If you press the Menu button shortly, the pedal will go to the next menu.
+If you keep Menu pressed, you can select the menu directly by using the select encoder.
+You can turn each menu on an off from the menu select by pressing the Start / Stop button.
+
+## Panic Button
 
 To immediately stop all MIDI output:
 
