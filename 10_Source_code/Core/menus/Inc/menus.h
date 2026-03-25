@@ -44,7 +44,6 @@ typedef struct {
 
 typedef uint64_t menu_group_mask_t;
 
-// Selector callback type used by the selector table (menus.c)
 typedef uint8_t (*selector_compute_fn_t)();
 
 // Active-list storage access for controller

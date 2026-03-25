@@ -8,16 +8,12 @@
 #include <stddef.h>
 #include "cmsis_os2.h" //For osDelay
 #include "main.h" // Timer
-#include "_menu_ui.h"
-#include "menus.h"
-#include "_menu_controller.h" // For menu_field_row_span
 #include "_menu_ui.h" // menu change functions
+#include "_menu_controller.h" // For menu_field_row_span
 #include "midi_tempo.h" //mt_start_stop
 #include "screen_driver.h" //Font
-#include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
 #include "utils.h" // Debounce
 
-extern TIM_HandleTypeDef htim2;
 
 typedef struct {
     uint8_t current_menu;
@@ -149,12 +145,6 @@ static void menu_ui_draw_8_steps(const ui_element *e)
 // -------------------------
 // Swing percent drawing (3 chars: " 5%".."99%")
 // -------------------------
-static inline uint8_t arp_step_ticks(uint8_t div_idx)
-{
-    static const uint8_t t[7] = { 48, 32, 24, 16, 12, 8, 6 };
-    if (div_idx > 6) div_idx = 6;
-    return t[div_idx];
-}
 
 // Convert swing ticks (0..ticks-1) into percent (rounded).
 // Note: your controller clamps swing to >= 1, so UI never sees 0 unless old data exists.
@@ -413,9 +403,6 @@ CtrlActiveList* list_for_page(menu_list_t page)
 }
 
 
-// -------------------------
-// Local helpers (private to menus.c)
-// -------------------------
 
 void build_union_for_groups_local(const ctrl_group_id_t *groups, uint8_t n_groups, CtrlActiveList *out)
 {
