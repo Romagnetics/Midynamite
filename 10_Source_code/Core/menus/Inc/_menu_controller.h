@@ -85,8 +85,7 @@ typedef struct {
 
 extern const menu_controls_t menu_controls[SAVE_FIELD_COUNT];
 
-// Build active list from an active-groups mask (sorted by ui_order).
-// Exported so menus.c can reuse the exact same ordering/filtering logic.
+
 void ctrl_build_active_fields(menu_group_mask_t active_groups, CtrlActiveList *out);
 menu_group_mask_t ctrl_active_mask_for_page(menu_list_t page);
 
@@ -157,6 +156,20 @@ uint8_t  menu_nav_get_select(menu_list_t field);
 void     update_menu();
 
 //update_dispatch_from_ch needs to be updated every cycle
+
+
+// ---------------------
+// Shared arpeggiator timing helpers
+// ---------------------
+// 48 PPQ grid. Divisions: 1/4 1/6 1/8 1/12 1/16 1/24 1/32
+// step ticks:            48   32  24   16    12    8     6
+static inline uint8_t arp_step_ticks(uint8_t div_idx)
+{
+    static const uint8_t ticks_map[7] = { 48, 32, 24, 16, 12, 8, 6 };
+    if (div_idx > 6) div_idx = 6;
+    return ticks_map[div_idx];
+}
+
 
 #ifdef UNIT_TEST
 void update_value_inc1(save_field_t);

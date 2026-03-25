@@ -89,17 +89,7 @@ void update_contrast(save_field_t f) {
     screen_driver_UpdateContrast();
 }
 
-// -------------------------
-// Arpeggiator: division -> ticks & swing mapping
-// -------------------------
-// 48 PPQ grid. Divisions: 1/4 1/6 1/8 1/12 1/16 1/24 1/32
-// step ticks:            48   32  24   16    12    8     6
-static inline uint8_t arp_step_ticks(uint8_t div_idx)
-{
-    static const uint8_t t[7] = { 48, 32, 24, 16, 12, 8, 6 };
-    if (div_idx > 6) div_idx = 6;
-    return t[div_idx];
-}
+
 
 static inline uint8_t arp_swing_max(uint8_t div_idx)
 {
@@ -404,18 +394,10 @@ menu_group_mask_t ctrl_active_mask_for_page(menu_list_t page)
 
 static const CtrlActiveList* get_list_for_page(menu_list_t page)
 {
-	const menu_group_mask_t mask = ctrl_active_mask_for_page(page); // from menus.c
-    CtrlActiveList *dst = list_for_page(page);                      // from menus.c
+	const menu_group_mask_t mask = ctrl_active_mask_for_page(page);
+    CtrlActiveList *dst = list_for_page(page);
     ctrl_build_active_fields(mask, dst);
     return dst;
-}
-
-// -------------------------
-// Row counting (pure logic)
-// -------------------------
-static uint8_t ctrl_row_count(const CtrlActiveList *list)
-{
-    return rows_for_list(list);
 }
 
 // -------------------------
@@ -428,11 +410,11 @@ static void menu_nav_update_select(menu_list_t page)
     // Compute rows BEFORE saving prev / reading step
     uint8_t rows = 0;
     CtrlActiveList u = {0};
-    if (build_union_for_position_page(page, &u)) { // from menus.c
+    if (build_union_for_position_page(page, &u)) {
         rows = rows_for_list(&u);
     } else {
         const CtrlActiveList* list = get_list_for_page(page);
-        rows = ctrl_row_count(list);
+        rows = rows_for_list(list);
     }
 
     if (rows == 0) { if (page < AMOUNT_OF_MENUS) s_menu_selects[page] = 0; return; }
@@ -459,7 +441,7 @@ uint8_t menu_nav_get_select(menu_list_t page) {
 menu_group_mask_t ui_active_groups(void) {
     uint8_t m = get_current_menu(CURRENT_MENU);
     if (m >= AMOUNT_OF_MENUS) m = 0;
-    return ctrl_active_mask_for_page((menu_list_t)m); // from menus.c
+    return ctrl_active_mask_for_page((menu_list_t)m);
 }
 
 void menu_nav_begin_and_update(menu_list_t page) {
@@ -517,7 +499,7 @@ static inline NavSel nav_selection(menu_list_t page)
 // -------------------------
 // Press-to-cycle (menus decides if/what cycles)
 // -------------------------
-static uint8_t menus_cycle_on_press(menu_list_t page)
+void select_press_menu_change(menu_list_t page)
 {
     const uint8_t row = menu_nav_get_select(page);
 
@@ -527,16 +509,11 @@ static uint8_t menus_cycle_on_press(menu_list_t page)
     if (build_union_for_position_page(page, &u)) {
         (void)menu_row_hit(&u, row, NULL, NULL, &gid);
     } else {
-        // Build active list from mask, in correct ui_order (shared implementation)
-    	const menu_group_mask_t mask = ctrl_active_mask_for_page(page);
-        CtrlActiveList *dst = list_for_page(page);
-        ctrl_build_active_fields(mask, dst);
-
-        (void)menu_row_hit(dst, row, NULL, NULL, &gid);
+        const CtrlActiveList *list = get_list_for_page(page);
+        (void)menu_row_hit(list, row, NULL, NULL, &gid);
     }
 
-
-    if (!gid) return 0;
+    if (!gid) return;
 
     for (size_t i = 0; i < kPageGroupRulesCount; ++i) {
         const page_group_rule_t *sel = &kPageGroupRules[i];
@@ -552,17 +529,10 @@ static uint8_t menus_cycle_on_press(menu_list_t page)
 
             if (sel->field != SAVE_FIELD_INVALID) {
                 save_modify_u8(sel->field, SAVE_MODIFY_INCREMENT, 0);
-                return 1;
             }
-            return 0;
+            return;
         }
     }
-
-    return 0;
-}
-
-void select_press_menu_change(menu_list_t page) {
-    (void)menus_cycle_on_press(page); // from menus.c
 }
 
 // -------------------------
