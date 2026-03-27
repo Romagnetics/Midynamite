@@ -35,6 +35,10 @@ typedef enum {
 typedef enum {
     ELEM_TEXT,
 	ELEM_ITEM,
+    ELEM_TEXT_1118,
+    ELEM_TEXT_1624,
+    ELEM_ITEM_1118,
+    ELEM_ITEM_1624,
 	ELEM_16CH,
     ELEM_8STEPS,
 	ELEM_SWINGPCT,
@@ -47,7 +51,6 @@ typedef struct {
     ui_elem_type_t type;
     uint8_t save_item;
     const char *text;
-    ui_font_t font;
     int16_t x;
     int16_t y;
     uint8_t ctrl_group_id;
