@@ -78,6 +78,30 @@ static void draw_text(const char *s, int16_t x, int16_t y, ui_font_t font) {
     }
 }
 
+static ui_font_t elem_font(const ui_element *e)
+{
+    switch (e->type) {
+        case ELEM_TEXT:
+        case ELEM_ITEM:
+        case ELEM_SWINGPCT:
+            return UI_6x8;
+
+        case ELEM_TEXT_1118:
+        case ELEM_ITEM_1118:
+            return UI_11x18;
+
+        case ELEM_TEXT_1624:
+        case ELEM_ITEM_1624:
+            return UI_16x24;
+
+        case ELEM_16CH:
+        case ELEM_8STEPS:
+            return UI_6x8_2;
+    }
+
+    return UI_6x8;
+}
+
 static void draw_text_ul(const char *s, int16_t x, int16_t y, ui_font_t font, uint8_t ul) {
     if (!s) return;
     switch (font) {
@@ -105,7 +129,7 @@ static inline void draw_item_row(const ui_element *e)
     if (idx > last) idx = last;
 
     const char *const *table = (const char *const *)e->text;
-    draw_text_ul(table[idx], e->x, e->y, e->font, ui_is_field_selected(f) ? 1 : 0);
+    draw_text_ul(table[idx], e->x, e->y, elem_font(e), ui_is_field_selected(f) ? 1 : 0);
 }
 
 static inline uint8_t elem_is_visible(const ui_element *e, menu_group_mask_t active_groups_mask)
@@ -138,7 +162,7 @@ static void menu_ui_draw_8_steps(const ui_element *e)
         const char *label = (mask & (1 << i)) ? "X" : "0";
         const uint8_t ul  = (selb == (int8_t)i) ? 1 : 0;
 
-        draw_text_ul(label, (int16_t)(base_x + 10 * i), y, e->font, ul);
+        draw_text_ul(label, (int16_t)(base_x + 10 * i), y, elem_font(e), ul);
     }
 }
 
@@ -182,7 +206,7 @@ static void menu_ui_draw_swing_percent(const ui_element *e)
     buf[2] = '%';
     buf[3] = 0;
 
-    draw_text_ul(buf, e->x, e->y, e->font, ui_is_field_selected(swing_f) ? 1 : 0);
+    draw_text_ul(buf, e->x, e->y, elem_font(e), ui_is_field_selected(swing_f) ? 1 : 0);
 }
 
 // -------------------------
@@ -207,7 +231,7 @@ static void menu_ui_draw_16ch(const ui_element *e) {
         const int16_t y    = (i < 8) ? y1 : y2;
         const uint8_t ul   = (selb == (int8_t)i) ? 1 : 0;
 
-        draw_text_ul(label, x, y, e->font, ul);
+        draw_text_ul(label, x, y, elem_font(e), ul);
     }
 }
 
@@ -253,8 +277,16 @@ void menu_ui_render(menu_list_t menu, const ui_element *elems, size_t count) {
         if (!elem_is_visible(e, active)) continue;
 
         switch (e->type) {
-            case ELEM_TEXT:     draw_text(e->text, e->x, e->y, e->font); break;
-            case ELEM_ITEM:     draw_item_row(e);                        break;
+            case ELEM_TEXT:
+            case ELEM_TEXT_1118:
+            case ELEM_TEXT_1624:
+                draw_text(e->text, e->x, e->y, elem_font(e));
+                break;
+            case ELEM_ITEM:
+            case ELEM_ITEM_1118:
+            case ELEM_ITEM_1624:
+                draw_item_row(e);
+                break;
             case ELEM_16CH:     menu_ui_draw_16ch(e);                    break;
             case ELEM_8STEPS:   menu_ui_draw_8_steps(e);                 break;
             case ELEM_SWINGPCT: menu_ui_draw_swing_percent(e);           break;
