@@ -9,11 +9,6 @@
 #include "menus.h"
 #include "text.h"
 
-void cont_update_split(menu_list_t field)
-{
-    toggle_subpage(field);
-}
-
 #define MASK_COL 80
 
 void ui_update_split(void)

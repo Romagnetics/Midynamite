@@ -489,13 +489,6 @@ uint8_t arp_handle_midi_cc64(const midi_note *msg)
 
 }
 
-
-void arp_process_pending_tempo_ticks(void)
-{
-    arp_on_tempo_tick();
-}
-
-
 void arp_on_tempo_tick(void)
 {
     arp_sync_hold_mode();

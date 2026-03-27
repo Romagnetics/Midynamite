@@ -4,36 +4,12 @@
  *  Created on: Jun 25, 2025
  *      Author: Romain Dereu
  */
-#include "main.h" // Timer
 #include "_menu_ui.h"
-#include "menus.h"
-#include "screen_driver.h"
 #include "text.h"
-#include "cmsis_os2.h" //osDelay
-#include "utils.h" // Debounce
 
-
-void cont_update_settings()  {
-    // Needs persistent state for debounce across frames
-    static uint8_t save_btn_state = 1;
-
-    if (debounce_button(GPIOB, Btn1_Pin, &save_btn_state, 50)) {
-        // Immediate feedback
-        write_68(message->saving, TXT_LEFT, B_LINE);
-        screen_driver_UpdateScreen();
-
-        store_settings();
-
-        write_68(message->saved, TXT_LEFT, B_LINE);
-        screen_driver_UpdateScreen();
-        osDelay(1000);
-
-        write_68(message->save_instruction, TXT_LEFT, B_LINE);
-        screen_driver_UpdateScreen();
-
-        // Make sure the normal UI redraws ASAP after the save banner
-        threads_display_notify(flag_for_menu(MENU_SETTINGS));
-    }
+static const char* settings_status_text(void)
+{
+    return settings_recently_saved() ? message->saved : message->save_instruction;
 }
 
 
@@ -72,7 +48,7 @@ void ui_update_settings(void)
         { ELEM_TEXT , 0,                       TEXT_(about_product),       UI_6x8,  TXT_LEFT, LINE_2, CTRL_SETTINGS_ABOUT },
         { ELEM_TEXT , 0,                       TEXT_(about_version),       UI_6x8, TXT_LEFT, LINE_3, CTRL_SETTINGS_ABOUT },
         // -------- Bottom part (always on) --------
-        { ELEM_TEXT , 0,                       TEXT_(save_instruction),    UI_6x8, TXT_LEFT, B_LINE, CTRL_SETTINGS_ALWAYS },
+        { ELEM_TEXT , 0,                       settings_status_text(),    UI_6x8, TXT_LEFT, B_LINE, CTRL_SETTINGS_ALWAYS },
     };
     menu_ui_render(MENU_SETTINGS, elems, sizeof(elems)/sizeof(elems[0]));
 }

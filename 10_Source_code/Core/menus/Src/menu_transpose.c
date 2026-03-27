@@ -8,11 +8,6 @@
 #include "menus.h"
 #include "text.h"
 
-void cont_update_transpose(menu_list_t field) {
-	toggle_subpage(field);
-}
-
-
 void ui_update_transpose(void)
 {
     const ui_element elems[] = {

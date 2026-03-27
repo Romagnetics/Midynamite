@@ -212,12 +212,10 @@ static void menu_ui_draw_16ch(const ui_element *e) {
 }
 
 typedef void (*ui_fn0_t)(void);
-typedef void (*cont_fn1_t)(menu_list_t);
 
 typedef struct {
-    ui_fn0_t   ui_update;
-    ui_fn0_t   ui_code;
-    cont_fn1_t cont_update;
+    ui_fn0_t ui_update;
+    ui_fn0_t ui_code;
 } MenuVTable;
 
 static inline menu_list_t current_menu(void) {
@@ -226,13 +224,13 @@ static inline menu_list_t current_menu(void) {
 }
 
 static const MenuVTable kMenuVT[AMOUNT_OF_MENUS] = {
-    [MENU_TEMPO]       = { ui_update_tempo,       ui_code_tempo,       NULL },
-    [MENU_SPLIT]       = { ui_update_split,       ui_code_split,       cont_update_split },
-    [MENU_MODIFY]      = { ui_update_modify,      ui_code_modify,      cont_update_modify },
-    [MENU_TRANSPOSE]   = { ui_update_transpose,   ui_code_transpose,   cont_update_transpose },
-    [MENU_ARPEGGIATOR] = { ui_update_arpeggiator, ui_code_arpeggiator, cont_update_arpeggiator },
-    [MENU_DISPATCH]    = { ui_update_dispatch,    ui_code_dispatch,    NULL },
-    [MENU_SETTINGS]    = { ui_update_settings,    ui_code_settings,    (cont_fn1_t)cont_update_settings },
+    [MENU_TEMPO]       = { ui_update_tempo,       ui_code_tempo },
+    [MENU_SPLIT]       = { ui_update_split,       ui_code_split },
+    [MENU_MODIFY]      = { ui_update_modify,      ui_code_modify },
+    [MENU_TRANSPOSE]   = { ui_update_transpose,   ui_code_transpose },
+    [MENU_ARPEGGIATOR] = { ui_update_arpeggiator, ui_code_arpeggiator },
+    [MENU_DISPATCH]    = { ui_update_dispatch,    ui_code_dispatch },
+    [MENU_SETTINGS]    = { ui_update_settings,    ui_code_settings },
 };
 
 
@@ -280,11 +278,21 @@ void screen_update_menu(uint32_t flag){
     if (flag & flag_for_menu(m)) kMenuVT[m].ui_update();
 }
 
-void cont_update_menu(menu_list_t field){
-    const menu_list_t m = current_menu();
-    if (kMenuVT[m].cont_update) {
-        kMenuVT[m].cont_update(field);
-    }
+static void notify_menu_refresh(void);
+
+static uint32_t s_settings_saved_until = 0;
+
+uint8_t settings_recently_saved(void)
+{
+    return ((int32_t)(HAL_GetTick() - s_settings_saved_until) < 0) ? 1 : 0;
+}
+
+
+static void settings_save_pressed(void)
+{
+    store_settings();
+    s_settings_saved_until = HAL_GetTick() + 1000;
+    notify_menu_refresh();
 }
 
 
@@ -607,9 +615,18 @@ void refresh_menu(void)
 
     if (!selecting_menu) {
         update_menu();
+
+	const menu_list_t m = current_menu();
+	 if (m == MENU_SPLIT || m == MENU_MODIFY || m == MENU_TRANSPOSE || m == MENU_ARPEGGIATOR) {
+		 toggle_subpage(m);
+	 }
+
+	 static uint8_t old_btn1_state = 1;
+	 if (m == MENU_SETTINGS && HAL_GPIO_ReadPin(GPIOB, Btn2_Pin) == GPIO_PIN_SET &&
+		 debounce_button(GPIOB, Btn1_Pin, &old_btn1_state, 50)) {
+		 settings_save_pressed();
+	 	 }
     }
-
-
 
     current = get_current_menu(CURRENT_MENU);
     set_current_menu(OLD_MENU, UI_MODIFY_SET, current);
