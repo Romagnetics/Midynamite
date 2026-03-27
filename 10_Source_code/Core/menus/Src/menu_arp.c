@@ -9,10 +9,6 @@
 #include "menus.h"
 #include "text.h"
 
-void cont_update_arpeggiator(menu_list_t field) {
-    toggle_subpage(field);
-}
-
 void ui_update_arpeggiator(void)
 {
     #define CENTER_SPLIT 62

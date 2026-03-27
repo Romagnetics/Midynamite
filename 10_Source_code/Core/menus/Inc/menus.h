@@ -55,24 +55,19 @@ void ui_update_tempo();
 
 void ui_code_split();
 void ui_update_split();
-void cont_update_split(menu_list_t field);
 
-void cont_update_modify(menu_list_t field);
 void ui_code_modify();
 void ui_update_modify();
 
-void cont_update_transpose(menu_list_t field);
 void ui_code_transpose();
 void ui_update_transpose();
 
-void cont_update_arpeggiator(menu_list_t field);
 void ui_code_arpeggiator();
 void ui_update_arpeggiator();
 
 void ui_code_dispatch();
 void ui_update_dispatch();
 
-void cont_update_settings();
 void ui_code_settings();
 void ui_update_settings();
 

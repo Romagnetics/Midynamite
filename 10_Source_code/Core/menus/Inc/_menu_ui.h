@@ -101,8 +101,7 @@ uint8_t build_union_for_position_page(menu_list_t page, CtrlActiveList *out);
 // -------- Menu helpers --------
 void screen_update_menu(uint32_t flag);
 
-void cont_update_menu(menu_list_t field);
-
+uint8_t settings_recently_saved(void);
 
 // Controller-facing polling entrypoint
 void refresh_menu(void);

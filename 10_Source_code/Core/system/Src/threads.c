@@ -3,7 +3,7 @@
 #include "main.h" //GPIO
 
 #include "midi_transform.h" //calculate_incoming_midi
-#include "midi_arp.h" //arp_process_pending_tempo_ticks
+#include "midi_arp.h" //arp_on_tempo_tick
 #include "midi_tempo.h" //tempo_sync_from_save
 
 #include "threads.h"
@@ -92,7 +92,7 @@ static void MidiCoreThread(void *argument)
         }
 
         if ((flags & MIDI_CORE_FLAG_ARP_TICK) != 0) {
-            arp_process_pending_tempo_ticks();
+            arp_on_tempo_tick();
         }
 
         if ((flags & MIDI_CORE_FLAG_TEMPO_OUT) != 0) {

@@ -625,6 +625,5 @@ void update_menu()
     if (page >= AMOUNT_OF_MENUS) page = 0;
 
     menu_nav_begin_and_update(page);
-    cont_update_menu(page);
     (void)menu_nav_end_auto(page);
 }

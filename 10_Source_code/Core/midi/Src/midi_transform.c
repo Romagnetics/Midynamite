@@ -196,8 +196,7 @@ void calculate_incoming_midi() {
             running_status = byte;
             msg.status = byte;
 
-            uint8_t status_nibble = byte & 0xF0;
-            expected_length = (status_nibble == 0xC0 || status_nibble == 0xD0) ? 2 : 3;
+            expected_length = midi_message_length(byte);
             byte_count = 1; // waiting for data
             continue;
         }
@@ -209,8 +208,7 @@ void calculate_incoming_midi() {
             // We assume running status is in effect, start a new message
             msg.status = running_status;
 
-            uint8_t status_nibble = running_status & 0xF0;
-            expected_length = (status_nibble == 0xC0 || status_nibble == 0xD0) ? 2 : 3;
+            expected_length = midi_message_length(running_status);
 
             msg.note = byte;
             byte_count = 2;

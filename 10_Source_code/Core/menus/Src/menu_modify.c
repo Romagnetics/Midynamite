@@ -9,11 +9,6 @@
 #include "menus.h"
 #include "text.h"
 
-void cont_update_modify(menu_list_t field) {
-	toggle_subpage(field);
-}
-
-
 void ui_update_modify(void)
 {
     const ui_element elems[] = {
