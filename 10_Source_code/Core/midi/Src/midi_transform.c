@@ -33,6 +33,7 @@ typedef enum {
 
 static uint8_t g_pipeline_split_route = 3;
 static split_output_target_t g_pipeline_split_target = SPLIT_TARGET_BOTH;
+static uint8_t g_split_velocity_note_high[16][128];
 
 // Circular buffer instance declared externally
 extern midi_modify_circular_buffer midi_modify_buff;
@@ -264,7 +265,22 @@ static uint8_t split_type_is_high(const midi_note *msg)
     if (split_type == 2) {
         uint8_t is_note_on = 0;
         if (midi_is_note_message(msg, &is_note_on) != 0) {
-            return (uint8_t)(msg->velocity >= (uint8_t)save_get(SPLIT_VELOCITY));
+            const uint8_t channel = (uint8_t)(msg->status & 0x0F);
+            const uint8_t note = msg->note;
+            const uint8_t high_by_velocity = (uint8_t)(msg->velocity >= (uint8_t)save_get(SPLIT_VELOCITY));
+
+            if (is_note_on != 0) {
+                g_split_velocity_note_high[channel][note] = high_by_velocity;
+                return high_by_velocity;
+            }
+
+            if (g_split_velocity_note_high[channel][note] != 0) {
+                g_split_velocity_note_high[channel][note] = 0;
+                return 1;
+            }
+
+            return high_by_velocity;
+
         }
         return 0;
     }
