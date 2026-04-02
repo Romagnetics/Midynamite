@@ -16,6 +16,12 @@ typedef struct {
     uint8_t velocity; ///< 0–127 velocity
 } midi_note;
 
+typedef struct {
+    uint8_t uart1;
+    uint8_t uart2;
+    uint8_t usb;
+} output_route_t;
+
 
 // ---------------------
 // Definitions of pipelines
@@ -43,8 +49,10 @@ uint8_t midi_buffer_pop(uint8_t *byte);
 void calculate_incoming_midi();
 
 
-void send_midi_out(midi_note *midi_message_raw, uint8_t length);
-void send_usb_midi_out(midi_note *midi_message_raw, uint8_t length);
+void emit_midi(const midi_note *msg, const output_route_t *route);
+void emit_midi_with_policy(const midi_note *msg);
+void send_midi_out(const midi_note *midi_message_raw, uint8_t length);
+void send_usb_midi_out(const midi_note *midi_message_raw, uint8_t length);
 
 
 #endif /* MIDI_INC_MIDI_TRANSFORM_H_ */

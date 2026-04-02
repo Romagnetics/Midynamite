@@ -6,6 +6,7 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 
 #include "memory_main.h"
 #include "midi_arp.h"
@@ -98,8 +99,7 @@ static uint8_t arp_index_up_down_2(uint8_t count)
 
 static uint8_t arp_index_random(uint8_t count)
 {
-    const uint32_t mixed = (uint32_t)(s_pattern_note_index + 1) * 1664525 + 1013904223;
-    return (uint8_t)(mixed % count);
+    return (uint8_t)(rand() % count);
 }
 
 static uint8_t arp_index_double_up(uint8_t count)
@@ -435,6 +435,7 @@ void arp_handle_midi_note(const midi_note *msg)
     arp_sync_hold_mode();
 
     const uint8_t note = (uint8_t)(msg->note & 0x7F);
+    const uint8_t incoming_channel = (uint8_t)(msg->status & 0x0F);
     const uint8_t hold_enabled = arp_hold_is_active();
 
 
@@ -450,19 +451,30 @@ void arp_handle_midi_note(const midi_note *msg)
             s_pattern_note_type = 255;
         }
 
-        s_physical_notes[note] = *msg;
-        s_physical_notes[note].note = note;
+        if (s_physical_notes[note].status == 0 ||
+            (uint8_t)(s_physical_notes[note].status & 0x0F) == incoming_channel) {
+            s_physical_notes[note] = *msg;
+            s_physical_notes[note].note = note;
+        }
 
-        s_active_notes[note] = *msg;
-        s_active_notes[note].note = note;
-        s_note_order[note] = ++s_note_order_counter;
+        if (s_active_notes[note].status == 0 ||
+            (uint8_t)(s_active_notes[note].status & 0x0F) == incoming_channel) {
+            s_active_notes[note] = *msg;
+            s_active_notes[note].note = note;
+            s_note_order[note] = ++s_note_order_counter;
+        }
 
         return;
     }
 
-    memset(&s_physical_notes[note], 0, sizeof(s_physical_notes[note]));
+    if ((s_physical_notes[note].status != 0) &&
+        ((uint8_t)(s_physical_notes[note].status & 0x0F) == incoming_channel)) {
+        memset(&s_physical_notes[note], 0, sizeof(s_physical_notes[note]));
+    }
 
-    if (hold_enabled == 0) {
+    if ((hold_enabled == 0) &&
+        (s_active_notes[note].status != 0) &&
+        ((uint8_t)(s_active_notes[note].status & 0x0F) == incoming_channel)) {
         memset(&s_active_notes[note], 0, sizeof(s_active_notes[note]));
         s_note_order[note] = 0;
     }
@@ -488,6 +500,7 @@ uint8_t arp_handle_midi_cc64(const midi_note *msg)
     return 0;
 
 }
+
 
 void arp_on_tempo_tick(void)
 {

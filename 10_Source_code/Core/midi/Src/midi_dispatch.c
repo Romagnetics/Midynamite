@@ -53,8 +53,6 @@ typedef struct {
 
 static dispatch_state_t g_dispatch_state;
 
-extern void send_midi_out(midi_note *midi_message_raw, uint8_t length);
-extern void send_usb_midi_out(midi_note *midi_message_raw, uint8_t length);
 extern uint8_t midi_is_note_message(const midi_note *msg, uint8_t *is_note_on);
 
 static uint8_t dispatch_synth_channel(const dispatch_state_t *state, uint8_t synth_idx)
@@ -67,9 +65,7 @@ static void dispatch_send_on_synth(const midi_note *src_msg, uint8_t synth_chann
 {
     midi_note out = *src_msg;
     midi_change_channel(&out, synth_channel);
-    const uint8_t length = midi_message_length(out.status);
-    send_midi_out(&out, length);
-    send_usb_midi_out(&out, length);
+    emit_midi_with_policy(&out);
 
 }
 
@@ -81,9 +77,7 @@ static void dispatch_send_note_off_on_synth(uint8_t note, uint8_t synth_channel)
         .velocity = 0
     };
     midi_change_channel(&off_msg, synth_channel);
-    const uint8_t length = midi_message_length(off_msg.status);
-    send_midi_out(&off_msg, length);
-    send_usb_midi_out(&off_msg, length);
+    emit_midi_with_policy(&off_msg);
 }
 
 
@@ -333,4 +327,3 @@ void midi_dispatch_reset_state(void)
     memset(&g_dispatch_state, 0, sizeof(g_dispatch_state));
 }
 #endif
-
