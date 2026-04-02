@@ -19,12 +19,14 @@ List of effects as of version 2.0:
 
 
 
-Menu chain of the Romagnetics Midynamite:
+**Menu chain of the Romagnetics Midynamite**
+
 ![Romagnetics Midynamite V2.0](https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:versions:v2.png)
 
 
 
 Available to buy here: https://www.romagnetics.com/product/romagnetics-midynamite/
+
 Full documentation: https://www.romagnetics.com/wiki/doku.php
 
 ---
