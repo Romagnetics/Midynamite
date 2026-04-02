@@ -1,130 +1,113 @@
 # Romagnetics Midynamite  
 *The Open Source MIDI Multi-Effects Pedal*
 
-![alt text](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/Midynamite.jpg "Romagnetics Midynamite")
+![Romagnetics Midynamite](https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:midynamite_main.jpg)
 
 The Romagnetics Midynamite is a compact, battery-powered MIDI multi-effects pedal with three physical MIDI DIN 5-pin connectors and USB MIDI device support.  
 It can function as a standalone pedal or as a USB MIDI interface for a computer.
 
 All effects can be toggled independently and configured via the onboard screen and encoder.
 
+List of effects as of version 2.0:
+・MIDI Tempo
+・MIDI Split
+・MIDI Modify
+・MIDI Transpose
+・Arpeggiator
+・MIDI Dispatch
+
+
+
+
+Menu chain of the Romagnetics Midynamite:
+![Romagnetics Midynamite V2.0](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/Midynamite.jpg)
+
+
+
 Available to buy here: https://www.romagnetics.com/product/romagnetics-midynamite/
+Full documentation: https://www.romagnetics.com/wiki/doku.php
 
 ---
 
 ## 🎛 Features Overview
 
----
-
-### 🎵 MIDI Tempo
-
-![Romagnetics_Midynamite](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/MIDI_Tempo.png "Midynamite MIDI Tempo")
-
-Send a MIDI clock signal to:
-
-- MIDI OUT 1  
-- MIDI OUT 2  
-- Both  
-- USB MIDI (optional via Settings)
-
-**Adjustable parameters:**
-
-- **Tempo** (BPM)  
-- **Output destinations** (including USB)
+# Menu List
 
 ---
 
-### 🎚 MIDI Modify
+## MIDI Tempo
 
-![MIDI_Modify](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/MIDI_Modify.png " MIDI Modify")
+<img src="https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:midi_tempo_1.jpg" width="400">
 
-Modify incoming MIDI messages in two main ways:
+Send a MIDI clock signal to any OUT you want.  
 
-#### 🌀 Channel Mode
-
-- **MIDI Change**  
-  Redirect all incoming MIDI messages to one or two selected MIDI channels.
-  This allows you to play two synths at the same time.
-  Also allows very quick channel changes between scenes.
-
-- **MIDI Split**  
-  Split the keyboard into two zones:  
-  - Notes below a split point go to one MIDI channel.  
-  - Notes above go to another.  
-  Ideal for controlling two synths with one keyboard.
-
-> The split point and both output channels are fully configurable.
-
-> The switch between MIDI Change and MIDI Split is made by pressing the select button when selecting a MIDI Change or MIDI Split item
-
-> The OUTs are fully configurable between OUT 1, OUT 2, OUT 1 & 2 & Split.
----
-
-#### 🎛 Velocity Mode
-
-- **Velocity Change**  
-  Add or subtract velocity from the incoming signal.  
-  *(Range: -50 to +50)*  
-  Preserves dynamic expression.
-
-- **Fixed Velocity**  
-  All incoming notes are set to a fixed velocity.  
-  Useful for consistent volume or triggering.
-
-  > The switch between Velocity Change and Fixed Velocity is made by pressing the select button when selecting a velocity item
-
+[More information about MIDI Tempo](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:midi_tempo)
 
 ---
 
-### 🎼 MIDI Transpose
+## MIDI Split
 
-![MIDI_Transpose](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/MIDI_Transpose.png " MIDI Transpose")
+<img src="https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:midi_split_1.jpg" width="400">
 
+MIDI Split allows you to send MIDI notes to two different groups based on the note, the MIDI channel, or the velocity.  
+You can send each group either to all the effects, to dry, or to Bus 1 or Bus 2.
 
-Apply real-time note transformations to incoming MIDI notes.
-
-#### 📉 Pitch Shift
-
-- Shift all incoming notes up/down by a specified number of semitones.  
-- Optionally **mute the original note**.
-
-#### 🎶 Scale Mode (Harmonizer)
-
-- Select a **scale**, **mode**, and **interval**.  
-- The pedal generates a harmonized note based on the input.
-
-> Optionally mute the original note only to hear the harmony.
-
-> The switch between Pitch Shift and Scale Mode is made by pressing the select button in the Transpose menu
+[More information about MIDI Split](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:midi_split)
 
 ---
 
-## ⚙️ Settings
+## MIDI Modify
 
-![Midynamite Settings](https://github.com/RomainDereu/Midynamite/blob/main/02_Photos/Settings.png "Midynamite Settings")
+<img src="https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:midi_modify_1.jpg" width="400">
 
-Accessible in the **Settings** menu:
-- **Start Menu**  
-  Choose default screen on startup:  
-  *Tempo*, *MIDI Modify*, *Transpose*, or *Settings*.
+Modify the MIDI Channel and/or the velocity of your MIDI messages.
 
-- **USB MIDI**  
-  Configure USB MIDI behavior:  
-  - *Send to USB*  
-  - *No USB*
-
-- **Contrast**  
-  Adjust screen contrast in 10 levels (from 10% to 100%).
+[More information about MIDI Modify](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:midi_modify)
 
 ---
 
-## 🆘 Panic Button
+## MIDI Transpose
 
-To immediately stop all MIDI output:
+<img src="https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:midi_transpose_1.jpg" width="400">
 
-**Press Select + Value simultaneously**
+Change the pitch of incoming notes, either with Pitch Shift or with the Harmonizer.
 
-This will send all notes off to all 16 MIDI channels.
+[More information about MIDI Transpose](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:midi_transpose)
 
 ---
 
+## Arpeggiator
+
+<img src="https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:arpeggiator_1.jpg" width="400">
+
+Everything you want from a modern arpeggiator, from Gate to programmable steps and Keysync.
+
+[More information about the Arpeggiator](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:arpeggiator)
+
+---
+
+## MIDI Dispatch
+
+<img src="https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:dispatch_1.jpg" width="400">
+
+Do you want to dispatch your MIDI notes to several synthesizers?
+
+[More information about MIDI Dispatch](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:midi_dispatch)
+
+---
+
+## Settings
+
+<img src="https://www.romagnetics.com/wiki/lib/exe/fetch.php?media=manuals:midynamite:settings_1.jpg" width="400">
+
+Contrast, send behaviour, MIDI masks, etc…  
+Change the behavior of the pedal with the settings.
+
+[More information about the settings](https://www.romagnetics.com/wiki/doku.php?id=manuals:midynamite:menus:settings)
+
+---
+
+Major Version History:
+
+**August 2025**: Version 1.0: 	First version. With MIDI Tempo, MIDI Modify and MIDI Transpose
+**April 2026**:Adding MIDI Split, Arpeggiator and MIDI Dispatch
