@@ -29,13 +29,9 @@ Available to buy here: https://www.romagnetics.com/product/romagnetics-midynamit
 
 Full documentation: https://www.romagnetics.com/wiki/doku.php
 
----
 
 ## 🎛 Features Overview
 
-# Menu List
-
----
 
 ## MIDI Tempo
 
@@ -112,4 +108,5 @@ Change the behavior of the pedal with the settings.
 Major Version History:
 
 **August 2025**: Version 1.0: 	First version. With MIDI Tempo, MIDI Modify and MIDI Transpose
+
 **April 2026**:Adding MIDI Split, Arpeggiator and MIDI Dispatch
