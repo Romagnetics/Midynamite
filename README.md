@@ -9,11 +9,17 @@ It can function as a standalone pedal or as a USB MIDI interface for a computer.
 All effects can be toggled independently and configured via the onboard screen and encoder.
 
 List of effects as of version 2.0:
+
 ・MIDI Tempo
+
 ・MIDI Split
+
 ・MIDI Modify
+
 ・MIDI Transpose
+
 ・Arpeggiator
+
 ・MIDI Dispatch
 
 
