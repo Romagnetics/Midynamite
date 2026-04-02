@@ -322,8 +322,49 @@ static uint8_t split_route_allows_menu(menu_list_t menu)
 
 static void split_send_direct(midi_note *msg, uint8_t length)
 {
-    send_midi_out(msg, length);
-    send_usb_midi_out(msg, length);
+    (void)length;
+    emit_midi_with_policy(msg);
+}
+
+
+
+
+typedef uint8_t (*pipeline_stage_fn_t)(midi_note *midi_msg, uint8_t length, uint8_t next_stage);
+
+typedef enum {
+    PIPELINE_STAGE_SPLIT = 0,
+    PIPELINE_STAGE_MODIFY,
+    PIPELINE_STAGE_TRANSPOSE,
+    PIPELINE_STAGE_ARP,
+    PIPELINE_STAGE_FINAL,
+    PIPELINE_STAGE_COUNT
+} pipeline_stage_index_t;
+
+static void pipeline_execute_from(uint8_t stage_index, midi_note *midi_msg);
+static uint8_t pipeline_stage_split(midi_note *midi_msg, uint8_t length, uint8_t next_stage);
+static uint8_t pipeline_stage_modify(midi_note *midi_msg, uint8_t length, uint8_t next_stage);
+static uint8_t pipeline_stage_transpose(midi_note *midi_msg, uint8_t length, uint8_t next_stage);
+static uint8_t pipeline_stage_arp(midi_note *midi_msg, uint8_t length, uint8_t next_stage);
+static uint8_t pipeline_stage_final(midi_note *midi_msg, uint8_t length, uint8_t next_stage);
+
+static const pipeline_stage_fn_t g_pipeline_stages[PIPELINE_STAGE_COUNT] = {
+    pipeline_stage_split,
+    pipeline_stage_modify,
+    pipeline_stage_transpose,
+    pipeline_stage_arp,
+    pipeline_stage_final
+};
+
+static void pipeline_execute_from(uint8_t stage_index, midi_note *midi_msg)
+{
+    for (uint8_t idx = stage_index; idx < PIPELINE_STAGE_COUNT; ++idx) {
+        const uint8_t length = midi_message_length(midi_msg->status);
+        const uint8_t next_stage = (uint8_t)(idx + 1);
+
+        if (g_pipeline_stages[idx](midi_msg, length, next_stage) != 0) {
+            return;
+        }
+    }
 }
 
 
@@ -336,7 +377,6 @@ static void split_send_direct(midi_note *msg, uint8_t length)
 void pipeline_start(midi_note *midi_msg)
 {
     const uint8_t status = midi_msg->status;
-    const uint8_t length = midi_message_length(status);
 
     g_pipeline_split_route = 3;
     g_pipeline_split_target = SPLIT_TARGET_BOTH;
@@ -347,38 +387,22 @@ void pipeline_start(midi_note *midi_msg)
 
     if (is_channel_blocked(status)) return;
 
-    if (save_get(SPLIT_CURRENTLY_SENDING) == 1) {
-        pipeline_midi_split(midi_msg);
+    const uint8_t any_pipeline_enabled =
+        (uint8_t)(
+            (save_get(SPLIT_CURRENTLY_SENDING) == 1)
+            || (save_get(MODIFY_CURRENTLY_SENDING) == 1)
+            || (save_get(TRANSPOSE_CURRENTLY_SENDING) == 1)
+            || (save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 1)
+            || (save_get(DISPATCH_CURRENTLY_SENDING) == 1)
+        );
+
+    if (any_pipeline_enabled != 0) {
+        pipeline_execute_from(PIPELINE_STAGE_SPLIT, midi_msg);
         return;
     }
-
-
-    if (save_get(MODIFY_CURRENTLY_SENDING) == 1) {
-        pipeline_midi_modify(midi_msg);
-        return;
-    }
-
-    if (save_get(TRANSPOSE_CURRENTLY_SENDING) == 1) {
-        pipeline_midi_transpose(midi_msg);
-        return;
-    }
-
-    if (save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 1) {
-        pipeline_arp(midi_msg, length);
-        return;
-    }
-
-    if (save_get(DISPATCH_CURRENTLY_SENDING) == 1) {
-        pipeline_final(midi_msg, length);
-        return;
-    }
-
 
     if (save_get(SETTINGS_MIDI_THRU) == 1) {
-        send_midi_out(midi_msg, length);
-    }
-    if (save_get(SETTINGS_SEND_USB) >= SETTINGS_SEND_USB) {
-        send_usb_midi_out(midi_msg, length);
+        emit_midi_with_policy(midi_msg);
     }
 }
 
@@ -387,6 +411,18 @@ void pipeline_start(midi_note *midi_msg)
 // ---------------------
 void pipeline_midi_split(midi_note *midi_msg)
 {
+    pipeline_execute_from(PIPELINE_STAGE_SPLIT, midi_msg);
+}
+
+static uint8_t pipeline_stage_split(midi_note *midi_msg, uint8_t length, uint8_t next_stage)
+{
+    (void)length;
+    (void)next_stage;
+
+    if (save_get(SPLIT_CURRENTLY_SENDING) == 0) {
+        return 0;
+    }
+
     midi_note split_msg = *midi_msg;
     const uint8_t split_is_high = split_type_is_high(&split_msg);
     const uint8_t split_channel = (split_is_high != 0)
@@ -404,10 +440,11 @@ void pipeline_midi_split(midi_note *midi_msg)
 
     if (split_send_mode == 0) {
         split_send_direct(&split_msg, midi_message_length(split_msg.status));
-        return;
+        return 1;
     }
 
-    pipeline_midi_modify(&split_msg);
+    *midi_msg = split_msg;
+    return 0;
 }
 
 
@@ -415,11 +452,16 @@ void pipeline_midi_split(midi_note *midi_msg)
 // Modify pipeline
 // ---------------------
 void pipeline_midi_modify(midi_note *midi_msg) {
-    if (save_get(MODIFY_CURRENTLY_SENDING) == 0 || split_route_allows_menu(MENU_MODIFY) == 0) {
-        pipeline_midi_transpose(midi_msg);
-        return;
-    }
+    pipeline_execute_from(PIPELINE_STAGE_MODIFY, midi_msg);
+}
 
+static uint8_t pipeline_stage_modify(midi_note *midi_msg, uint8_t length, uint8_t next_stage)
+{
+    (void)length;
+
+    if (save_get(MODIFY_CURRENTLY_SENDING) == 0 || split_route_allows_menu(MENU_MODIFY) == 0) {
+        return 0;
+    }
 
     change_velocity(midi_msg);
 
@@ -429,7 +471,7 @@ void pipeline_midi_modify(midi_note *midi_msg) {
         if (send_ch1 >= 2) {
             midi_change_channel(&midi_note_1, (uint8_t)(send_ch1 - 1));
         }
-        pipeline_midi_transpose(&midi_note_1);
+        pipeline_execute_from(next_stage, &midi_note_1);
     }
 
     const uint8_t send_ch2 = (uint8_t)save_get(MODIFY_SEND_TO_MIDI_CH2);
@@ -438,11 +480,11 @@ void pipeline_midi_modify(midi_note *midi_msg) {
         if (send_ch2 >= 2) {
             midi_change_channel(&midi_note_2, (uint8_t)(send_ch2 - 1));
         }
-        pipeline_midi_transpose(&midi_note_2);
+        pipeline_execute_from(next_stage, &midi_note_2);
     }
+
+    return 1;
 }
-
-
 
 // ---------------------
 // Scale helpers
@@ -561,17 +603,20 @@ static void midi_pitch_shift(midi_note *midi_msg) {
         midi_msg->note = (uint8_t)note;
     }
 }
-
 // ---------------------
 // Transpose pipeline
 // ---------------------
 void pipeline_midi_transpose(midi_note *midi_msg)
 {
-    const uint8_t length = midi_message_length(midi_msg->status);
+    pipeline_execute_from(PIPELINE_STAGE_TRANSPOSE, midi_msg);
+}
+
+static uint8_t pipeline_stage_transpose(midi_note *midi_msg, uint8_t length, uint8_t next_stage)
+{
+    (void)length;
 
     if (save_get(TRANSPOSE_CURRENTLY_SENDING) == 0 || split_route_allows_menu(MENU_TRANSPOSE) == 0) {
-        pipeline_arp(midi_msg, length);
-        return;
+        return 0;
     }
 
     if (save_get(TRANSPOSE_SEND_ORIGINAL) == 1) {
@@ -586,16 +631,16 @@ void pipeline_midi_transpose(midi_note *midi_msg)
                                                    save_get(TRANSPOSE_BASE_NOTE));
         }
 
-        pipeline_arp(&pre_shift_msg, length);
+        pipeline_execute_from(next_stage, &pre_shift_msg);
 
         midi_note shifted_msg = pre_shift_msg;
         midi_pitch_shift(&shifted_msg);
-        pipeline_arp(&shifted_msg, length);
-        return;
+        pipeline_execute_from(next_stage, &shifted_msg);
+        return 1;
     }
 
     midi_pitch_shift(midi_msg);
-    pipeline_arp(midi_msg, length);
+    return 0;
 }
 
 // ---------------------
@@ -603,15 +648,24 @@ void pipeline_midi_transpose(midi_note *midi_msg)
 // --------------------
 void pipeline_arp(midi_note *midi_msg, uint8_t length)
 {
+    (void)length;
+    pipeline_execute_from(PIPELINE_STAGE_ARP, midi_msg);
+}
+
+static uint8_t pipeline_stage_arp(midi_note *midi_msg, uint8_t length, uint8_t next_stage)
+{
+    (void)length;
+    (void)next_stage;
+
     if (save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 1 && split_route_allows_menu(MENU_ARPEGGIATOR) == 1) {
         uint8_t is_note_on = 0;
         if (midi_is_note_message(midi_msg, &is_note_on)) {
             arp_handle_midi_note(midi_msg);
-            return;
+            return 1;
         }
     }
 
-    pipeline_final(midi_msg, length);
+    return 0;
 }
 
 
@@ -621,73 +675,123 @@ void pipeline_arp(midi_note *midi_msg, uint8_t length)
 // ---------------------
 void pipeline_final(midi_note *midi_msg, uint8_t length)
 {
-    if (split_route_allows_menu(MENU_DISPATCH) == 1 && midi_dispatch_process(midi_msg, length) != 0) {
-        return;
-    }
-
-    send_midi_out(midi_msg, length);
-    send_usb_midi_out(midi_msg, length);
+    (void)pipeline_stage_final(midi_msg, length, PIPELINE_STAGE_COUNT);
 }
 
-void send_midi_out(midi_note *midi_message_raw, uint8_t length)
+static uint8_t pipeline_stage_final(midi_note *midi_msg, uint8_t length, uint8_t next_stage)
 {
-    if (midi_message_raw->status < 0x80) return;
+    (void)next_stage;
 
-    length = midi_message_length(midi_message_raw->status); // enforce correctness
+    if (split_route_allows_menu(MENU_DISPATCH) == 1 && midi_dispatch_process(midi_msg, length) != 0) {
+        return 1;
+    }
 
-    uint8_t midi_bytes[3] = {0};
-    midi_bytes[0] = midi_message_raw->status;
-    if (length > 1) midi_bytes[1] = midi_message_raw->note;
-    if (length > 2) midi_bytes[2] = midi_message_raw->velocity;
+    emit_midi_with_policy(midi_msg);
+    return 1;
+}
+
+
+
+static output_route_t midi_route_from_settings(void)
+{
+    output_route_t route = { .uart1 = 0, .uart2 = 0, .usb = 0 };
 
     switch (save_get(SETTINGS_SEND_TO_OUT)) {
         case MIDI_OUT_1:
-            HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
+            route.uart1 = 1;
             break;
 
         case MIDI_OUT_2:
-            HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
+            route.uart2 = 1;
             break;
 
         case MIDI_OUT_1_2:
-            HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
-            HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
+            route.uart1 = 1;
+            route.uart2 = 1;
             break;
 
         case MIDI_OUT_SPLIT:
             if (save_get(SPLIT_CURRENTLY_SENDING) == 1) {
                 if (g_pipeline_split_target == SPLIT_TARGET_LOW) {
-                    HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
+                    route.uart1 = 1;
                 } else if (g_pipeline_split_target == SPLIT_TARGET_HIGH) {
-                    HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
+                    route.uart2 = 1;
                 } else {
-                    HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
-                    HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
+                    route.uart1 = 1;
+                    route.uart2 = 1;
                 }
             } else {
-                HAL_UART_Transmit(&huart1, midi_bytes, length, 1000);
-                HAL_UART_Transmit(&huart2, midi_bytes, length, 1000);
+                route.uart1 = 1;
+                route.uart2 = 1;
             }
             break;
 
-               default:
-                   break;
-           }
-       }
+        default:
+            break;
+    }
 
+    return route;
+}
 
-void send_usb_midi_out(midi_note *msg, uint8_t length)
+static output_route_t midi_route_with_usb_policy(void)
 {
+    output_route_t route = midi_route_from_settings();
+    if (save_get(SETTINGS_SEND_USB) != MIDI_USB_OFF) {
+        route.usb = 1;
+    }
+    return route;
+}
+
+void emit_midi(const midi_note *msg, const output_route_t *route)
+{
+    if ((msg == NULL) || (route == NULL)) {
+        return;
+    }
+    if (msg->status < 0x80) {
+        return;
+    }
+
+    const uint8_t length = midi_message_length(msg->status);
+    uint8_t bytes[3] = { 0 };
+    bytes[0] = msg->status;
+    if (length > 1) {
+        bytes[1] = msg->note;
+    }
+    if (length > 2) {
+        bytes[2] = msg->velocity;
+    }
+
+    if (route->uart1 != 0) {
+        HAL_UART_Transmit(&huart1, bytes, length, 1000);
+    }
+    if (route->uart2 != 0) {
+        HAL_UART_Transmit(&huart2, bytes, length, 1000);
+    }
+    if (route->usb != 0) {
+        send_usb_midi_message(bytes, length);
+    }
+}
+
+void emit_midi_with_policy(const midi_note *msg)
+{
+    output_route_t route = midi_route_with_usb_policy();
+    emit_midi(msg, &route);
+}
+
+void send_midi_out(const midi_note *midi_message_raw, uint8_t length)
+{
+    (void)length;
+    output_route_t route = midi_route_from_settings();
+    emit_midi(midi_message_raw, &route);
+}
+
+void send_usb_midi_out(const midi_note *msg, uint8_t length)
+{
+    (void)length;
     if (save_get(SETTINGS_SEND_USB) == MIDI_USB_OFF) {
         return;
     }
 
-    length = midi_message_length(msg->status);
-
-    uint8_t bytes[3] = {0};
-    bytes[0] = msg->status;
-    if (length > 1) bytes[1] = msg->note;
-    if (length > 2) bytes[2] = msg->velocity;
-
-    send_usb_midi_message(bytes, length);
+    output_route_t route = { .uart1 = 0, .uart2 = 0, .usb = 1 };
+    emit_midi(msg, &route);
 }
