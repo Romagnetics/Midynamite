@@ -14,15 +14,17 @@
 
 #define ARP_MAX_NOTES 128
 
-void arp_state_reset(void);
-void arp_sync_hold_mode(void);
 void arp_handle_midi_note(const midi_note *msg);
 uint8_t arp_handle_midi_cc64(const midi_note *msg);
 
 void arp_on_tempo_tick(void);
+
+
+#ifdef UNIT_TEST
+void arp_state_reset(void);
+void arp_sync_hold_mode(void);
 uint8_t arp_get_pressed_keys(uint8_t *out_notes);
 uint8_t arp_get_pressed_key_count(void);
-
-
+#endif
 
 #endif /* MIDI_INC_MIDI_ARP_H_ */

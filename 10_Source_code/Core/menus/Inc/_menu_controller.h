@@ -181,9 +181,6 @@ void update_tempo_send_to_out(save_field_t);
 
 void update_dispatch_from_ch(save_field_t field);
 
-
-void update_tempo_bpm(save_field_t field);
-
 void shadow_select(save_field_t field);
 void update_contrast(save_field_t f);
 

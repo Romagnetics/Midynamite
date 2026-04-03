@@ -177,15 +177,7 @@ HAL_StatusTypeDef store_settings(void);
 
 int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap);
 
-// Re-init RAM image to defaults and notify UI
 void memory_init_defaults(void);
-
-// Simple test helpers that write via the public API
-void memory_set_midi_thru(uint8_t v);
-
-// (Optional) generic setters if you want easy test wiring everywhere:
-void ut_set_u8(save_field_t f, uint8_t v);
-void ut_set_u32(save_field_t f, uint32_t v);
 #endif
 
 

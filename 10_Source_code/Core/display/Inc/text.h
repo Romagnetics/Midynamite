@@ -8,8 +8,6 @@
 #ifndef TEXT_H_
 #define TEXT_H_
 
-#include "menus.h"
-
 // Central struct for all UI strings and selectable options
 typedef struct {
     // Menu Titles
