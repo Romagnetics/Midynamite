@@ -99,10 +99,7 @@ static void input_sync_hold_mode(void)
     }
 }
 
-static void input_reset_all(void)
-{
-    memset(&s_input_tracker, 0, sizeof(s_input_tracker));
-}
+
 
 static void input_clear_tracked_notes(void)
 {
@@ -337,12 +334,6 @@ static uint8_t pattern_step_is_enabled(void)
     return enabled;
 }
 
-static void pattern_reset_all(void)
-{
-    memset(&s_pattern_engine, 0, sizeof(s_pattern_engine));
-    s_pattern_engine.note_type = 255;
-    s_pattern_engine.random_state = 0x9E3779B9;
-}
 
 /* ------------------------------ Clock/gate engine ---------------------------- */
 
@@ -431,10 +422,6 @@ static void clock_stop_playing_note(void)
     s_clock_gate_engine.note_on_playing = 0;
 }
 
-static void clock_reset_all(void)
-{
-    memset(&s_clock_gate_engine, 0, sizeof(s_clock_gate_engine));
-}
 
 /* ------------------------------- Coordination -------------------------------- */
 
@@ -455,17 +442,7 @@ static void arp_apply_key_sync_on_note_on(uint8_t note)
     s_pattern_engine.note_type = 255;
 }
 
-/* Used for tests */
-void arp_state_reset(void)
-{
-    input_reset_all();
-    pattern_reset_all();
-    clock_reset_all();
 
-    last_note_sent.status = 0x90;
-    last_note_sent.note = 60;
-    last_note_sent.velocity = 100;
-}
 
 static void arp_clear_tracked_notes(void)
 {
@@ -480,10 +457,7 @@ static void arp_clear_tracked_notes(void)
     s_pattern_engine.note_type = 255;
 }
 
-void arp_sync_hold_mode(void)
-{
-    input_sync_hold_mode();
-}
+
 
 void arp_handle_midi_note(const midi_note *msg)
 {
@@ -631,6 +605,23 @@ void arp_on_tempo_tick(void)
     s_clock_gate_engine.swing_phase ^= 1;
 }
 
+#ifdef UNIT_TEST
+/* Used for tests */
+
+
+void arp_state_reset(void)
+{
+    memset(&s_input_tracker, 0, sizeof(s_input_tracker));
+    memset(&s_pattern_engine, 0, sizeof(s_pattern_engine));
+    s_pattern_engine.note_type = 255;
+    s_pattern_engine.random_state = 0x9E3779B9;
+    memset(&s_clock_gate_engine, 0, sizeof(s_clock_gate_engine));
+
+    last_note_sent.status = 0x90;
+    last_note_sent.note = 60;
+    last_note_sent.velocity = 100;
+}
+
 uint8_t arp_get_pressed_keys(uint8_t *out_notes)
 {
     const uint8_t count = input_collect_pressed_keys(s_source_entries);
@@ -648,3 +639,10 @@ uint8_t arp_get_pressed_key_count(void)
 {
     return input_collect_pressed_keys(NULL);
 }
+
+void arp_sync_hold_mode(void)
+{
+    input_sync_hold_mode();
+}
+
+#endif

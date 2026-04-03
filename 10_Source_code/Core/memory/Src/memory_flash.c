@@ -315,9 +315,4 @@ void memory_init_defaults(void)
     save_mark_all_changed();
 }
 
-void memory_set_midi_thru(uint8_t v)
-{
-    (void)save_modify_u8(SETTINGS_MIDI_THRU, SAVE_MODIFY_SET, v ? 1 : 0);
-}
-
 #endif
