@@ -33,6 +33,7 @@ typedef enum {
 
 typedef struct {
     uint8_t active;
+    uint8_t source_channel;
     uint8_t note;
     uint8_t velocity;
     uint8_t synth_idx;
@@ -231,14 +232,14 @@ static int16_t dispatch_select_synth_round_robin(dispatch_state_t *state)
     return -1;
 }
 
-static int16_t dispatch_find_note_on_voice(const dispatch_state_t *state, uint8_t note)
+static int16_t dispatch_find_note_on_voice(const dispatch_state_t *state, uint8_t source_channel, uint8_t note)
 {
     int16_t found_idx = -1;
     uint32_t latest_age = 0;
 
     for (uint8_t i = 0; i < DISPATCH_MAX_VOICES; ++i) {
         const dispatch_voice_t *voice = &state->voices[i];
-        if ((voice->active == 0) || (voice->note != note)) {
+        if ((voice->active == 0) || (voice->source_channel != source_channel) || (voice->note != note)) {
             continue;
         }
 
@@ -262,6 +263,7 @@ uint8_t midi_dispatch_process(midi_note *midi_msg, uint8_t length)
     dispatch_init_or_reconfigure(&g_dispatch_state);
 
     const uint8_t status_nibble = (uint8_t)(midi_msg->status & 0xF0);
+    const uint8_t source_channel = (uint8_t)(midi_msg->status & 0x0F);
     const uint8_t is_cc64 = ((status_nibble == 0xB0) && ((midi_msg->note & 0x7F) == 64)) ? 1 : 0;
     uint8_t is_note_on = 0;
     const uint8_t is_note = midi_is_note_message(midi_msg, &is_note_on);
@@ -283,6 +285,7 @@ uint8_t midi_dispatch_process(midi_note *midi_msg, uint8_t length)
                 if (voice_slot >= 0) {
                     dispatch_voice_t *voice = &g_dispatch_state.voices[voice_slot];
                     voice->active = 1;
+                    voice->source_channel = source_channel;
                     voice->note = midi_msg->note;
                     voice->velocity = midi_msg->velocity;
                     voice->synth_idx = (uint8_t)target_synth;
@@ -293,7 +296,7 @@ uint8_t midi_dispatch_process(midi_note *midi_msg, uint8_t length)
                 }
             }
         } else {
-            const int16_t found_voice = dispatch_find_note_on_voice(&g_dispatch_state, midi_msg->note);
+            const int16_t found_voice = dispatch_find_note_on_voice(&g_dispatch_state, source_channel, midi_msg->note);
             if (found_voice >= 0) {
                 const dispatch_voice_t *voice = &g_dispatch_state.voices[found_voice];
                 dispatch_send_on_synth(midi_msg, dispatch_synth_channel(&g_dispatch_state, voice->synth_idx));
