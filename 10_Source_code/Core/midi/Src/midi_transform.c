@@ -320,6 +320,33 @@ static uint8_t split_route_allows_menu(menu_list_t menu)
     return (uint8_t)(menu_mask == active_route);
 }
 
+static void split_update_route_from_channel(uint8_t channel)
+{
+    if (save_get(SPLIT_CURRENTLY_SENDING) == 0) {
+        return;
+    }
+
+    const uint8_t low_channel = (uint8_t)save_get(SPLIT_MIDI_CH1);
+    const uint8_t high_channel = (uint8_t)save_get(SPLIT_MIDI_CH2);
+    const uint8_t low_route = (uint8_t)save_get(SPLIT_SEND_CH1);
+    const uint8_t high_route = (uint8_t)save_get(SPLIT_SEND_CH2);
+
+    if ((low_channel == 0) || (high_channel == 0) || (low_channel == high_channel)) {
+        return;
+    }
+
+    if (channel == low_channel) {
+        g_pipeline_split_target = SPLIT_TARGET_LOW;
+        g_pipeline_split_route = low_route;
+        return;
+    }
+
+    if (channel == high_channel) {
+        g_pipeline_split_target = SPLIT_TARGET_HIGH;
+        g_pipeline_split_route = high_route;
+    }
+}
+
 static void split_send_direct(midi_note *msg, uint8_t length)
 {
     (void)length;
@@ -515,6 +542,7 @@ static uint8_t pipeline_stage_modify(midi_note *midi_msg, uint8_t length, uint8_
         if (send_ch1 >= 2) {
             midi_change_channel(&midi_note_1, (uint8_t)(send_ch1 - 1));
         }
+        split_update_route_from_channel((uint8_t)((midi_note_1.status & 0x0F) + 1));
         pipeline_execute_from(next_stage, &midi_note_1);
     }
 
@@ -524,6 +552,7 @@ static uint8_t pipeline_stage_modify(midi_note *midi_msg, uint8_t length, uint8_
         if (send_ch2 >= 2) {
             midi_change_channel(&midi_note_2, (uint8_t)(send_ch2 - 1));
         }
+        split_update_route_from_channel((uint8_t)((midi_note_2.status & 0x0F) + 1));
         pipeline_execute_from(next_stage, &midi_note_2);
     }
 
