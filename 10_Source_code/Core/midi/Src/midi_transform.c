@@ -326,6 +326,52 @@ static void split_send_direct(midi_note *msg, uint8_t length)
     emit_midi_with_policy(msg);
 }
 
+static void pipeline_execute_from(uint8_t stage_index, midi_note *midi_msg);
+
+static uint8_t split_route_cc64_for_both_parts(const midi_note *midi_msg, uint8_t next_stage)
+{
+    if (midi_msg == NULL) {
+        return 0;
+    }
+
+    const uint8_t status_nibble = (uint8_t)(midi_msg->status & 0xF0);
+    if ((status_nibble != 0xB0) || ((midi_msg->note & 0x7F) != 64)) {
+        return 0;
+    }
+
+    const uint8_t split_send_modes[2] = {
+        (uint8_t)save_get(SPLIT_SEND_CH1),
+        (uint8_t)save_get(SPLIT_SEND_CH2)
+    };
+    const uint8_t split_channels[2] = {
+        (uint8_t)save_get(SPLIT_MIDI_CH1),
+        (uint8_t)save_get(SPLIT_MIDI_CH2)
+    };
+    const split_output_target_t split_targets[2] = {
+        SPLIT_TARGET_LOW,
+        SPLIT_TARGET_HIGH
+    };
+
+    for (uint8_t i = 0; i < 2; ++i) {
+        midi_note split_part_msg = *midi_msg;
+
+        if (split_channels[i] > 0) {
+            midi_change_channel(&split_part_msg, split_channels[i]);
+        }
+
+        g_pipeline_split_target = split_targets[i];
+        g_pipeline_split_route = split_send_modes[i];
+
+        if (split_send_modes[i] == 0) {
+            split_send_direct(&split_part_msg, midi_message_length(split_part_msg.status));
+        } else {
+            pipeline_execute_from(next_stage, &split_part_msg);
+        }
+    }
+
+    return 1;
+}
+
 
 
 
@@ -340,7 +386,6 @@ typedef enum {
     PIPELINE_STAGE_COUNT
 } pipeline_stage_index_t;
 
-static void pipeline_execute_from(uint8_t stage_index, midi_note *midi_msg);
 static uint8_t pipeline_stage_split(midi_note *midi_msg, uint8_t length, uint8_t next_stage);
 static uint8_t pipeline_stage_modify(midi_note *midi_msg, uint8_t length, uint8_t next_stage);
 static uint8_t pipeline_stage_transpose(midi_note *midi_msg, uint8_t length, uint8_t next_stage);
@@ -381,10 +426,6 @@ void pipeline_start(midi_note *midi_msg)
     g_pipeline_split_route = 3;
     g_pipeline_split_target = SPLIT_TARGET_BOTH;
 
-    if (arp_handle_midi_cc64(midi_msg) != 0) {
-        return;
-    }
-
     if (is_channel_blocked(status)) return;
 
     const uint8_t any_pipeline_enabled =
@@ -417,10 +458,13 @@ void pipeline_midi_split(midi_note *midi_msg)
 static uint8_t pipeline_stage_split(midi_note *midi_msg, uint8_t length, uint8_t next_stage)
 {
     (void)length;
-    (void)next_stage;
 
     if (save_get(SPLIT_CURRENTLY_SENDING) == 0) {
         return 0;
+    }
+
+    if (split_route_cc64_for_both_parts(midi_msg, next_stage) != 0) {
+        return 1;
     }
 
     midi_note split_msg = *midi_msg;
@@ -658,6 +702,10 @@ static uint8_t pipeline_stage_arp(midi_note *midi_msg, uint8_t length, uint8_t n
     (void)next_stage;
 
     if (save_get(ARPEGGIATOR_CURRENTLY_SENDING) == 1 && split_route_allows_menu(MENU_ARPEGGIATOR) == 1) {
+        if (arp_handle_midi_cc64(midi_msg) != 0) {
+            return 1;
+        }
+
         uint8_t is_note_on = 0;
         if (midi_is_note_message(midi_msg, &is_note_on)) {
             arp_handle_midi_note(midi_msg);
