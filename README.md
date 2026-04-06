@@ -115,4 +115,4 @@ Major Version History:
 
 **August 2025**: Version 1.0: 	First version. With MIDI Tempo, MIDI Modify and MIDI Transpose
 
-**April 2026**: Adding MIDI Split, Arpeggiator and MIDI Dispatch
+**April 2026**: Version 2.0: Adding MIDI Split, Arpeggiator and MIDI Dispatch
