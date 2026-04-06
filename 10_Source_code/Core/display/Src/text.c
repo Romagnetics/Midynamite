@@ -18,22 +18,39 @@ static const Message _message = {
     .global_settings_2 = "Global Settings 2",
     .about = "About",
     .midi_modify = "MIDI Modify",
+    .midi_split = "MIDI Split 1/2",
     .midi_transpose = "MIDI Transpose",
-	.output_sem = "Output:",
+    .midi_dispatch = "MIDI Dispatch",
 
-	.MIDI_Thru = "MIDI Thru",
-	.USB_Thru = "USB Thru",
-	.MIDI_Filter = "MIDI Filter",
+	.MIDI_Thru_ = "MIDI Thru:",
+	.MIDI_Out_ = "MIDI Out:",
+	.MIDI_Filter_ = "MIDI Filter:",
 
-	.X_equals_ignore_channel = "X = Ignore Channel",
+	.equals_ignore_channel = "0 = Ignore Channel",
 
     // Channel Modify
     .midi_modify_select = "Ch. Modify",
-    .split = "Split",
-    .low_sem = "Low:",
-    .high_sem = "High:",
 	.send_1_sem = "Send 1:",
 	.send_2_sem = "Send 2:",
+	.send_to = "Send to",
+
+    // Channel Split
+    .dry_buses_all = { "Dry", "Bus 1", "Bus 2", "All" },
+    .split_note = "Split Note",
+    .split_ch = "Split Ch.",
+    .split_velocity = "Split Vel.",
+    .low_sem = "Low:",
+    .high_sem = "High:",
+	.low_to = "Low to:",
+	.high_to = "High to:",
+	.ch_sem = "Ch:",
+	.select_bus_effects = "Select BUS effects",
+	.modify_short = "Modify:",
+	.transpose_short = "Transpose:",
+	.arpeggiator_short = "Arpeggiator:",
+	.dispatch_short = "Dispatch:",
+	.split_types = { "Note", "MIDI Ch.", "Velocity" },
+	.bus_effect_mask = { "Err", "Bus 1", "Bus 2", "All" },
 
     // Velocity
     .velocity = "Velocity",
@@ -41,6 +58,8 @@ static const Message _message = {
     .fixed = "Fixed",
     .change_velocity = "Change Velocity",
     .fixed_velocity = "Fixed Velocity",
+
+
 
     // Transpose
     .type = "Type",
@@ -83,20 +102,22 @@ static const Message _message = {
 
 
     // Start Menu
-    .start_menu = "Start Menu",
+    .start_menu_= "Start Menu:",
 
 
     // Contrast
-    .contrast = "Contrast",
-    .contrast_levels = {
+    .contrast_ = "Contrast:",
+    .ten_hundred_ten_percent = { " 0%",
         "10%", "20%", "30%", "40%", "50%",
         "60%", "70%", "80%", "90%", "100%"
     },
+	.zero_hundred_ten = { " 0", " 10", " 20", " 30" , " 40", " 50", " 60", " 70", " 80" , " 90", "100"},
+
 
     // About
     .about_brand = "Romagnetics",
     .about_product = "Midynamite",
-    .about_version = "v1.0.0",
+    .about_version = "v2.0.0",
 
     // Saving
     .save_instruction = "Press select to Save",
@@ -109,13 +130,37 @@ static const Message _message = {
 
     // MIDI Tempo
     .bpm = "BPM",
+    .tempo = "Tempo",
 
     //USB Midi
-	.usb_midi = "USB Midi",
+	.usb_midi_ = "USB Midi:",
 
 
     //USB Midi
 	.upgrade_mode = "Upgrade Mode",
+
+	//Arpeggio
+    .arpeggiator_1 = "Arpeggiator 1/2",
+    .arpeggiator_2 = "Arpeggiator 2/2",
+	.division_ = "Division:",
+	.pattern_ = "Pattern:",
+	.gate_ = "Gate:",
+	.hold_ = "Hold:",
+    .steps_ = "Steps:",
+	.swing_ = "Swing:",
+	.length_ = "Length:",
+	.key_sync_ = "KeySync:",
+
+	//Dispatch
+	.synths_ = "Synths:",
+	.from_ch_ =  "From Ch:",
+	.notes_per_synth_ =  "Notes/synth:",
+	.voice_delete_ = "Voice delete:",
+	.voice_manage_options = {"First", "Last", "Veloc.", "Random"},
+
+
+	//Error Handlers
+	.error = "ERROR",
 
     // MIDI Note Names (C-1 to G9)
     .midi_note_names = {
@@ -195,7 +240,7 @@ static const Message _message = {
     },
 
 	.zero_to_sixteen = {
-			"Err",  "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"
+			"/",  "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"
 	},
 
 	//Used by 6_82
@@ -203,11 +248,8 @@ static const Message _message = {
 	    "1", "2", "3", "4", "5", "6", "7", "8", "9", "A", "B", "C", "D", "E", "F", "G"
 	},
 
-	//Error Handlers
-	.error = "ERROR",
 
-    .change_split = { "Change", "Split" },
-    .change_fixed = { "Change", "Fixed" },
+
     .midi_outs = {"Out 1", "Out 2", "Out 1+2"},
     .midi_outs_split = {"Out 1", "Out 2", "Out 1+2", "Split"},
     .transpose_modes = { "Pitch Shift", "Scale" },
@@ -218,15 +260,27 @@ static const Message _message = {
      },
     .no_yes = { "No", "Yes" },
     .off_on = { "Off", "On" },
-    .usb_receive_send = { "No USB", "Send USB"},
+	.off_out_thru_thru_both = { "Off", "Out", "Thru", "Thru+Out" },
+
     .midi_channels = {
-         "Off",
+         "Off", "Thru",
          "Ch. 1",  "Ch. 2",  "Ch. 3",  "Ch. 4",
          "Ch. 5",  "Ch. 6",  "Ch. 7",  "Ch. 8",
          "Ch. 9",  "Ch. 10", "Ch. 11", "Ch. 12",
          "Ch. 13", "Ch. 14", "Ch. 15", "Ch. 16"
      },
-    .menu_list = { "Tempo", "Modify", "Transpose", "Settings"},
+	.menu_list = { "Tempo", "Split", "Modify", "Transpose", "Arp." , "Dispatch", "Settings"},
+	.menu_list_long = { "Send Tempo",
+			            "MIDI Split",
+					    "MIDI Modify",
+						"Transpose",
+						"Arpeggiator" ,
+						"MIDI Dispatch",
+						"Settings"},
+	//Arpeggio
+	.division_list = { "1/4", "1/6", "1/8", "1/12", "1/16", "1/24", "1/32" },
+	.arp_patterns = { "Up", "Down", "Up/Down", "Up/Down 2", "Random", "Double Up", "Double Down", "Order"},
+	.octave_count = { "Error", "1 Octave", "2 Octaves", "3 Octaves", "4 Octaves"},
 };
 
 const Message *message = &_message;

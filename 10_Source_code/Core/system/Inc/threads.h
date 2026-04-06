@@ -1,26 +1,17 @@
 #ifndef THREADS_H_
 #define THREADS_H_
 
-#include "cmsis_os.h"
+#include "cmsis_os2.h"
 
+#define MIDI_CORE_FLAG_ARP_TICK  (1 << 0)
+#define MIDI_CORE_FLAG_TEMPO_OUT (1 << 1)
+#define MIDI_CORE_FLAG_MASK      (MIDI_CORE_FLAG_ARP_TICK | MIDI_CORE_FLAG_TEMPO_OUT)
 
-typedef struct {
-  TIM_HandleTypeDef *htim2; // tempo timer (start/stop)
-  TIM_HandleTypeDef *htim3; // encoder A
-  TIM_HandleTypeDef *htim4; // encoder B
-} threads_ctx_t;
-
-typedef enum {
-    FLAG_TEMPO      = (1u << 0),
-    FLAG_MODIFY     = (1u << 1),
-    FLAG_TRANSPOSE  = (1u << 2),
-    FLAG_SETTINGS   = (1u << 3)
-} DisplayFlags_t;
-
-// Start all application threads (display, midi_core, medium_tasks)
-void threads_start();
+void threads_start(void);
 void threads_display_notify(uint32_t flags);
-osThreadId_t threads_display_handle(void);
+void threads_midi_core_set_flags(uint32_t flags);
+void threads_midi_core_notify_tempo_tick_from_isr(void);
 
+osThreadId_t threads_display_handle(void);
 
 #endif /* THREADS_H_ */

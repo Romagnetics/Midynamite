@@ -2,7 +2,7 @@
  * memory_main.h
  *
  *  Created on: Aug 23, 2025
- *      Author: Astaa
+ *      Author: Romain Dereu
  */
 
 #ifndef MEMORY_SAVE_H_
@@ -17,7 +17,7 @@
 #define SAVE_STATE_BUSY         ((int32_t)0x7FFFFFFF)
 #define SAVE_U8_BUSY    ((uint8_t)0xFF)
 
-#define DATA_VALIDITY_CHECKSUM  0xA5A5C6A4u
+#define DATA_VALIDITY_CHECKSUM  0x354747A5
 #define FLASH_SECTOR7_ADDR      ((uint32_t)0x08060000)
 
 
@@ -44,26 +44,36 @@ typedef enum {
 typedef enum {
     // midi_tempo_data
     TEMPO_CURRENT_TEMPO,
-    TEMPO_TEMPO_CLICK_RATE,
     TEMPO_CURRENTLY_SENDING,
     TEMPO_SEND_TO_MIDI_OUT,
 
+    // midi_split_data
+    SPLIT_TYPE,
+    SPLIT_NOTE,
+	SPLIT_MIDI_CHANNEL,
+	SPLIT_VELOCITY,
+    SPLIT_MENU_MASK,
+    SPLIT_CURRENTLY_SENDING,
+
+	SPLIT_SEND_CH1,
+    SPLIT_MIDI_CH1,
+	SPLIT_SEND_CH2,
+    SPLIT_MIDI_CH2,
+
+    SPLIT_MASK_MODIFY,
+    SPLIT_MASK_TRANSPOSE,
+    SPLIT_MASK_ARPEGGIATOR,
+    SPLIT_MASK_DISPATCH,
+
     // midi_modify_data
-    MODIFY_CHANGE_OR_SPLIT,
     MODIFY_VELOCITY_TYPE,
 
     MODIFY_SEND_TO_MIDI_CH1,
     MODIFY_SEND_TO_MIDI_CH2,
 
-    MODIFY_SPLIT_MIDI_CH1,
-    MODIFY_SPLIT_MIDI_CH2,
-    MODIFY_SPLIT_NOTE,
-
-    MODIFY_SEND_TO_MIDI_OUT,
-
     MODIFY_VEL_PLUS_MINUS,
     MODIFY_VEL_ABSOLUTE,
-    MODIFY_SENDING,
+    MODIFY_CURRENTLY_SENDING,
 
     // midi_transpose_data
     TRANSPOSE_TRANSPOSE_TYPE,
@@ -72,14 +82,36 @@ typedef enum {
     TRANSPOSE_INTERVAL,
     TRANSPOSE_TRANSPOSE_SCALE,
     TRANSPOSE_SEND_ORIGINAL,
-    TRANSPOSE_SENDING,
+    TRANSPOSE_CURRENTLY_SENDING,
+
+    // arpeggiator_data
+	ARPEGGIATOR_CURRENTLY_SENDING,
+	ARPEGGIATOR_DIVISION,
+	ARPEGGIATOR_GATE,
+	ARPEGGIATOR_OCTAVES,
+	ARPEGGIATOR_PATTERN,
+
+	ARPEGGIATOR_SWING,
+	ARPEGGIATOR_LENGTH,
+	ARPEGGIATOR_NOTES,
+	ARPEGGIATOR_HOLD,
+	ARPEGGIATOR_KEY_SYNC,
+
+	// dispatch_data
+	DISPATCH_CURRENTLY_SENDING,
+	DISPATCH_AMOUNT_OF_SYNTHS,
+	DISPATCH_FROM_CHANNEL,
+	DISPATCH_NOTES_PER_SYNTH,
+	DISPATCH_VOICE_MANAGE,
+
+
 
     // settings_data
     SETTINGS_START_MENU,
     SETTINGS_SEND_USB,
     SETTINGS_BRIGHTNESS,
     SETTINGS_MIDI_THRU,
-    SETTINGS_USB_THRU,
+	SETTINGS_SEND_TO_OUT,
     SETTINGS_CHANNEL_FILTER,
     SETTINGS_FILTERED_CH,
     SETTINGS_ABOUT,
@@ -103,7 +135,6 @@ extern uint8_t*  u8_fields[SAVE_FIELD_COUNT];
 
 // Some enums you already use elsewhere
 typedef enum { MIDI_OUT_1, MIDI_OUT_2, MIDI_OUT_1_2, MIDI_OUT_SPLIT } midi_outs_t;
-typedef enum { MIDI_MODIFY_CHANGE = 0, MIDI_MODIFY_SPLIT } midi_modify_change_split_t;
 typedef enum { MIDI_MODIFY_CHANGED_VEL = 0, MIDI_MODIFY_FIXED_VEL } midi_modify_velocity_t;
 typedef enum { MIDI_TRANSPOSE_SHIFT = 0, MIDI_TRANSPOSE_SCALED } midi_transpose_types_t;
 
@@ -116,7 +147,6 @@ typedef enum {
     THIRD_UP, FOURTH_UP, FIFTH_UP, SIXTH_UP, OCTAVE_UP
 } intervals_t;
 
-typedef enum { USB_MIDI_OFF, USB_MIDI_SEND } midi_mode_t;
 typedef enum { NOT_SENDING, SENDING } sending_t;
 typedef enum { FALSE, TRUE } boolean_t;
 
@@ -147,15 +177,7 @@ HAL_StatusTypeDef store_settings(void);
 
 int32_t wrap_or_clamp_i32(int32_t v, int32_t min, int32_t max, uint8_t wrap);
 
-// Re-init RAM image to defaults and notify UI
 void memory_init_defaults(void);
-
-// Simple test helpers that write via the public API
-void memory_set_midi_thru(uint8_t v);
-
-// (Optional) generic setters if you want easy test wiring everywhere:
-void ut_set_u8(save_field_t f, uint8_t v);
-void ut_set_u32(save_field_t f, uint32_t v);
 #endif
 
 

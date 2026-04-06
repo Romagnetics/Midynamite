@@ -20,25 +20,40 @@ typedef struct {
 
     const char *about;
     const char *midi_modify;
+    const char *midi_split;
     const char *midi_transpose;
-    const char *output_sem;
+    const char *midi_dispatch;
 
     // Settings
-    const char *MIDI_Thru;
-    const char *USB_Thru;
-    const char *MIDI_Filter;
+    const char *MIDI_Thru_;
+    const char *MIDI_Out_;
+    const char *MIDI_Filter_;
 
-    const char *X_equals_ignore_channel;
+    const char *equals_ignore_channel;
 
 
     // Channel Modify
     const char *midi_modify_select;
-    const char *split;
-    const char *low_sem;
-    const char *high_sem;
     const char *send_1_sem;
     const char *send_2_sem;
 
+    // Channel Split
+    const char *dry_buses_all[4];
+    const char *split_note;
+    const char *split_ch;
+    const char *split_velocity;
+    const char *low_sem;
+    const char *high_sem;
+    const char *low_to;
+    const char *high_to;
+    const char *ch_sem;
+    const char *select_bus_effects;
+    const char *modify_short;
+    const char *transpose_short;
+    const char *arpeggiator_short;
+    const char *dispatch_short;
+    const char *split_types[3];
+    const char *bus_effect_mask[4];
 
     // Velocity
     const char *velocity;
@@ -46,6 +61,7 @@ typedef struct {
     const char *fixed;
     const char *change_velocity;
     const char *fixed_velocity;
+
 
     // Transpose
     const char *type;
@@ -87,12 +103,14 @@ typedef struct {
 
 
     // Start Menu
-    const char *start_menu;
+    const char *start_menu_;
 
 
     // Contrast
-    const char *contrast;
-    const char *contrast_levels[10];
+    const char *contrast_;
+    const char *ten_hundred_ten_percent[11];
+    const char *zero_hundred_ten[11];
+
 
     // About
     const char *about_brand;
@@ -112,16 +130,37 @@ typedef struct {
 
     // MIDI Tempo
     const char *bpm;
+    const char *tempo;
 
     //USB Midi
-    const char *usb_midi;
+    const char *usb_midi_;
 
 
     //Upgrade mode
     const char *upgrade_mode;
 
+    // Arpeggiator
+    const char *arpeggiator_1;
+    const char *arpeggiator_2;
+    const char *pattern_;
+    const char *division_;
+    const char *gate_;
+    const char *hold_;
+    const char *steps_;
+    const char *swing_;
+    const char *length_;
+    const char *key_sync_;
+
+	//Dispatch
+    const char *synths_;
+    const char *from_ch_;
+    const char *notes_per_synth_;
+    const char *voice_delete_;
+    const char *voice_manage_options[4];
+
     //Error handlers
     const char *error;
+
 
     // Note names
     const char *midi_note_names[128];
@@ -132,8 +171,6 @@ typedef struct {
     const char *zero_to_sixteen[17];
     const char *one_to_sixteen_one_char[17];
 
-    const char *change_split[2];
-    const char *change_fixed[2];
     const char *midi_outs[3];
     const char *midi_outs_split[4];
     const char *transpose_modes[2];
@@ -141,12 +178,19 @@ typedef struct {
     const char *intervals[10];
     const char *no_yes[2];
     const char *off_on[2];
-    const char *usb_receive_send[2];
-    const char *midi_channels[17];
-    const char *menu_list[4];
+    const char *off_out_thru_thru_both[4];
+
+    const char *midi_channels[18];
+    const char *menu_list[7];
+    const char *menu_list_long[7];
+
+
+    const char *division_list[7];
+    const char *arp_patterns[8];
+    const char *octave_count[5];
+
 
 } Message;
-
 // Global access to UI strings and options
 extern const Message *message;
 

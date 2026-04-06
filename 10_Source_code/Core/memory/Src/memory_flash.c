@@ -18,9 +18,15 @@
 enum {
     /* u32 fields */
     IDX_U32_TEMPO_CURRENT_TEMPO = 0,
-    IDX_U32_TEMPO_CLICK_RATE,
-    IDX_U32_MODIFY_VEL_PM,
-    IDX_U32_TRANSPOSE_SHIFT,
+
+	IDX_U32_MODIFY_VEL_PM,
+
+	IDX_U32_TRANSPOSE_SHIFT,
+
+	IDX_U32_SPLIT_MENU_MASK,
+
+	IDX_U32_ARPEGGIATOR_NOTES,
+
     IDX_U32_SETTINGS_FILTERED_CH,
     U32_COUNT   /* keep last */
 };
@@ -30,16 +36,28 @@ enum {
     IDX_U8_TEMPO_CURRENTLY_SENDING = 0,
     IDX_U8_TEMPO_SEND_TO_OUT,
 
-    IDX_U8_MODIFY_CHANGE_OR_SPLIT,
+	IDX_U8_SPLIT_TYPE,
+	IDX_U8_SPLIT_NOTE,
+	IDX_U8_SPLIT_MIDI_CHANNEL,
+	IDX_U8_SPLIT_VELOCITY,
+
+
+	IDX_U8_SPLIT_MIDI_CH1,
+	IDX_U8_SPLIT_SEND_CH1,
+	IDX_U8_SPLIT_MIDI_CH2,
+	IDX_U8_SPLIT_SEND_CH2,
+
+	IDX_U8_SPLIT_SPLIT_TYPE,
+	IDX_U8_SPLIT_SPLIT_NOTE,
+	IDX_U8_SPLIT_SPLIT_MIDI_CHANNEL,
+	IDX_U8_SPLIT_SPLIT_VELOCITY,
+	IDX_U8_SPLIT_CURRENTLY_SENDING,
+
     IDX_U8_MODIFY_VELOCITY_TYPE,
-    IDX_U8_MODIFY_SEND_TO_OUT,
     IDX_U8_MODIFY_SEND_CH1,
     IDX_U8_MODIFY_SEND_CH2,
-    IDX_U8_MODIFY_SPLIT_NOTE,
-    IDX_U8_MODIFY_SPLIT_CH1,
-    IDX_U8_MODIFY_SPLIT_CH2,
     IDX_U8_MODIFY_VEL_ABS,
-    IDX_U8_MODIFY_SENDING,
+	IDX_U8_MODIFY_CURRENTLY_SENDING,
 
     IDX_U8_TRANSPOSE_TYPE,
     IDX_U8_TRANSPOSE_BASE_NOTE,
@@ -48,12 +66,28 @@ enum {
     IDX_U8_TRANSPOSE_SEND_ORIGINAL,
     IDX_U8_TRANSPOSE_SENDING,
 
+	IDX_U8_ARPEGGIATOR_CURRENTLY_SENDING,
+	IDX_U8_ARPEGGIATOR_INTERVAL,
+	IDX_U8_ARPEGGIATOR_PATTERN,
+	IDX_U8_ARPEGGIATOR_GATE,
+	IDX_U8_ARPEGGIATOR_OCTAVES,
+	IDX_U8_ARPEGGIATOR_LATCH,
+	IDX_U8_ARPEGGIATOR_SWING,
+	IDX_U8_ARPEGGIATOR_RETRIGGER,
+	IDX_U8_ARPEGGIATOR_LENGTH,
+
+	IDX_U8_DISPATCH_CURRENTLY_SENDING,
+	IDX_U8_DISPATCH_AMOUNT_OF_SYNTHS,
+	IDX_U8_DISPATCH_FROM_CHANNEL,
+	IDX_U8_DISPATCH_NOTES_PER_SYNTH,
+	IDX_U8_DISPATCH_VOICE_MANAGE,
+
     IDX_U8_SETTINGS_START_MENU,
     IDX_U8_SETTINGS_SEND_USB,
     IDX_U8_SETTINGS_BRIGHTNESS,
     IDX_U8_SETTINGS_CHANNEL_FILTER,
     IDX_U8_SETTINGS_MIDI_THRU,
-    IDX_U8_SETTINGS_USB_THRU,
+	IDX_U8_SETTINGS_SEND_TO_OUT,
 
     U8_COUNT    /* keep last */
 };
@@ -90,9 +124,15 @@ static void bind_field_pointers(save_struct* s, int32_t** u32tab, uint8_t** u8ta
 
     /* ---- u32 mappings ---- */
     u32tab[TEMPO_CURRENT_TEMPO]        = &s->u32_vals[IDX_U32_TEMPO_CURRENT_TEMPO];
-    u32tab[TEMPO_TEMPO_CLICK_RATE]     = &s->u32_vals[IDX_U32_TEMPO_CLICK_RATE];
+
     u32tab[MODIFY_VEL_PLUS_MINUS] = &s->u32_vals[IDX_U32_MODIFY_VEL_PM];
+
     u32tab[TRANSPOSE_MIDI_SHIFT_VALUE] = &s->u32_vals[IDX_U32_TRANSPOSE_SHIFT];
+
+    u32tab[SPLIT_MENU_MASK] = &s->u32_vals[IDX_U32_SPLIT_MENU_MASK];
+
+    u32tab[ARPEGGIATOR_NOTES] = &s->u32_vals[IDX_U32_ARPEGGIATOR_NOTES];
+
     u32tab[SETTINGS_FILTERED_CH]      = &s->u32_vals[IDX_U32_SETTINGS_FILTERED_CH];
 
     /* CHECKSUM exposed via u32 path for readback tools */
@@ -102,30 +142,63 @@ static void bind_field_pointers(save_struct* s, int32_t** u32tab, uint8_t** u8ta
     u8tab[TEMPO_CURRENTLY_SENDING]     = &s->u8_vals[IDX_U8_TEMPO_CURRENTLY_SENDING];
     u8tab[TEMPO_SEND_TO_MIDI_OUT]      = &s->u8_vals[IDX_U8_TEMPO_SEND_TO_OUT];
 
-    u8tab[MODIFY_CHANGE_OR_SPLIT]      = &s->u8_vals[IDX_U8_MODIFY_CHANGE_OR_SPLIT];
+    u8tab[SPLIT_SEND_CH1]             = &s->u8_vals[IDX_U8_SPLIT_SEND_CH1];
+    u8tab[SPLIT_SEND_CH2]             = &s->u8_vals[IDX_U8_SPLIT_SEND_CH2];
+    u8tab[SPLIT_MIDI_CH1]             = &s->u8_vals[IDX_U8_SPLIT_MIDI_CH1];
+    u8tab[SPLIT_MIDI_CH2]             = &s->u8_vals[IDX_U8_SPLIT_MIDI_CH2];
+
+    u8tab[SPLIT_TYPE]                  = &s->u8_vals[IDX_U8_SPLIT_TYPE];
+    u8tab[SPLIT_NOTE]                  = &s->u8_vals[IDX_U8_SPLIT_NOTE];
+    u8tab[SPLIT_MIDI_CHANNEL]          = &s->u8_vals[IDX_U8_SPLIT_MIDI_CHANNEL];
+    u8tab[SPLIT_VELOCITY]              = &s->u8_vals[IDX_U8_SPLIT_VELOCITY];
+    u8tab[SPLIT_CURRENTLY_SENDING]    = &s->u8_vals[IDX_U8_SPLIT_CURRENTLY_SENDING];
+
+
+
     u8tab[MODIFY_VELOCITY_TYPE]        = &s->u8_vals[IDX_U8_MODIFY_VELOCITY_TYPE];
     u8tab[MODIFY_SEND_TO_MIDI_CH1]=&s->u8_vals[IDX_U8_MODIFY_SEND_CH1];
     u8tab[MODIFY_SEND_TO_MIDI_CH2]=&s->u8_vals[IDX_U8_MODIFY_SEND_CH2];
-    u8tab[MODIFY_SPLIT_NOTE]           = &s->u8_vals[IDX_U8_MODIFY_SPLIT_NOTE];
-    u8tab[MODIFY_SEND_TO_MIDI_OUT]     = &s->u8_vals[IDX_U8_MODIFY_SEND_TO_OUT];
-    u8tab[MODIFY_SPLIT_MIDI_CH1] = &s->u8_vals[IDX_U8_MODIFY_SPLIT_CH1];
-    u8tab[MODIFY_SPLIT_MIDI_CH2] = &s->u8_vals[IDX_U8_MODIFY_SPLIT_CH2];
+
     u8tab[MODIFY_VEL_ABSOLUTE]    = &s->u8_vals[IDX_U8_MODIFY_VEL_ABS];
-    u8tab[MODIFY_SENDING]    = &s->u8_vals[IDX_U8_MODIFY_SENDING];
+    u8tab[MODIFY_CURRENTLY_SENDING]    = &s->u8_vals[IDX_U8_MODIFY_CURRENTLY_SENDING];
+
+
 
     u8tab[TRANSPOSE_TRANSPOSE_TYPE]    = &s->u8_vals[IDX_U8_TRANSPOSE_TYPE];
     u8tab[TRANSPOSE_BASE_NOTE]         = &s->u8_vals[IDX_U8_TRANSPOSE_BASE_NOTE];
     u8tab[TRANSPOSE_INTERVAL]          = &s->u8_vals[IDX_U8_TRANSPOSE_INTERVAL];
     u8tab[TRANSPOSE_TRANSPOSE_SCALE]   = &s->u8_vals[IDX_U8_TRANSPOSE_SCALE];
     u8tab[TRANSPOSE_SEND_ORIGINAL]     = &s->u8_vals[IDX_U8_TRANSPOSE_SEND_ORIGINAL];
-    u8tab[TRANSPOSE_SENDING] = &s->u8_vals[IDX_U8_TRANSPOSE_SENDING];
+    u8tab[TRANSPOSE_CURRENTLY_SENDING] = &s->u8_vals[IDX_U8_TRANSPOSE_SENDING];
+
+
+
+    u8tab[ARPEGGIATOR_CURRENTLY_SENDING] = &s->u8_vals[IDX_U8_ARPEGGIATOR_CURRENTLY_SENDING];
+    u8tab[ARPEGGIATOR_DIVISION] = &s->u8_vals[IDX_U8_ARPEGGIATOR_INTERVAL];
+    u8tab[ARPEGGIATOR_PATTERN] = &s->u8_vals[IDX_U8_ARPEGGIATOR_PATTERN];
+    u8tab[ARPEGGIATOR_GATE] = &s->u8_vals[IDX_U8_ARPEGGIATOR_GATE];
+    u8tab[ARPEGGIATOR_OCTAVES] = &s->u8_vals[IDX_U8_ARPEGGIATOR_OCTAVES];
+    u8tab[ARPEGGIATOR_HOLD] = &s->u8_vals[IDX_U8_ARPEGGIATOR_LATCH];
+    u8tab[ARPEGGIATOR_SWING] = &s->u8_vals[IDX_U8_ARPEGGIATOR_SWING];
+    u8tab[ARPEGGIATOR_KEY_SYNC] = &s->u8_vals[IDX_U8_ARPEGGIATOR_RETRIGGER];
+    u8tab[ARPEGGIATOR_LENGTH] = &s->u8_vals[IDX_U8_ARPEGGIATOR_LENGTH];
+
+
+
+    u8tab[DISPATCH_CURRENTLY_SENDING] = &s->u8_vals[IDX_U8_DISPATCH_CURRENTLY_SENDING];
+    u8tab[DISPATCH_AMOUNT_OF_SYNTHS] = &s->u8_vals[IDX_U8_DISPATCH_AMOUNT_OF_SYNTHS];
+    u8tab[DISPATCH_FROM_CHANNEL] = &s->u8_vals[IDX_U8_DISPATCH_FROM_CHANNEL];
+    u8tab[DISPATCH_NOTES_PER_SYNTH] = &s->u8_vals[IDX_U8_DISPATCH_NOTES_PER_SYNTH];
+    u8tab[DISPATCH_VOICE_MANAGE] = &s->u8_vals[IDX_U8_DISPATCH_VOICE_MANAGE];
+
+
 
     u8tab[SETTINGS_START_MENU]              = &s->u8_vals[IDX_U8_SETTINGS_START_MENU];
     u8tab[SETTINGS_SEND_USB]                = &s->u8_vals[IDX_U8_SETTINGS_SEND_USB];
     u8tab[SETTINGS_BRIGHTNESS]              = &s->u8_vals[IDX_U8_SETTINGS_BRIGHTNESS];
     u8tab[SETTINGS_CHANNEL_FILTER]          = &s->u8_vals[IDX_U8_SETTINGS_CHANNEL_FILTER];
     u8tab[SETTINGS_MIDI_THRU]               = &s->u8_vals[IDX_U8_SETTINGS_MIDI_THRU];
-    u8tab[SETTINGS_USB_THRU]                = &s->u8_vals[IDX_U8_SETTINGS_USB_THRU];
+    u8tab[SETTINGS_SEND_TO_OUT]             = &s->u8_vals[IDX_U8_SETTINGS_SEND_TO_OUT];
 }
 
 /* Bind the module-global pointer tables to save_data */
@@ -201,11 +274,11 @@ HAL_StatusTypeDef store_settings(void)
     }
 
     const uint32_t* p    = (const uint32_t*)&local;
-    const uint32_t  words = (sizeof(save_struct) + 3u) / 4u;
+    const uint32_t  words = (sizeof(save_struct) + 3) / 4;
 
     for (uint32_t i = 0; i < words; ++i) {
         status = HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD,
-                                   FLASH_SECTOR7_ADDR + i * 4u,
+                                   FLASH_SECTOR7_ADDR + i * 4,
                                    p[i]);
         if (status != HAL_OK) {
             HAL_FLASH_Lock();
@@ -242,10 +315,4 @@ void memory_init_defaults(void)
     save_mark_all_changed();
 }
 
-void memory_set_midi_thru(uint8_t v)
-{
-    (void)save_modify_u8(SETTINGS_MIDI_THRU, SAVE_MODIFY_SET, v ? 1u : 0u);
-}
-
 #endif
-

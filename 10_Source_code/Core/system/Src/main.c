@@ -3,11 +3,14 @@
  *
  *      Author: Romain Dereu
  */
-#include "cmsis_os.h" //osKernel
+#include "cmsis_os2.h" //osKernel
 #include "main.h"
 #include "_menu_ui.h" //For the screen init
+
+#include "midi_arp.h" //arp_on_tempo_tick
 #include "midi_transform.h" //midi_buffer_push
 #include "midi_tempo.h" //mt_start_stop
+
 #include "threads.h" // thread functions
 
 
@@ -60,11 +63,10 @@ int main(void)
   //Initializations
   save_load_from_flash();
   initialize_screen();
+  tempo_sync_from_save();
 
 
-  if (save_get(TEMPO_CURRENTLY_SENDING) == 1) {
-    mt_start_stop(&htim2);
-  }
+  HAL_TIM_Base_Start_IT(&htim2);
 
   HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
   HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
@@ -326,9 +328,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
   // Romagnetics code
   if (htim->Instance == TIM2) {
-    uint8_t send_to_out        = save_get(TEMPO_SEND_TO_MIDI_OUT);
-    uint32_t tempo_click_rate  = save_get(TEMPO_TEMPO_CLICK_RATE);
-    send_midi_tempo_out(tempo_click_rate, send_to_out);
+    threads_midi_core_notify_tempo_tick_from_isr();
   }
 }
 
