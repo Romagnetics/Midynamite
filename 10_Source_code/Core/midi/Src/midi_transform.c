@@ -33,7 +33,12 @@ typedef enum {
 
 static uint8_t g_pipeline_split_route = 3;
 static split_output_target_t g_pipeline_split_target = SPLIT_TARGET_BOTH;
-static uint8_t g_split_velocity_note_high[16][128];
+
+static uint8_t g_split_velocity_note_high_count[16][128];
+static uint8_t g_split_velocity_note_low_count[16][128];
+
+static output_route_t midi_route_from_settings(void);
+
 
 // Circular buffer instance declared externally
 extern midi_modify_circular_buffer midi_modify_buff;
@@ -172,9 +177,10 @@ void calculate_incoming_midi() {
     while (midi_buffer_pop(&byte)) {
         // Real-time messages (do not affect parsing)
         if (byte >= 0xF8) {
-            if (save_get(SETTINGS_MIDI_THRU) == 1) {
+            const uint8_t usb_mode = (uint8_t)save_get(SETTINGS_SEND_USB);
+            if ((save_get(SETTINGS_MIDI_THRU) == 1) || (midi_usb_mode_allows_thru(usb_mode) != 0)) {
                 midi_note rt = { .status = byte, .note = 0, .velocity = 0 };
-                pipeline_final(&rt, 1);
+                pipeline_start(&rt);
             }
             continue;
         }
@@ -248,6 +254,7 @@ static uint8_t is_channel_blocked(uint8_t status_byte) {
     return 0;
 }
 
+
 static uint8_t split_type_is_high(const midi_note *msg)
 {
     if (msg == NULL) return 0;
@@ -268,15 +275,30 @@ static uint8_t split_type_is_high(const midi_note *msg)
             const uint8_t channel = (uint8_t)(msg->status & 0x0F);
             const uint8_t note = msg->note;
             const uint8_t high_by_velocity = (uint8_t)(msg->velocity >= (uint8_t)save_get(SPLIT_VELOCITY));
+            uint8_t *high_count = &g_split_velocity_note_high_count[channel][note];
+            uint8_t *low_count = &g_split_velocity_note_low_count[channel][note];
 
             if (is_note_on != 0) {
-                g_split_velocity_note_high[channel][note] = high_by_velocity;
+                if (high_by_velocity != 0) {
+                    if (*high_count < 255) {
+                        (*high_count)++;
+                    }
+                } else {
+                    if (*low_count < 255) {
+                        (*low_count)++;
+                    }
+                }
                 return high_by_velocity;
             }
 
-            if (g_split_velocity_note_high[channel][note] != 0) {
-                g_split_velocity_note_high[channel][note] = 0;
+            if (*high_count != 0) {
+                (*high_count)--;
                 return 1;
+            }
+
+            if (*low_count != 0) {
+                (*low_count)--;
+                return 0;
             }
 
             return high_by_velocity;
@@ -287,6 +309,8 @@ static uint8_t split_type_is_high(const midi_note *msg)
 
     return (uint8_t)(msg->note >= (uint8_t)save_get(SPLIT_NOTE));
 }
+
+
 
 static uint8_t split_route_allows_menu(menu_list_t menu)
 {
@@ -449,6 +473,9 @@ static void pipeline_execute_from(uint8_t stage_index, midi_note *midi_msg)
 void pipeline_start(midi_note *midi_msg)
 {
     const uint8_t status = midi_msg->status;
+    const uint8_t usb_mode = (uint8_t)save_get(SETTINGS_SEND_USB);
+    const uint8_t midi_thru_enabled = (uint8_t)(save_get(SETTINGS_MIDI_THRU) == 1);
+    const uint8_t usb_thru_enabled = midi_usb_mode_allows_thru(usb_mode);
 
     g_pipeline_split_route = 3;
     g_pipeline_split_target = SPLIT_TARGET_BOTH;
@@ -464,13 +491,19 @@ void pipeline_start(midi_note *midi_msg)
             || (save_get(DISPATCH_CURRENTLY_SENDING) == 1)
         );
 
+    if ((midi_thru_enabled != 0) || (usb_thru_enabled != 0)) {
+        output_route_t thru_route = midi_route_from_settings();
+        thru_route.usb = usb_thru_enabled;
+        if (midi_thru_enabled == 0) {
+            thru_route.uart1 = 0;
+            thru_route.uart2 = 0;
+        }
+        emit_midi(midi_msg, &thru_route);
+    }
+
     if (any_pipeline_enabled != 0) {
         pipeline_execute_from(PIPELINE_STAGE_SPLIT, midi_msg);
         return;
-    }
-
-    if (save_get(SETTINGS_MIDI_THRU) == 1) {
-        emit_midi_with_policy(midi_msg);
     }
 }
 
@@ -813,7 +846,8 @@ static output_route_t midi_route_from_settings(void)
 static output_route_t midi_route_with_usb_policy(void)
 {
     output_route_t route = midi_route_from_settings();
-    if (save_get(SETTINGS_SEND_USB) != MIDI_USB_OFF) {
+    const uint8_t usb_mode = (uint8_t)save_get(SETTINGS_SEND_USB);
+    if (midi_usb_mode_allows_out(usb_mode) != 0) {
         route.usb = 1;
     }
     return route;
@@ -865,7 +899,8 @@ void send_midi_out(const midi_note *midi_message_raw, uint8_t length)
 void send_usb_midi_out(const midi_note *msg, uint8_t length)
 {
     (void)length;
-    if (save_get(SETTINGS_SEND_USB) == MIDI_USB_OFF) {
+    const uint8_t usb_mode = (uint8_t)save_get(SETTINGS_SEND_USB);
+    if (midi_usb_mode_allows_out(usb_mode) == 0) {
         return;
     }
 

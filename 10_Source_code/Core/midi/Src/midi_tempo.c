@@ -50,7 +50,9 @@ static uint8_t clock_tick = 0xF8;
 UART_HandleTypeDef *UART_list_tempo[2];
 list_of_UART_to_send_to(*mt_send_to_midi_out_cache(), UART_list_tempo);
 
-send_usb_midi_message(&clock_tick, 1);
+if (midi_usb_mode_allows_out((uint8_t)save_get(SETTINGS_SEND_USB)) != 0) {
+    send_usb_midi_message(&clock_tick, 1);
+}
 for (int i = 0; i < 2; i++) {
 	if (UART_list_tempo[i] != NULL) {
 		HAL_UART_Transmit(UART_list_tempo[i], &clock_tick, 1, 1000);
@@ -74,7 +76,9 @@ void mt_start_stop(void) {
                 HAL_UART_Transmit(UART_list_tempo[i], &clock_stop, 1, 1000);
             }
         }
-        send_usb_midi_message(&clock_stop, 1);
+        if (midi_usb_mode_allows_out((uint8_t)save_get(SETTINGS_SEND_USB)) != 0) {
+            send_usb_midi_message(&clock_stop, 1);
+        }
     }
     // Start clock
     else if (clock_sending == 1) {
@@ -83,7 +87,9 @@ void mt_start_stop(void) {
                 HAL_UART_Transmit(UART_list_tempo[i], &clock_start, 1, 1000);
             }
         }
-        send_usb_midi_message(&clock_start, 1);
+        if (midi_usb_mode_allows_out((uint8_t)save_get(SETTINGS_SEND_USB)) != 0) {
+            send_usb_midi_message(&clock_start, 1);
+        }
 
     }
 }

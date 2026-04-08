@@ -10,6 +10,7 @@
 #include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
 #include "text.h"
 #include "utils.h"
+#include "midi_usb.h"
 
 
 extern TIM_HandleTypeDef htim3;
@@ -72,6 +73,31 @@ void all_notes_off(UART_HandleTypeDef *huart) {
 }
 
 // Panic on both UART1 and UART2
+static void all_notes_off_usb(void)
+{
+    if (midi_usb_mode_allows_out((uint8_t)save_get(SETTINGS_SEND_USB)) == 0) {
+        return;
+    }
+
+    uint8_t all_notes_off_msg[3];
+    uint8_t reset_ctrl_msg[3];
+
+    for (uint8_t channel = 0; channel < 16; channel++) {
+        uint8_t status = 0xB0 | channel;
+
+        all_notes_off_msg[0] = status;
+        all_notes_off_msg[1] = 123;
+        all_notes_off_msg[2] = 0;
+
+        reset_ctrl_msg[0] = status;
+        reset_ctrl_msg[1] = 121;
+        reset_ctrl_msg[2] = 0;
+
+        send_usb_midi_message(all_notes_off_msg, 3);
+        send_usb_midi_message(reset_ctrl_msg, 3);
+    }
+}
+
 void panic_midi(GPIO_TypeDef *port,
 				uint16_t pin1,
 				uint16_t pin2) {
@@ -88,6 +114,7 @@ void panic_midi(GPIO_TypeDef *port,
 
     	all_notes_off(&huart1);
     	all_notes_off(&huart2);
+        all_notes_off_usb();
     }
 }
 
