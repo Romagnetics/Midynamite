@@ -279,7 +279,7 @@ static const Message _message = {
 						"Settings"},
 	//Arpeggio
 	.division_list = { "1/4", "1/6", "1/8", "1/12", "1/16", "1/24", "1/32" },
-	.arp_patterns = { "Up", "Down", "Up/Down", "Up/Down 2", "Random", "Double Up", "Double Down", "Order"},
+	.arp_patterns = { "Up", "Down", "Up/Down", "Up/Down 2", "Random", "Double Up", "Double Down", "Order", "All"},
 	.octave_count = { "Error", "1 Octave", "2 Octaves", "3 Octaves", "4 Octaves"},
 };
 
