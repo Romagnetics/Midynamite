@@ -4,7 +4,7 @@
 
 #include "midi_transform.h" //calculate_incoming_midi
 #include "midi_arp.h" //arp_on_tempo_tick
-#include "midi_tempo.h" //tempo_sync_from_save
+#include "midi_tempo.h" // mt_process_pending_tempo_out
 
 #include "threads.h"
 #include "usb_device.h" //MX_USB_DEVICE_Init
