@@ -186,7 +186,7 @@ typedef struct {
 
 
     const char *division_list[7];
-    const char *arp_patterns[8];
+    const char *arp_patterns[9];
     const char *octave_count[5];
 
 
