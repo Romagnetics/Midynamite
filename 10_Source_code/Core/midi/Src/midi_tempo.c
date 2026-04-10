@@ -14,17 +14,6 @@
 static uint8_t s_mt_send_to_midi_out = 0;
 static uint8_t s_mt_divider_phase = 0;
 
-static inline void mt_reset_clock_divider(void)
-{
-    s_mt_divider_phase = 0;
-}
-
-static inline uint8_t mt_usb_tempo_out_enabled(void)
-{
-    const uint8_t usb_mode = (uint8_t)save_get(SETTINGS_SEND_USB);
-    return (uint8_t)((usb_mode == MIDI_USB_OUT) || (usb_mode == MIDI_USB_THRU_OUT));
-}
-
 
 void set_tempo_bpm(uint32_t bpm)
 {
@@ -53,17 +42,18 @@ void tempo_sync_from_save(void)
 {
     set_tempo_bpm(save_get(TEMPO_CURRENT_TEMPO));
     mt_set_send_to_midi_out((uint8_t)save_get(TEMPO_SEND_TO_MIDI_OUT));
-    mt_reset_clock_divider();
+    s_mt_divider_phase = 0;
 }
 
 
-static inline void mt_send_clock_byte(uint8_t clock_byte)
+static inline void select_outs_and_send(uint8_t clock_byte)
 {
     s_mt_send_to_midi_out = (uint8_t)save_get(TEMPO_SEND_TO_MIDI_OUT);
     UART_HandleTypeDef *uart_list_tempo[2];
     list_of_UART_to_send_to(s_mt_send_to_midi_out, uart_list_tempo);
 
-    if (mt_usb_tempo_out_enabled() != 0) {
+    const uint8_t usb_mode = (uint8_t)save_get(SETTINGS_SEND_USB);
+    if ((usb_mode == MIDI_USB_OUT) || (usb_mode == MIDI_USB_THRU_OUT)) {
         send_usb_midi_message(&clock_byte, 1);
     }
 
@@ -77,7 +67,7 @@ static inline void mt_send_clock_byte(uint8_t clock_byte)
 void mt_process_pending_tempo_out(void)
 {
     if (save_get(TEMPO_CURRENTLY_SENDING) == 0) {
-        mt_reset_clock_divider();
+        s_mt_divider_phase = 0;
         return;
     }
 
@@ -86,20 +76,21 @@ void mt_process_pending_tempo_out(void)
         return;
     }
 
-    mt_send_clock_byte(0xF8);
+    select_outs_and_send(0xF8);
 }
 
-void mt_start_stop(void) {
-	uint8_t clock_sending = save_get(TEMPO_CURRENTLY_SENDING);
+void mt_start_stop(void)
+{
+    const uint8_t clock_sending = save_get(TEMPO_CURRENTLY_SENDING);
 
     // Stop clock
     if (clock_sending == 0) {
-        mt_reset_clock_divider();
-        mt_send_clock_byte(0xFC);
+        s_mt_divider_phase = 0;
+        select_outs_and_send(0xFC);
     }
     // Start clock
     else if (clock_sending == 1) {
-        mt_reset_clock_divider();
-        mt_send_clock_byte(0xFA);
+        s_mt_divider_phase = 0;
+        select_outs_and_send(0xFA);
     }
 }

@@ -66,7 +66,7 @@ static void dispatch_send_on_synth(const midi_note *src_msg, uint8_t synth_chann
 {
     midi_note out = *src_msg;
     midi_change_channel(&out, synth_channel);
-    emit_midi_with_policy(&out);
+    emit_midi(&out);
 
 }
 
@@ -78,7 +78,7 @@ static void dispatch_send_note_off_on_synth(uint8_t note, uint8_t synth_channel)
         .velocity = 0
     };
     midi_change_channel(&off_msg, synth_channel);
-    emit_midi_with_policy(&off_msg);
+    emit_midi(&off_msg);
 }
 
 

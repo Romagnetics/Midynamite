@@ -31,6 +31,13 @@ typedef enum {
     SPLIT_TARGET_HIGH
 } split_output_target_t;
 
+typedef struct {
+    uint8_t uart1;
+    uint8_t uart2;
+    uint8_t usb;
+} output_route_t;
+
+
 static uint8_t g_pipeline_split_route = 3;
 static split_output_target_t g_pipeline_split_target = SPLIT_TARGET_BOTH;
 
@@ -38,7 +45,7 @@ static uint8_t g_split_velocity_note_high_count[16][128];
 static uint8_t g_split_velocity_note_low_count[16][128];
 
 static output_route_t midi_route_from_settings(void);
-
+static void emit_midi_to_route(const midi_note *msg, const output_route_t *route);
 
 // Circular buffer instance declared externally
 extern midi_modify_circular_buffer midi_modify_buff;
@@ -374,7 +381,7 @@ static void split_update_route_from_channel(uint8_t channel)
 static void split_send_direct(midi_note *msg, uint8_t length)
 {
     (void)length;
-    emit_midi_with_policy(msg);
+    emit_midi(msg);
 }
 
 static void pipeline_execute_from(uint8_t stage_index, midi_note *midi_msg);
@@ -498,7 +505,7 @@ void pipeline_start(midi_note *midi_msg)
             thru_route.uart1 = 0;
             thru_route.uart2 = 0;
         }
-        emit_midi(midi_msg, &thru_route);
+        emit_midi_to_route(midi_msg, &thru_route);
     }
 
     if (any_pipeline_enabled != 0) {
@@ -510,11 +517,6 @@ void pipeline_start(midi_note *midi_msg)
 // ---------------------
 // Split pipeline
 // ---------------------
-void pipeline_midi_split(midi_note *midi_msg)
-{
-    pipeline_execute_from(PIPELINE_STAGE_SPLIT, midi_msg);
-}
-
 static uint8_t pipeline_stage_split(midi_note *midi_msg, uint8_t length, uint8_t next_stage)
 {
     (void)length;
@@ -555,10 +557,6 @@ static uint8_t pipeline_stage_split(midi_note *midi_msg, uint8_t length, uint8_t
 // ---------------------
 // Modify pipeline
 // ---------------------
-void pipeline_midi_modify(midi_note *midi_msg) {
-    pipeline_execute_from(PIPELINE_STAGE_MODIFY, midi_msg);
-}
-
 static uint8_t pipeline_stage_modify(midi_note *midi_msg, uint8_t length, uint8_t next_stage)
 {
     (void)length;
@@ -712,11 +710,6 @@ static void midi_pitch_shift(midi_note *midi_msg) {
 // ---------------------
 // Transpose pipeline
 // ---------------------
-void pipeline_midi_transpose(midi_note *midi_msg)
-{
-    pipeline_execute_from(PIPELINE_STAGE_TRANSPOSE, midi_msg);
-}
-
 static uint8_t pipeline_stage_transpose(midi_note *midi_msg, uint8_t length, uint8_t next_stage)
 {
     (void)length;
@@ -752,12 +745,6 @@ static uint8_t pipeline_stage_transpose(midi_note *midi_msg, uint8_t length, uin
 // ---------------------
 // Pipeline Arp
 // --------------------
-void pipeline_arp(midi_note *midi_msg, uint8_t length)
-{
-    (void)length;
-    pipeline_execute_from(PIPELINE_STAGE_ARP, midi_msg);
-}
-
 static uint8_t pipeline_stage_arp(midi_note *midi_msg, uint8_t length, uint8_t next_stage)
 {
     (void)length;
@@ -796,7 +783,7 @@ static uint8_t pipeline_stage_final(midi_note *midi_msg, uint8_t length, uint8_t
         return 1;
     }
 
-    emit_midi_with_policy(midi_msg);
+    emit_midi(midi_msg);
     return 1;
 }
 
@@ -843,17 +830,7 @@ static output_route_t midi_route_from_settings(void)
     return route;
 }
 
-static output_route_t midi_route_with_usb_policy(void)
-{
-    output_route_t route = midi_route_from_settings();
-    const uint8_t usb_mode = (uint8_t)save_get(SETTINGS_SEND_USB);
-    if (midi_usb_mode_allows_out(usb_mode) != 0) {
-        route.usb = 1;
-    }
-    return route;
-}
-
-void emit_midi(const midi_note *msg, const output_route_t *route)
+static void emit_midi_to_route(const midi_note *msg, const output_route_t *route)
 {
     if ((msg == NULL) || (route == NULL)) {
         return;
@@ -883,27 +860,12 @@ void emit_midi(const midi_note *msg, const output_route_t *route)
     }
 }
 
-void emit_midi_with_policy(const midi_note *msg)
+void emit_midi(const midi_note *msg)
 {
-    output_route_t route = midi_route_with_usb_policy();
-    emit_midi(msg, &route);
-}
-
-void send_midi_out(const midi_note *midi_message_raw, uint8_t length)
-{
-    (void)length;
     output_route_t route = midi_route_from_settings();
-    emit_midi(midi_message_raw, &route);
-}
-
-void send_usb_midi_out(const midi_note *msg, uint8_t length)
-{
-    (void)length;
     const uint8_t usb_mode = (uint8_t)save_get(SETTINGS_SEND_USB);
-    if (midi_usb_mode_allows_out(usb_mode) == 0) {
-        return;
+    if (midi_usb_mode_allows_out(usb_mode) != 0) {
+        route.usb = 1;
     }
-
-    output_route_t route = { .uart1 = 0, .uart2 = 0, .usb = 1 };
-    emit_midi(msg, &route);
+    emit_midi_to_route(msg, &route);
 }
