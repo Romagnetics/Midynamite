@@ -185,7 +185,7 @@ typedef struct {
     const char *menu_list_long[7];
 
 
-    const char *division_list[7];
+    const char *division_list[10];
     const char *arp_patterns[9];
     const char *octave_count[5];
 

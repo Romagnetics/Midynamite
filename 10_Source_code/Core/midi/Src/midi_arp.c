@@ -341,15 +341,26 @@ static uint8_t pattern_step_is_enabled(void)
 
 static uint16_t clocks_per_step(uint8_t div)
 {
-    static const uint16_t map[7] = {48, 32, 24, 16, 12, 8, 6};
-    return map[div % 7];
+    static const uint16_t map[10] = {192, 96, 64, 48, 32, 24, 16, 12, 8, 6};
+
+    if (div > 9) {
+        div = 9;
+    }
+
+    return map[div];
 }
+
+
+
 
 static uint16_t clock_current_step_ticks(uint16_t clocks_per_step_value)
 {
     uint16_t swing = (uint16_t)(uint8_t)save_get(ARPEGGIATOR_SWING);
 
-    if (swing >= clocks_per_step_value) {
+    if ((clocks_per_step_value > 100) || (swing >= clocks_per_step_value)) {
+        if (swing > 99) {
+            swing = 99;
+        }
         swing = (uint16_t)((clocks_per_step_value * swing + 50) / 100);
     }
 
@@ -366,6 +377,7 @@ static uint16_t clock_current_step_ticks(uint16_t clocks_per_step_value)
 
     return (uint16_t)(2 * (clocks_per_step_value - swing));
 }
+
 
 static uint8_t clock_should_process_step(uint16_t step_ticks_value, uint8_t has_pressed_notes)
 {
