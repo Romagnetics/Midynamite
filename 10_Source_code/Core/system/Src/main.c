@@ -7,7 +7,6 @@
 #include "main.h"
 #include "_menu_ui.h" //For the screen init
 
-#include "midi_arp.h" //arp_on_tempo_tick
 #include "midi_transform.h" //midi_buffer_push
 #include "midi_tempo.h" //tempo_sync_from_save
 
