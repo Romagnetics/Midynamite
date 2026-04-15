@@ -474,6 +474,11 @@ static void arp_clear_tracked_notes(void)
     s_pattern_engine.note_type = 255;
 }
 
+void arp_panic_clear(void)
+{
+    clock_stop_playing_note();
+    arp_clear_tracked_notes();
+}
 
 
 void arp_handle_midi_note(const midi_note *msg)

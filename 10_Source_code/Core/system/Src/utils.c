@@ -10,6 +10,8 @@
 #include "stm32f4xx_hal.h"   // HAL types (TIM, GPIO)
 #include "text.h"
 #include "utils.h"
+
+#include "midi_arp.h"
 #include "midi_usb.h"
 
 
@@ -115,6 +117,7 @@ void panic_midi(GPIO_TypeDef *port,
     	all_notes_off(&huart1);
     	all_notes_off(&huart2);
         all_notes_off_usb();
+        arp_panic_clear();
     }
 }
 
